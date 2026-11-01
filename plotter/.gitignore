@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Regenerated from bench.db by `uv run benchplot`; not source.
+./plots/

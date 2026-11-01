@@ -1,0 +1,30 @@
+[workspace]
+members = [
+    "trql-algebra",
+    "trql-bbox-compiler",
+    "trql-dsl",
+    "trql-instrument",
+    "trql-server",
+    "trql-tui",
+    "trql-poly",
+    "trql-predicates",
+    "trql-storage",
+    "trql-types",
+    "trql-selector",
+    "trql-cli",
+    "trql-sql"
+]
+
+resolver = "2"
+
+[workspace.package]
+rust-version = "1.92"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+authors = ["Satyam Jay"]
+
+[workspace.dependencies]
+trql-algebra = { path = "trql-algebra" }
+trql-predicates = { path = "trql-predicates" }
+trql-storage = { path = "trql-storage" }
+trql-types = { path = "trql-types" }

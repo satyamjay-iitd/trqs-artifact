@@ -1,0 +1,21 @@
+[package]
+name = "trql-types"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bincode = { version = "2.0.1", features = ["serde", "derive"] }
+thiserror = "2.0.18"
+smallvec = { version = "1.15.1", features = ["serde"] }
+
+serde = { version = "1.0.229", features = ["derive"], optional = true }
+
+[features]
+default = []
+
+serialize = [
+    "dep:serde",
+]
+# Ablation: replace the 5-tuple `IntervalSets` with the fully materialized
+# pair set in `intervals/naive.rs`. Benchmark-only; never enable for real use.
+naive-intervals = []

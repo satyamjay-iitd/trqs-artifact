@@ -1,0 +1,3 @@
+REGIONS (crossing = [37500, 46210, 45000, 51210])
+SELECT (c: class="vehicle.car", t: class="vehicle.truck", p: class="human.pedestrian.adult")
+WHERE DURATION(c.center INSIDE crossing AND t.center INSIDE crossing AND p.center INSIDE crossing, 25)

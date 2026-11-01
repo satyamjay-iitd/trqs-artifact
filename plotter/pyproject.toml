@@ -1,0 +1,24 @@
+[project]
+name = "benchplot"
+version = "0.1.0"
+description = "Plots for the VLDB'27 evaluation, generated from a trql-cli bench.db"
+readme = "README.md"
+authors = [
+    { name = "Satyam Jay", email = "satyamjay030@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.10",
+    # Already pulled in by pandas; declared because `plots/cooccurrence.py`
+    # imports it directly.
+    "numpy>=2.0",
+    "pandas>=2.3",
+    "typer>=0.21",
+]
+
+[project.scripts]
+benchplot = "benchplot.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.9.21,<0.10.0"]
+build-backend = "uv_build"

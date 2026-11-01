@@ -1,0 +1,30 @@
+[package]
+name = "trql-tui"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "trql-tui"
+path = "src/main.rs"
+
+[features]
+default = ["quadratic"]
+linear = ["trql/linear"]
+quadratic = ["trql/quadratic"]
+cubic = ["trql/cubic"]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+crossterm = "0.28"
+duckdb = { version = "~1.10505", default-features = false }
+trql = { path = "../trql", default-features = false, features = ["ingest"] }
+trql-types = { path = "../trql-types" }
+image = { version = "0.25", default-features = false, features = ["png"] }
+ratatui = "0.29"
+ratatui-image = { version = "9.0.0", default-features = false, features = ["crossterm"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

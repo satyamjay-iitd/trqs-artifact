@@ -1,0 +1,14 @@
+[package]
+name = "trql-instrument"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+authors = ["Satyam Jay"]
+
+[features]
+# Off by default: every entry point is an inlined no-op and the guard is a
+# zero-sized type, so instrumented builds pay nothing. Turn on only for the
+# query-time breakdown experiments (paper P4 / experiment C).
+enabled = []
+
+[dependencies]

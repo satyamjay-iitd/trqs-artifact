@@ -1,0 +1,3 @@
+REGIONS (junction = [187500, 127510, 192500, 130010])
+SELECT (c: class="vehicle.car")
+WHERE DURATION(c.center INSIDE junction, 120)

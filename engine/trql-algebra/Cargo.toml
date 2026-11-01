@@ -1,0 +1,48 @@
+[package]
+name = "trql-algebra"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["quadratic"]
+# Trajectory polynomial degree, forwarded to all poly-aware deps. Exactly one must be enabled.
+linear = [
+    "trql-poly/linear",
+    "trql-bbox-compiler/linear",
+    "trql-predicates/linear",
+    "trql-selector/linear",
+    "trql-storage/linear",
+]
+quadratic = [
+    "trql-poly/quadratic",
+    "trql-bbox-compiler/quadratic",
+    "trql-predicates/quadratic",
+    "trql-selector/quadratic",
+    "trql-storage/quadratic",
+]
+cubic = [
+    "trql-poly/cubic",
+    "trql-bbox-compiler/cubic",
+    "trql-predicates/cubic",
+    "trql-selector/cubic",
+    "trql-storage/cubic",
+]
+# Query-time breakdown instrumentation (paper P4). Off by default; benchmark-only.
+instrument = [
+    "trql-instrument/enabled",
+    "trql-bbox-compiler/instrument",
+    "trql-poly/instrument",
+]
+# Ablation: evaluate with materialized pair sets instead of 5-tuples. Benchmark-only.
+naive-intervals = ["trql-types/naive-intervals"]
+
+[dependencies]
+trql-bbox-compiler = { path = "../trql-bbox-compiler", default-features = false }
+trql-poly = { path = "../trql-poly", default-features = false }
+trql-instrument = { path = "../trql-instrument", default-features = false }
+trql-predicates = { path = "../trql-predicates", default-features = false }
+trql-selector = { path = "../trql-selector", default-features = false }
+trql-storage = { path = "../trql-storage", default-features = false }
+trql-types = { path = "../trql-types" }
+rustc-hash = "2"
+smallvec = "1.15.1"

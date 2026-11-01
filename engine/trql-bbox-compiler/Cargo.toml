@@ -1,0 +1,20 @@
+[package]
+name = "trql-bbox-compiler"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["quadratic"]
+# Trajectory polynomial degree. Forwards to the matching `trql-poly` feature and
+# selects the corresponding compiler module. Exactly one must be enabled.
+linear = ["trql-poly/linear"]
+quadratic = ["trql-poly/quadratic"]
+cubic = ["trql-poly/cubic"]
+# Query-time breakdown instrumentation (paper P4). Off by default; benchmark-only.
+instrument = ["trql-instrument/enabled", "trql-poly/instrument"]
+
+[dependencies]
+trql-poly = { path = "../trql-poly", default-features = false }
+trql-types = { path = "../trql-types" }
+trql-instrument = { path = "../trql-instrument", default-features = false }
+thiserror = "2"

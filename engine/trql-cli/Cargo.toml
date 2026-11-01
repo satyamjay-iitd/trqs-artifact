@@ -1,0 +1,44 @@
+[package]
+name = "trql-cli"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "trql-cli"
+path = "src/main.rs"
+
+[features]
+default = ["quadratic"]
+# Query-time stage breakdown (object selection / polynomial solving / temporal
+# relations). Off by default: the timing scopes cost a little on every predicate,
+# so a breakdown run's absolute times are inflated and only its proportions are
+# meaningful. Build with `--features instrument` for a breakdown.
+instrument = ["trql/instrument"]
+# Ablation: replace the 5-tuple interval sets with fully materialized pair sets,
+# to measure what the 5-tuple buys. Results are identical; only time and memory
+# change. Runs are recorded under the system name `TrQS-naive`.
+naive-intervals = ["trql/naive-intervals"]
+linear = ["trql/linear"]
+quadratic = ["trql/quadratic"]
+cubic = ["trql/cubic"]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+colored = "2"
+csv = "1"
+comfy-table = "7"
+# Links against the system libduckdb (see README): install DuckDB v1.5.5, which is what
+# `duckdb` 1.10505 pins `libduckdb-sys` to. `~` keeps that pin — a minor bump would demand
+# a different libduckdb than the one installed.
+duckdb = { version = "~1.10505", default-features = false }
+indicatif = "0.18"
+procfs = "0.17"
+rusqlite = { version = "0.32", features = ["bundled"] }
+trql = { path = "../trql", default-features = false, features = ["ingest"] }
+trql-types = { path = "../trql-types", features=["serialize"]}
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

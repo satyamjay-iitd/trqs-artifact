@@ -1,0 +1,31 @@
+Queries recorded in bench.db, as run.
+
+<name>.trql is the DSL verbatim -- no header, because trql-cli takes it as a
+command-line argument and a leading `--` is parsed as a flag.
+<name>.sql is the hand-written reference it was checked against.
+
+CL-overtake      clevrer_merged/video_00000+9999more      7 runs, err 0..16
+I24-journey4     i24_motion/post1                         8 runs, err 0..25
+I24-lane-any     i24_motion/post1                         8 runs, err 0..25
+I24-lane-truck   i24_motion/post1                         8 runs, err 0..25
+NS-crossing      nuscenes_maps/boston-seaport             9 runs, err 0..50
+NS-junction      nuscenes_maps/boston-seaport             9 runs, err 0..50
+ST-swap          merged/SoccerTrackv2-117092-1st+19more   9 runs, err 0..50
+SD-passclose     merged/bookstore_video0+59more           1 run,  err 0
+
+CYDET-cyclist    rekall_cydet_{raw,tracked}/0001          28 runs each, err 0..4
+
+CYDET-cyclist is Rekall's own tutorial query (tutorial 01, "Cyclist
+Detection"), ported to TrQL: a person's box intersects a bicycle's, with no
+duration constraint. It is measured by papers/vldb27/suite/bench_rekall.py,
+which runs Rekall's code on Rekall's released detections beside the reference
+SQL and the engine -- so this row is the only one in the suite whose answer is
+gated against a third system rather than two.
+
+SD-passclose is SD-approach with a proximity requirement: the biker and the
+pedestrian must come within 100 px on both axes for a second, strictly inside
+the pass. CONTAINS rather than AND, because AND on interval sets is equality
+and would demand the close spell occupy the whole pass. It cuts the answer from
+23,206 intervals to 3,305 on the 60-video merged set -- the OVERLAP alone
+constrains only relative position, so a biker on the far side of the frame
+qualifies while it is left-of and above.

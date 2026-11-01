@@ -1,0 +1,181 @@
+{
+  "video": "ytstream/uav_0006",
+  "window_s": [
+    180,
+    1080
+  ],
+  "window_frames": [
+    900,
+    5400
+  ],
+  "fps": 5,
+  "query_file": "UAV-rightturn-top.trql",
+  "region_names": [
+    "from_top",
+    "exit_west"
+  ],
+  "approach": [
+    25,
+    0,
+    80,
+    60
+  ],
+  "exit_right": [
+    0,
+    155,
+    40,
+    215
+  ],
+  "query": "REGIONS (from_top = [25, 0, 80, 60], exit_west = [0, 155, 40, 215])\nSELECT (v: class=car)\nWHERE DURATION(v.center INSIDE from_top, 3) THEN DURATION(v.center INSIDE exit_west, 3)",
+  "turns_in_whole_video": 22,
+  "turns": [
+    {
+      "oid": 476,
+      "turn_start_frame": 929,
+      "turn_end_frame": 949,
+      "turn_start_s": 185.8,
+      "turn_end_s": 189.8
+    },
+    {
+      "oid": 510,
+      "turn_start_frame": 968,
+      "turn_end_frame": 989,
+      "turn_start_s": 193.6,
+      "turn_end_s": 197.8
+    },
+    {
+      "oid": 534,
+      "turn_start_frame": 1000,
+      "turn_end_frame": 1014,
+      "turn_start_s": 200.0,
+      "turn_end_s": 202.8
+    },
+    {
+      "oid": 605,
+      "turn_start_frame": 1056,
+      "turn_end_frame": 1069,
+      "turn_start_s": 211.2,
+      "turn_end_s": 213.8
+    },
+    {
+      "oid": 680,
+      "turn_start_frame": 1432,
+      "turn_end_frame": 1455,
+      "turn_start_s": 286.4,
+      "turn_end_s": 291.0
+    },
+    {
+      "oid": 786,
+      "turn_start_frame": 1496,
+      "turn_end_frame": 1526,
+      "turn_start_s": 299.2,
+      "turn_end_s": 305.2
+    },
+    {
+      "oid": 820,
+      "turn_start_frame": 1528,
+      "turn_end_frame": 1547,
+      "turn_start_s": 305.6,
+      "turn_end_s": 309.4
+    },
+    {
+      "oid": 849,
+      "turn_start_frame": 1557,
+      "turn_end_frame": 1573,
+      "turn_start_s": 311.4,
+      "turn_end_s": 314.6
+    },
+    {
+      "oid": 979,
+      "turn_start_frame": 1940,
+      "turn_end_frame": 1957,
+      "turn_start_s": 388.0,
+      "turn_end_s": 391.4
+    },
+    {
+      "oid": 1110,
+      "turn_start_frame": 2057,
+      "turn_end_frame": 2081,
+      "turn_start_s": 411.4,
+      "turn_end_s": 416.2
+    },
+    {
+      "oid": 1132,
+      "turn_start_frame": 2084,
+      "turn_end_frame": 2102,
+      "turn_start_s": 416.8,
+      "turn_end_s": 420.4
+    },
+    {
+      "oid": 1151,
+      "turn_start_frame": 2111,
+      "turn_end_frame": 2128,
+      "turn_start_s": 422.2,
+      "turn_end_s": 425.6
+    },
+    {
+      "oid": 1278,
+      "turn_start_frame": 2477,
+      "turn_end_frame": 2493,
+      "turn_start_s": 495.4,
+      "turn_end_s": 498.6
+    },
+    {
+      "oid": 1764,
+      "turn_start_frame": 3457,
+      "turn_end_frame": 3469,
+      "turn_start_s": 691.4,
+      "turn_end_s": 693.8
+    },
+    {
+      "oid": 1826,
+      "turn_start_frame": 3505,
+      "turn_end_frame": 3529,
+      "turn_start_s": 701.0,
+      "turn_end_s": 705.8
+    },
+    {
+      "oid": 1857,
+      "turn_start_frame": 3533,
+      "turn_end_frame": 3552,
+      "turn_start_s": 706.6,
+      "turn_end_s": 710.4
+    },
+    {
+      "oid": 1869,
+      "turn_start_frame": 3548,
+      "turn_end_frame": 3565,
+      "turn_start_s": 709.6,
+      "turn_end_s": 713.0
+    },
+    {
+      "oid": 1967,
+      "turn_start_frame": 3926,
+      "turn_end_frame": 3939,
+      "turn_start_s": 785.2,
+      "turn_end_s": 787.8
+    },
+    {
+      "oid": 2192,
+      "turn_start_frame": 4376,
+      "turn_end_frame": 4484,
+      "turn_start_s": 875.2,
+      "turn_end_s": 896.8
+    },
+    {
+      "oid": 2240,
+      "turn_start_frame": 4455,
+      "turn_end_frame": 4506,
+      "turn_start_s": 891.0,
+      "turn_end_s": 901.2
+    },
+    {
+      "oid": 2290,
+      "turn_start_frame": 4511,
+      "turn_end_frame": 4523,
+      "turn_start_s": 902.2,
+      "turn_end_s": 904.6
+    }
+  ],
+  "straddling_window_excluded": []
+}

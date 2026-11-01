@@ -1,0 +1,2 @@
+SELECT (a: class=car, b: class=car)
+WHERE DURATION(a.cy < b.cy, 25) THEN DURATION(a.cy > b.cy, 25)

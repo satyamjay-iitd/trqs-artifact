@@ -1,0 +1,4 @@
+SELECT (s: class=semi, t: class=truck, v: class=van)
+WHERE DURATION(s.cy > 21100 AND s.cy < 22200
+           AND t.cy > 21100 AND t.cy < 22200
+           AND v.cy > 21100 AND v.cy < 22200, 50)

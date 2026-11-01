@@ -1,0 +1,23 @@
+[package]
+name = "trql-storage"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["quadratic"]
+# Trajectory polynomial degree, forwarded to `trql-poly`. Exactly one must be enabled.
+linear = ["trql-poly/linear"]
+quadratic = ["trql-poly/quadratic"]
+cubic = ["trql-poly/cubic"]
+# DuckDB ingestion: inspecting a sub-dataset's `duckdb.db` and converting it to
+# a `.trql`. Off by default so query-side crates don't pull in DuckDB.
+duckdb = ["dep:duckdb"]
+
+[dependencies]
+anyhow = "1"
+bincode = { version = "2.0.1", features = ["serde", "derive"] }
+duckdb = { version = "~1.10505", default-features = false, optional = true }
+trql-types = { path = "../trql-types" }
+trql-poly = { path = "../trql-poly", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

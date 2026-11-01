@@ -1,0 +1,15 @@
+[package]
+name = "trql-predicates"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["quadratic"]
+# Trajectory polynomial degree, forwarded to `trql-poly`. Exactly one must be enabled.
+linear = ["trql-poly/linear"]
+quadratic = ["trql-poly/quadratic"]
+cubic = ["trql-poly/cubic"]
+
+[dependencies]
+trql-types = { path = "../trql-types" }
+trql-poly = { path = "../trql-poly", default-features = false }

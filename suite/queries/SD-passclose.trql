@@ -1,0 +1,3 @@
+SELECT (b: class=biker, p: class=pedestrian)
+WHERE CONTAINS(OVERLAP(DURATION(b.cx < p.cx, 60), DURATION(b.cy < p.cy, 60)),
+               DURATION(b.cx <= p.cx + 100 AND b.cx >= p.cx - 100 AND b.cy <= p.cy + 100 AND b.cy >= p.cy - 100, 30))

@@ -1,0 +1,3 @@
+SELECT (v:)
+WHERE DURATION(v.cy > 21100 AND v.cy < 22200, 50)
+ THEN DURATION(v.cy > 22200 AND v.cy < 23450, 50)

@@ -1,0 +1,3 @@
+REGIONS (approach = [230, 280, 340, 540], exit_right = [800, 40, 960, 130])
+SELECT (v: class=car)
+WHERE DURATION(v.center INSIDE approach, 3) THEN DURATION(v.center INSIDE exit_right, 3)

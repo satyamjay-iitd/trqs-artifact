@@ -1,0 +1,31 @@
+[package]
+name = "trql-sql"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["quadratic"]
+# Trajectory polynomial degree, forwarded to all poly-aware deps. Exactly one must be enabled.
+# This crate never evaluates polynomials, but it reads `AnalyticalPred`, whose shape is
+# selected by these features, so it has to agree with the rest of the workspace.
+linear = [
+    "trql-algebra/linear",
+    "trql-bbox-compiler/linear",
+]
+quadratic = [
+    "trql-algebra/quadratic",
+    "trql-bbox-compiler/quadratic",
+]
+cubic = [
+    "trql-algebra/cubic",
+    "trql-bbox-compiler/cubic",
+]
+
+[dependencies]
+trql-algebra       = { path = "../trql-algebra", default-features = false }
+trql-bbox-compiler = { path = "../trql-bbox-compiler", default-features = false }
+trql-types         = { path = "../trql-types" }
+thiserror          = "2"
+
+[dev-dependencies]
+trql-dsl = { path = "../trql-dsl", default-features = false }

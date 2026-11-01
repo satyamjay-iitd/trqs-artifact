@@ -1,0 +1,35 @@
+[package]
+name = "trql-dsl"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["quadratic"]
+# Trajectory polynomial degree, forwarded to all poly-aware deps. Exactly one must be enabled.
+linear = [
+    "trql-poly/linear",
+    "trql-algebra/linear",
+    "trql-bbox-compiler/linear",
+    "trql-predicates/linear",
+]
+quadratic = [
+    "trql-poly/quadratic",
+    "trql-algebra/quadratic",
+    "trql-bbox-compiler/quadratic",
+    "trql-predicates/quadratic",
+]
+cubic = [
+    "trql-poly/cubic",
+    "trql-algebra/cubic",
+    "trql-bbox-compiler/cubic",
+    "trql-predicates/cubic",
+]
+
+[dependencies]
+trql-algebra   = { path = "../trql-algebra", default-features = false }
+trql-bbox-compiler = { path = "../trql-bbox-compiler", default-features = false }
+trql-predicates = { path = "../trql-predicates", default-features = false }
+trql-types     = { path = "../trql-types" }
+trql-poly      = { path = "../trql-poly", default-features = false }
+nom               = "7"
+thiserror         = "2"

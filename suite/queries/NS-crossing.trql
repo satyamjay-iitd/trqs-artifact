@@ -1,0 +1,4 @@
+REGIONS (crossing = [37500, 46210, 45000, 51210])
+SELECT (c: class="vehicle.car", p: class="human.pedestrian.adult")
+WHERE CONTAINS(DURATION(c.center INSIDE crossing, 60),
+               DURATION(p.center INSIDE crossing, 12))

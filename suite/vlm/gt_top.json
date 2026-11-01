@@ -1,0 +1,55 @@
+{
+  "video": "ytstream/uav_0006",
+  "window_s": [
+    180,
+    210
+  ],
+  "window_frames": [
+    900,
+    1050
+  ],
+  "fps": 5,
+  "query_file": "UAV-rightturn-top.trql",
+  "region_names": [
+    "from_top",
+    "exit_west"
+  ],
+  "approach": [
+    25,
+    0,
+    80,
+    60
+  ],
+  "exit_right": [
+    0,
+    155,
+    40,
+    215
+  ],
+  "query": "REGIONS (from_top = [25, 0, 80, 60], exit_west = [0, 155, 40, 215])\nSELECT (v: class=car)\nWHERE DURATION(v.center INSIDE from_top, 3) THEN DURATION(v.center INSIDE exit_west, 3)",
+  "turns_in_whole_video": 22,
+  "turns": [
+    {
+      "oid": 476,
+      "turn_start_frame": 929,
+      "turn_end_frame": 949,
+      "turn_start_s": 185.8,
+      "turn_end_s": 189.8
+    },
+    {
+      "oid": 510,
+      "turn_start_frame": 968,
+      "turn_end_frame": 989,
+      "turn_start_s": 193.6,
+      "turn_end_s": 197.8
+    },
+    {
+      "oid": 534,
+      "turn_start_frame": 1000,
+      "turn_end_frame": 1014,
+      "turn_start_s": 200.0,
+      "turn_end_s": 202.8
+    }
+  ],
+  "straddling_window_excluded": []
+}

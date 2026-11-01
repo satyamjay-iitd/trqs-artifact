@@ -1,0 +1,19 @@
+[package]
+name = "trql-poly"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+# default = ["quadratic"]
+# Degree of the fitted trajectory polynomials. Exactly one must be enabled.
+linear = []
+quadratic = []
+cubic = []
+# Query-time breakdown instrumentation (paper P4). Off by default; benchmark-only.
+instrument = ["trql-instrument/enabled"]
+
+[dependencies]
+bincode = { version = "2.0.1", features = ["serde", "derive"] }
+# trql-predicates = { path = "../trql-predicates" }
+trql-types = { path = "../trql-types" }
+trql-instrument = { path = "../trql-instrument", default-features = false }

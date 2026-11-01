@@ -1,0 +1,5 @@
+SELECT (v: class=car)
+WHERE DURATION(v.cy < 100, 10)
+ THEN DURATION(v.cy > 110 AND v.cy < 150, 10)
+ THEN DURATION(v.cy > 170 AND v.cy < 220, 10)
+ THEN DURATION(v.cy > 250, 10)

@@ -1,0 +1,480 @@
+# Every figure in the VLDB'27 evaluation, and the settings that draw it.
+#
+#   uv run benchplot render            # all of them
+#   uv run benchplot render -n speedup # one of them
+#   uv run benchplot kinds             # what a [[plots]] table may say
+#
+# Paths are relative to this file, so it draws the same figures from anywhere.
+
+[defaults]
+# Where `trql-cli … bench --bench-db` writes: the repository root.
+db = "../../bench.db"
+out_dir = "plots"
+format = "pdf"
+# How a (query, err) point measured more than once is collapsed:
+# latest | median | min. `latest` suits repeats that straddle a code change,
+# where only the newest describes the current engine.
+aggregate = "latest"
+# Kept in bench.db and in final_queries.md, where it earns its place as the
+# unselective control — but off the charts. A plot that names `queries`
+# overrides this; one that sets its own `exclude` replaces it.
+exclude = ["I24-lane-any"]
+
+[[plots]]
+name = "speedup"
+kind = "speedup"
+# Named rather than left to `exclude`, so benchmarking a new query cannot quietly
+# add a bar to the paper's headline figure — the VIRAT clips did exactly that.
+# Naming also fixes the order. These are the suite of `final_queries.md`.
+queries = [
+    "I24-journey4",
+    "I24-convoy",
+    "CL-overtake",
+    "NS-crossing",
+    "ST-swap-img",
+    "SD-carpass",
+]
+# log / accuracy / memory are this kind's own keys and all default to true;
+# they are written out here because this is the figure the paper ships.
+log = true
+accuracy = false
+memory = true
+# One bar per query fits a single column; drawn at that size so the type is not
+# scaled down twice.
+width = 3.4
+# Untiled runs only. The Stanford Drone set was also measured at
+# `--db-repeat 50` as a scaling check (332 M boxes, under the earlier
+# biker-vs-pedestrian form of this query); drawing that beside six untiled
+# datasets would compare
+# unlike sizes, and its 10.8 GB would swamp the memory panel.
+scales = [1]
+# ST-swap was re-measured on the panorama (image-coordinate) copy of SoccerTrack
+# after the pitch-coordinate copy turned out to be snapped to a 1%-of-pitch grid,
+# which no polynomial can fit across. The runs are recorded under a separate id so
+# both encodings stay in the database; the figure names the query, not the copy.
+# The headline figure draws one bar per query: the widest fitting budget at
+# which TrQS still reproduces the reference answer exactly -- precision and
+# recall both 1.0 -- which is the operating point the paper recommends. That
+# budget differs by video, which is the point: I24-Motion tolerates 25 stored
+# units, SoccerTrack 8, nuScenes 4, CLEVRER none at all, so the bar colours
+# differ across groups. An accuracy panel would be a row of 1.0s and is off;
+# the sweep behind the choice is Figure "fidelity".
+#
+# I24-Motion never loses exactness inside the sweep, so its bar is the widest
+# budget measured. It also has no eps=0 run to drop into: a lossless fit of its
+# intermittent tracks degenerates to roughly a segment per three boxes --
+# 89.6 M segments, 11.7 GB resident against DuckDB's 2.3 GB.
+# A keep list, not a drop list: the budgets this figure draws are a decision,
+# and every new budget measured for the percentile figure would otherwise land
+# here as an extra bar until someone remembered to exclude it.
+#
+# Stanford Drone is exact through eps=1 and never falls below 0.998 on either
+# metric out to eps=16. Both its predicates compare two moving centroids, but a
+# car crosses a pedestrian decisively, so few frames sit within the budget of
+# the threshold -- unlike the biker-vs-pedestrian form this replaced, which was
+# exact only at eps=0.
+[plots.keep_errs]
+"I24-journey4" = [25]
+"I24-convoy" = [25]
+"CL-overtake" = [0]
+"NS-crossing" = [4]
+"ST-swap-img" = [8]
+"SD-carpass" = [1]
+
+[plots.labels]
+"ST-swap-img" = "ST-swap"
+
+[[plots]]
+name = "fidelity"
+kind = "speedup"
+# The three queries that stop being exact within the sweep; the I24-Motion
+# queries never do, so they would draw three flat rows of 1.0.
+queries = ["CL-overtake", "NS-crossing", "ST-swap-img", "SD-carpass"]
+log = true
+accuracy = true
+memory = false
+# Single column, drawn at that size so the type is not scaled down twice.
+width = 3.4
+# Untiled runs only, matching the headline figure.
+scales = [1]
+
+# Starts where the headline figure stops: every budget here is strictly wider
+# than the one at which that query is still exact (eps=0 for CL-overtake,
+# 1 for SD-carpass, 4 for NS-crossing, 8 for ST-swap), so the two figures
+# partition
+# the sweep rather than overlapping at a shared bar. At most four per query,
+# which was the density the figure could carry.
+[plots.keep_errs]
+"CL-overtake" = [1, 4, 8, 16]
+"SD-carpass" = [2, 4, 8, 16]
+"NS-crossing" = [8, 16, 32, 50]
+"ST-swap-img" = [16, 32, 50]
+
+[plots.labels]
+"ST-swap-img" = "ST-swap"
+
+[[plots]]
+name = "compression"
+kind = "compression"
+# The two ends of the redundancy scale, one group each: a VIRAT parking lot where
+# 98 % of frames repeat the one before them, and a DETRAC motorway junction where
+# 0.3 % do (`scripts/virat_cdf.py` measures both). Both run the same query --
+# two vehicles converge (200 px apart, then within 70 px) -- so the panels compare
+# with like; a query naming a person could not run on DETRAC at all, which is why
+# this one takes both slots from `class=car`.
+#
+# DETRAC is read from its integer-pixel copy (`suite/build_detrac_px.py`):
+# UA-DETRAC annotates in floats and `trql-storage` truncates on ingest, so
+# against the original doubles the reference SQL and the engine disagree on
+# boundary cases for reasons that have nothing to do with the algebra.
+queries = ["VIRAT-meet", "DETRAC-meet"]
+# The tiled runs. Untiled, DETRAC is 38 k boxes and the engine's ~5 ms fixed
+# per-query cost starts to show at the wider budgets. `--db-repeat 10` lifts both
+# sides clear of that; x100 is not an option here, since the car-to-car join on
+# the parking lot spills DuckDB to disk (110 s, 42 GB) and the figure would be
+# measuring the spill.
+scales = [10]
+log = true
+time = true
+# Off at column width: the ratio stands over the group's last bar, and in 3.35
+# inches that text is wider than the three bars beside it. The caption carries
+# the two numbers instead.
+ratio_labels = false
+# On, and the kind labels only the bars that are *not* exact -- which on this
+# pair is TrQS past eps=16 on the parking lot and past eps=4 on the motorway.
+recall_labels = true
+# The second relational baseline: the same query over a copy of each clip with
+# every frame that repeats its predecessor dropped, measured at the same tiling
+# by papers/vldb27/suite/bench_dedup.py. Drawn as a dotted rule per clip -- it
+# does not see the error budget either.
+baselines = "../vldb27/suite/results-dedup.json"
+# One panel of a three-panel row spanning both columns: ~0.42 of a 7 in text
+# width, and published at the size it is drawn.
+width = 2.95
+height = 1.75
+format="pdf"
+
+[[plots]]
+name = "recall"
+kind = "recall"
+# Per key, keep the most accurate repeat rather than the newest. On this database
+# repeats agree exactly, so it changes no number here; it matters if a key is ever
+# re-measured across a code change. Biased by construction — see `collapse_repeats`.
+aggregate = "best"
+title = "Query accuracy on detector output, DETRAC"
+# Only the DETRAC queries carry ground-truth scores; every other query in the
+# database was run against annotation alone and has nothing to be scored against.
+#
+# Ordered by what each one asks for, so the figure reads left to right as the
+# query getting harder: one object and one phase, one object and two phases, two
+# objects and two phases. That ordering is what lets a reader tell temporal
+# composition apart from arity.
+queries = ["DETRAC-dwell", "DETRAC-approach", "DETRAC-pass"]
+metric = "recall"
+
+[[plots]]
+name = "precision"
+kind = "recall"
+# Per key, keep the most accurate repeat rather than the newest. On this database
+# repeats agree exactly, so it changes no number here; it matters if a key is ever
+# re-measured across a code change. Biased by construction — see `collapse_repeats`.
+aggregate = "best"
+title = "Query precision on detector output, DETRAC"
+# The other half of the recall figure. Gap smoothing bridges tracker
+# fragmentation, which recovers events — and invents some: a bridged hole is an
+# assertion the object was there. Shown beside the recall plot so the trade is
+# visible rather than implied.
+queries = ["DETRAC-dwell", "DETRAC-approach", "DETRAC-pass"]
+metric = "precision"
+
+[[plots]]
+name = "cooccurrence"
+kind = "cooccurrence"
+# A column-width figure for the paper body, so it ships as a PDF: the text in it
+# is typeset at the size it will be read at rather than rasterised and shrunk.
+format = "pdf"
+# Measured from the datasets by `tools/cooccurrence_stats.py`, not by
+# `trql-cli bench` — this kind reads no bench.db, so none of the selection keys
+# above apply to it.
+stats = "data/cooccurrence_stats.json"
+# The longest continuous video measured — 52 minutes, 5,802 objects — because
+# the separation between the quadratic bound and the pairs that actually
+# co-occur is what grows with video length, and a 2-minute clip barely shows it.
+# The cache also holds DETRAC, VIRAT, MEVA, Stanford Drone and I-24 MOTION;
+# another `[[plots]]` table naming one of those draws it.
+label = "YTStream"
+ratio_labels = true
+legend = true
+
+# Not a figure the paper ships. Every query at the lossless setting, which is
+# where the suite started before I24-Motion's eps=0 memory (11.7 GB against
+# DuckDB's 1.7-2.3 GB) pushed its bars to eps=1. Drawn so that trade is visible
+# in one place.
+[[plots]]
+name = "lossless"
+kind = "speedup"
+title = "All queries at $\\varepsilon = 0$ (lossless)"
+queries = [
+    "I24-journey4",
+    "I24-convoy",
+    "CL-overtake",
+    "NS-crossing",
+    "ST-swap-img",
+    "SD-carpass",
+]
+log = true
+accuracy = false
+memory = true
+width = 3.4
+errs = [0]
+scales = [1]
+
+[plots.labels]
+"ST-swap-img" = "ST-swap"
+
+# The headline figure: every query at five budgets of its own, set as
+# percentiles of that dataset's per-timestep displacement (plots/displacement_cdf).
+# A budget means nothing across datasets -- it is in whatever units the dataset
+# stores coordinates in -- so the budgets differ per group, the colours name the
+# percentile rather than the number, and `budgets` is what maps one to the other.
+# Where percentiles coincide (p15 = p25 = 0 on half the datasets) the group
+# draws one bar, coloured for the lowest of them; `err_labels` puts the budget
+# itself on every bar, which is what tells a reader a group of three is three
+# distinct budgets rather than two missing runs.
+[[plots]]
+name = "main"
+kind = "speedup"
+queries = [
+    "I24-journey4",
+    "I24-convoy",
+    "CL-overtake",
+    "NS-crossing",
+    "ST-swap-img",
+    "SD-carpass",
+]
+log = true
+accuracy = true
+memory = true
+scales = [1]
+rank_labels = ["p15", "p25", "p50", "p75", "p99"]
+err_labels = true
+legend_inside = true
+# The paper's headline figure, in one column: drawn at the width TeX will
+# publish it at, so nothing is scaled twice.
+width = 3.4
+height = 3.6
+
+[plots.budgets]
+"I24-journey4" = [30, 55, 148, 364, 487]
+"I24-convoy" = [30, 55, 148, 364, 487]
+"NS-crossing" = [0, 0, 0, 4, 102]
+"ST-swap-img" = [0, 0, 1, 2, 9]
+"CL-overtake" = [0, 0, 1, 2, 8]
+"SD-carpass" = [0, 0, 0, 2, 7]
+
+[plots.labels]
+"I24-journey4" = "Q1"
+"I24-convoy" = "Q2"
+"CL-overtake" = "Q3"
+"NS-crossing" = "Q4"
+"ST-swap-img" = "Q5"
+"SD-carpass" = "Q6"
+
+# The headline figure at its first budget only (p15), speedup and memory side by
+# side with queries down the shared axis. Same `budgets` as `main`: the first
+# entry of each is the one drawn.
+[[plots]]
+name = "p15"
+kind = "p15"
+format = "pdf"
+queries = [
+    "I24-journey4",
+    "I24-convoy",
+    "CL-overtake",
+    "NS-crossing",
+    "ST-swap-img",
+    "SD-carpass",
+]
+scales = [1]
+width = 3.4
+height = 1.5
+
+[plots.budgets]
+"I24-journey4" = [30, 55, 148, 364, 487]
+"I24-convoy" = [30, 55, 148, 364, 487]
+"NS-crossing" = [0, 0, 0, 4, 102]
+"ST-swap-img" = [0, 0, 1, 2, 9]
+"CL-overtake" = [0, 0, 1, 2, 8]
+"SD-carpass" = [0, 0, 0, 2, 7]
+
+[plots.labels]
+"I24-journey4" = "Q1"
+"I24-convoy" = "Q2"
+"CL-overtake" = "Q3"
+"NS-crossing" = "Q4"
+"ST-swap-img" = "Q5"
+"SD-carpass" = "Q6"
+
+# Error-budget ablation: every budget measured for each of the six queries, as
+# one point per budget at (speedup, F1). Two rows of three, one panel per query,
+# in the headline figure's order and with its Q-names. All budgets measured are
+# drawn, not the five percentile ones: this is the sweep the headline figure's
+# budgets were picked from.
+[[plots]]
+name = "epsilon"
+kind = "epsilon"
+format = "pdf"
+# Fit each panel's F1 range independently, keeping 1.0 aligned.
+align_one = true
+queries = [
+    "I24-convoy",
+    "CL-overtake",
+    "NS-crossing",
+]
+scales = [1]
+rows = 1
+cols = 3
+width = 7.0
+height = 2.0
+# The budgets are a percentile ladder of each dataset's own motion -- the
+# per-object, consecutive-frame centre displacement -- so a point labelled p90
+# is the budget that covers 90% of the steps that dataset actually contains.
+# They are in each dataset's own coordinate units, so the three panels are not
+# comparable; each labels its own.
+#
+# `show` lists all six, so every budget named below is drawn; narrow it to draw
+# fewer without re-measuring. `[plots.eps]` is the other way to select -- an
+# explicit list per query, with no percentile names -- and is unused here. The
+# hand-trimmed lists it held are kept commented out below.
+rank_labels = ["p15", "p50", "p75", "p90", "p95", "p99", "p99.9"]
+show = ["p15", "p50", "p75", "p90", "p95", "p99", "p99.9"]
+# Shape per rung with one shared legend, rather than text under each point:
+# above p75 the budget buys almost no speed on Q2, so five of its six points
+# land inside 5 ms and no per-point label can fit between them.
+legend_names = true
+
+[plots.labels]
+"I24-convoy" = "Q2"
+"CL-overtake" = "Q3"
+"NS-crossing" = "Q4"
+
+# p100 was measured and dropped: it is the largest single step in the dataset,
+# set by one outlier track (3144 against a p99.9 of 540 on i24, 475 against 11
+# on CLEVRER), so it bounds the ladder rather than being a budget anyone would
+# choose -- and it was the only rung that cost real accuracy. Its runs are
+# still in bench.db, so adding "p100" back to `rank_labels`/`show` with 3144,
+# 475, 1000 redraws it without re-measuring.
+#
+# p15 and p50 are 0 on CLEVRER and 0/0.5 on nuScenes: half of what those
+# datasets' objects do between consecutive frames is sub-pixel, so the tight
+# end of their ladder is the lossless budget itself.
+[plots.budgets]
+"I24-convoy" = [34, 169, 372, 431, 454, 490, 540]
+"CL-overtake" = [0, 1, 2, 4, 5, 8, 11]
+"NS-crossing" = [0, 0.5, 4, 18, 51, 104, 154]
+
+# Previous hand-picked selection, superseded by the ladder above:
+# [plots.eps]
+# "I24-convoy" = [0, 2, 30, 55, 178, 450]
+# "CL-overtake" = [0, 1, 2, 8, 20, 32, 48, 64]
+# "NS-crossing" = [0, 1, 4, 12, 16, 20, 24, 250]
+
+# Rekall on its own tutorial query, beside the frame-expanded SQL and the
+# engine, against input size (papers/vldb27/suite/bench_rekall.py). Reads that
+# script's JSON rather than bench.db, since the Rekall column is not a
+# `trql-cli bench` run.
+#
+# `tracked` is the like-for-like variant: Rekall's release has no track ids, so
+# `raw` leaves the engine one verbatim segment per detection -- an honest floor
+# (1.7x over DuckDB at 5.3 M boxes) but not the regime the engine is for. Both
+# are in the JSON; `variant = "raw"` draws the other one.
+#
+# Rekall is drawn in its faster configuration only -- its `IntervalSetMapping`
+# keyed by frame, so each join sees one frame's boxes rather than the whole
+# video's. The alternative is dominated by a list-slice copy internal to
+# `IntervalSet.join`, so drawing both would put an implementation artifact on the
+# same axis as the query. `whole = true` brings it back as a dashed line.
+#
+# eps=0 because that is the budget gated on reproducing Rekall's answer exactly,
+# and on this query the wider budgets are within noise of it: box overlap is too
+# coarse a predicate for a few pixels of fit error to flip.
+[[plots]]
+name = "rekall"
+kind = "rekall"
+format = "pdf"
+variant = "tracked"
+err = 0
+# Drawn and published at the same size, so nothing is scaled twice: the body
+# includes it at 0.42\linewidth, a little under half a column. Below 2.4 in the
+# kind drops the thread count from the DuckDB label, which is what lets the
+# legend sit in two rows rather than three -- a row of legend costs a decade of
+# the panel at this width.
+width = 1.4
+height = 1.5
+
+# Two queries over one aerial video, both asking for (object, interval) pairs:
+# Q1 is every car turning right out of the queue lane, Q2 every car entering
+# from the top of the frame and turning right. They select disjoint sets of
+# cars, so they are different questions of the same footage.
+#
+# (a) Cumulative cost against query count. The engine pays detection and
+# tracking once (vlm/ingest_cost.py, 49.9 s with the largest YOLO11 checkpoint)
+# and then answers in milliseconds, so its line is flat; the model has no
+# persistent state to re-use and must re-read the video per question, so its
+# line is linear. One query cannot tell those shapes apart, which is why there
+# are two. k = 1,2 are measured and solid; past that the mean measured
+# per-query cost is extrapolated and drawn dashed.
+#
+# (b) F1 per query, so the cost panel is not read on its own. The engine's F1 is
+# 1.0 **by construction** -- the TrQL region query defines the event being
+# scored -- and Q2's manoeuvre is shorter and in a corner of the frame, so its
+# F1 is not comparable with Q1's. Neither panel's claim rests on that
+# comparison. The caption says both.
+#
+# The 30 s window is deliberately absent: five ground-truth turns quantise
+# recall into steps of 0.2, so that cell cannot carry a figure. It is in the
+# suite README.
+#
+# Reads results-vlm-600s.json, results-vlm-top-600s.json and ingest.json, not
+# bench.db.
+[[plots]]
+name = "vlm"
+kind = "vlm"
+format = "pdf"
+with_ingest = true
+# The 15 min window (3:00-18:00 of the same video), which nests the 30 s and
+# 10 min cells drawn in earlier revisions. `window = "600s"` draws the 10 min
+# one; `right_panel = "length"` swaps (b) for cost against video length.
+window = "900s"
+kmax = 10
+# Published at \linewidth (one column of the two-column body), so nothing is
+# scaled twice.
+width = 3.3
+height = 1.7
+
+# Cost of a first and a second query at three video lengths, with precision and
+# recall printed over each bar. One panel per window, one group per system, two
+# bars per group.
+#
+# The engine's pair is the argument: the first bar carries ingestion, the second
+# is the query alone -- four orders of magnitude smaller -- while each model's
+# two bars are the same height, because a prompt has nothing to re-use and
+# re-reads the video every time. The y axis is logarithmic for exactly that
+# reason: on a linear one the engine's second bar would be invisible.
+#
+# The engine's P and R are 1.00 **by construction** (the TrQL query defines the
+# event scored), so they report expressibility, not an accuracy win. The caption
+# must say so. P and R are printed rather than plotted because the axis is time:
+# comparing bar heights compares cost, and the labels stop that reading as
+# quality.
+#
+# Drawn at 7 in, so it belongs in a `figure*` spanning both columns.
+#
+# Reads results-vlm*.json and ingest.json, not bench.db.
+[[plots]]
+name = "vlmbars"
+kind = "vlmbars"
+format = "pdf"
+with_ingest = true
+width = 5.8
+height = 2.1

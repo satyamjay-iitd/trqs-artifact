@@ -1,0 +1,2 @@
+SELECT (b: class=biker, p: class=pedestrian, q: class=pedestrian)
+WHERE DURATION(b.cx > p.cx AND b.cx < q.cx AND q.cx < p.cx + 200, 90)

@@ -1,0 +1,4 @@
+SELECT (a:, b:)
+WHERE DURATION(a.cx < b.cx, 5)
+ THEN DURATION(a.cy < 160, 1)
+ THEN DURATION(a.cx > b.cx, 5)

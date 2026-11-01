@@ -1,0 +1,2 @@
+SELECT (p: class=person, b: class=bicycle)
+WHERE p.x1 < b.x2 AND b.x1 < p.x2 AND p.y1 < b.y2 AND b.y1 < p.y2

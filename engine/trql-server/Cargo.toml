@@ -1,0 +1,32 @@
+[package]
+name = "trql-server"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "trql-server"
+path = "src/main.rs"
+
+[features]
+default = ["quadratic"]
+# Trajectory polynomial degree, forwarded to all poly-aware deps. Exactly one must be enabled.
+linear = ["trql/linear", "trql-dsl/linear", "trql-bbox-compiler/linear"]
+quadratic = ["trql/quadratic", "trql-dsl/quadratic", "trql-bbox-compiler/quadratic"]
+cubic = ["trql/cubic", "trql-dsl/cubic", "trql-bbox-compiler/cubic"]
+
+[dependencies]
+trql        = { path = "../trql", default-features = false }
+trql-dsl    = { path = "../trql-dsl", default-features = false }
+trql-bbox-compiler = { path = "../trql-bbox-compiler", default-features = false }
+trql-types  = { path = "../trql-types", features = ["serialize"] }
+axum           = { version = "0.8", features = ["multipart"] }
+tower          = { version = "0.5", features = ["util"] }
+tower-http     = { version = "0.6", features = ["fs"] }
+tokio          = { version = "1", features = ["full"] }
+serde          = { version = "1", features = ["derive"] }
+serde_json     = "1"
+clap           = { version = "4", features = ["derive"] }
+anyhow         = "1"
+roxmltree      = "0.20"
+utoipa = {version="5.3.1", features=["axum_extras"] }
+utoipa-swagger-ui = { version = "9", features = ["axum", "vendored"] }

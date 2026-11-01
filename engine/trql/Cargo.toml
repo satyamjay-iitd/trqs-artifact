@@ -1,0 +1,63 @@
+[package]
+name = "trql"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["quadratic"]
+# Trajectory polynomial degree, forwarded to all poly-aware deps. Exactly one must be enabled.
+linear = [
+    "trql-poly/linear",
+    "trql-algebra/linear",
+    "trql-dsl/linear",
+    "trql-predicates/linear",
+    "trql-storage/linear",
+    "trql-bbox-compiler/linear",
+]
+quadratic = [
+    "trql-poly/quadratic",
+    "trql-algebra/quadratic",
+    "trql-dsl/quadratic",
+    "trql-predicates/quadratic",
+    "trql-storage/quadratic",
+    "trql-bbox-compiler/quadratic",
+]
+cubic = [
+    "trql-poly/cubic",
+    "trql-algebra/cubic",
+    "trql-dsl/cubic",
+    "trql-predicates/cubic",
+    "trql-storage/cubic",
+    "trql-bbox-compiler/cubic",
+]
+# DuckDB ingestion (`storage::convert` / `storage::duckdb_meta`). Off by
+# default; enabled by the front ends that build `.trql` files.
+ingest = ["trql-storage/duckdb"]
+# Query-time breakdown instrumentation (paper P4). Off by default; benchmark-only.
+instrument = [
+    "trql-algebra/instrument",
+    "trql-poly/instrument",
+    "trql-bbox-compiler/instrument",
+]
+# Ablation: evaluate with materialized pair sets instead of 5-tuples. Benchmark-only.
+naive-intervals = ["trql-algebra/naive-intervals"]
+
+[dependencies]
+anyhow = "1"
+bincode = { version = "2.0.1", features = ["serde", "derive"] }
+clap = { version = "4", features = ["derive"] }
+rustc-hash = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+csv = "1"
+duckdb = { version = "~1.10505", default-features = false }
+trql-poly = { path = "../trql-poly", default-features = false }
+trql-algebra = { path = "../trql-algebra", default-features = false }
+trql-dsl = { path = "../trql-dsl", default-features = false }
+trql-predicates = { path = "../trql-predicates", default-features = false }
+trql-storage = { path = "../trql-storage", default-features = false }
+trql-types = { path = "../trql-types" }
+
+[dev-dependencies]
+criterion = { version = "0.5.1", features = ["html_reports"] }
+trql-bbox-compiler = { path = "../trql-bbox-compiler", default-features = false }

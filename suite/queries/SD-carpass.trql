@@ -1,0 +1,2 @@
+SELECT (c: class=car, p: class=pedestrian)
+WHERE OVERLAP(DURATION(c.cx < p.cx, 60), DURATION(c.cy < p.cy, 60))

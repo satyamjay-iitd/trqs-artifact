@@ -1,0 +1,5 @@
+SELECT (p: class=person, c: class=car)
+WHERE DURATION(p.cx > c.cx + 300 OR p.cx < c.cx - 300
+            OR p.cy > c.cy + 300 OR p.cy < c.cy - 300, 25)
+ THEN DURATION(p.cx <= c.cx + 100 AND p.cx >= c.cx - 100
+           AND p.cy <= c.cy + 100 AND p.cy >= c.cy - 100, 50)

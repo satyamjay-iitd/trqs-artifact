@@ -1,0 +1,2 @@
+SELECT (a: class=playerA, b: class=playerB)
+WHERE DURATION(a.cx < b.cx, 25) THEN DURATION(a.cx > b.cx, 25)

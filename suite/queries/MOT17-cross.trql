@@ -1,0 +1,2 @@
+SELECT (p: class=pedestrian)
+WHERE DURATION(p.cy < 250, 15) THEN DURATION(p.cy > 350, 15)

@@ -1,0 +1,2 @@
+SELECT (a: class=pedestrian, b: class=pedestrian)
+WHERE DURATION(a.cy < b.cy, 25) THEN DURATION(a.cy > b.cy, 25)
