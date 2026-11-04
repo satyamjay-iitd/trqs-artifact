@@ -2746,7 +2746,6 @@ dependencies = [
 name = "trql-selector"
 version = "0.1.0"
 dependencies = [
- "criterion",
  "smallvec",
  "trql-poly",
  "trql-storage",

@@ -15,10 +15,3 @@ smallvec = "1.15.1"
 trql-poly = { path = "../trql-poly", default-features = false }
 trql-storage = { path = "../trql-storage", default-features = false }
 trql-types = { path = "../trql-types" }
-
-[dev-dependencies]
-criterion = { version = "0.5.1", features = ["html_reports"] }
-
-[[bench]]
-name = "selector"
-harness = false

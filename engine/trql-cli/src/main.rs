@@ -114,7 +114,8 @@ enum Commands {
         query_id: String,
         /// Query in the TrQL DSL.
         query: String,
-        /// How many times to rebuild/reload the database under test.
+        /// Dataset replication factor: 1 uses the original data; N tiles it N
+        /// times with offset object and frame ids to benchmark larger inputs.
         db_repeat: u32,
         /// How many times to run the query per loaded database.
         run_repeat: u32,
@@ -122,8 +123,8 @@ enum Commands {
         /// adding precision/recall/IoU to the report.
         #[arg(long)]
         gt: Option<PathBuf>,
-        /// SQLite results database to append this run to, in the schema
-        /// `papers/plotter/` reads.
+        /// Append this run to the suite's SQLite results schema.
+        /// Use --bench-db with --sql for the current plotter's paired schema.
         #[arg(long)]
         results_db: Option<PathBuf>,
         /// Equivalent SQL for this query, as a file containing one `SELECT`

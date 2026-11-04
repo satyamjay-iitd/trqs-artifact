@@ -1,0 +1,9 @@
+/engine/target/
+/.build/
+/.trqs-pyenv/
+/.venv-detect/
+/results/
+/data-artifact/
+/datasets/
+/*.pt
+__pycache__/

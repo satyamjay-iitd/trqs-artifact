@@ -1,7 +1,7 @@
 //! Append benchmark runs to the SQLite results database.
 //!
-//! Mirrors `evaluator/src/db.rs` so the plot scripts under `papers/plotter/`
-//! (see its `plotter/models.py`) read rows written here exactly as they read
+//! Mirrors the older evaluator's SQLite schema so legacy evaluation tools
+//! can read rows written here exactly as they read
 //! the evaluator's: the same `systems` / `queries` / `runs` tables, with the
 //! same column names and types.
 //!

@@ -36,9 +36,13 @@
 //! checked separately, by differential testing against a brute-force reference that
 //! enumerates concrete intervals directly and never uses the 5-tuple encoding:
 //!
+//! Run from the repository root (requires Python `duckdb` and Rust/Cargo):
+//!
 //! ```text
-//! datasets/.venv/bin/python trql-sql/tests/differential.py
+//! .trqs-pyenv/bin/python engine/trql-sql/tests/differential.py
 //! ```
+//!
+//! Add `--real-db path/to/soccernet/clip/duckdb.db` for the optional real-clip cases.
 //!
 //! It compares denotations — the full set of `(s, e)` pairs — over a synthetic fixture and
 //! a slice of a real clip. The fixture is deliberately built to reach the awkward corners
