@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-detect_track.py — Run a detector+tracker over one video and write a FrameQL
+detect_track.py — Run a detector+tracker over one video and write a TrQS
 DuckDB (the `objects` + `bbox` tables the rest of the pipeline expects).
 
-This is the worker invoked by the frameql-tui "detect" action, one process per
-video. It is intentionally machine-friendly: progress is reported on stdout as
+This is the worker invoked by `trql-cli detect run`, the `trql-tui` detect action,
+and the VLM ingestion timer, one process per video. Progress is reported on stdout as
 `PROGRESS <done> <total>` lines and a final `DONE <n_objs> <n_bbox>` line, so
 the TUI can drive a progress bar. Everything else (model load chatter, etc.)
 goes to stderr.
 
-Output schema (matches frameql-tui/src/convert.rs expectations):
+Output schema (consumed by engine/trql-storage/src/convert.rs):
   objects(oid INTEGER, class VARCHAR)         -- one row per track, majority class
   bbox(oid INTEGER, fid INTEGER, x1,y1,x2,y2 INTEGER)  -- fid is 0-based
 
