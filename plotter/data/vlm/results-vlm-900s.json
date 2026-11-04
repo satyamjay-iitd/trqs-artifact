@@ -1,0 +1,4434 @@
+{
+  "model": "gemini-4-argon",
+  "clip": "papers/vldb27/suite/vlm/clip/uav0006_180_1080.mp4",
+  "prompt": "This is a 15-minute aerial video of road traffic recorded at 5 frames per second.\n\nIdentify every car that makes a right turn during the video.\n\nReturn ONLY a JSON array and nothing else. Each element must be:\n{\"box_2d\": [ymin, xmin, ymax, xmax], \"start\": \"MM:SS\", \"end\": \"MM:SS\"}\n\n- box_2d locates that car at the moment its turn begins, in normalised 0-1000 coordinates.\n- start and end bound the turn itself, not the car's whole time on screen.\n- If no car does this, return [].\n",
+  "objects_in_window": 2170,
+  "event": "every car that makes a right turn",
+  "ground_truth": {
+    "video": "ytstream/uav_0006",
+    "window_s": [
+      180,
+      1080
+    ],
+    "window_frames": [
+      900,
+      5400
+    ],
+    "fps": 5,
+    "query_file": "UAV-rightturn.trql",
+    "region_names": [
+      "approach",
+      "exit_right"
+    ],
+    "approach": [
+      230,
+      280,
+      340,
+      540
+    ],
+    "exit_right": [
+      800,
+      40,
+      960,
+      130
+    ],
+    "query": "REGIONS (approach = [230, 280, 340, 540], exit_right = [800, 40, 960, 130])\nSELECT (v: class=car)\nWHERE DURATION(v.center INSIDE approach, 3) THEN DURATION(v.center INSIDE exit_right, 3)",
+    "turns_in_whole_video": 78,
+    "turns": [
+      {
+        "oid": 446,
+        "turn_start_frame": 928,
+        "turn_end_frame": 989,
+        "turn_start_s": 185.6,
+        "turn_end_s": 197.8
+      },
+      {
+        "oid": 449,
+        "turn_start_frame": 943,
+        "turn_end_frame": 996,
+        "turn_start_s": 188.6,
+        "turn_end_s": 199.2
+      },
+      {
+        "oid": 499,
+        "turn_start_frame": 958,
+        "turn_end_frame": 1007,
+        "turn_start_s": 191.6,
+        "turn_end_s": 201.4
+      },
+      {
+        "oid": 508,
+        "turn_start_frame": 975,
+        "turn_end_frame": 1032,
+        "turn_start_s": 195.0,
+        "turn_end_s": 206.4
+      },
+      {
+        "oid": 460,
+        "turn_start_frame": 986,
+        "turn_end_frame": 1048,
+        "turn_start_s": 197.2,
+        "turn_end_s": 209.6
+      },
+      {
+        "oid": 524,
+        "turn_start_frame": 996,
+        "turn_end_frame": 1066,
+        "turn_start_s": 199.2,
+        "turn_end_s": 213.2
+      },
+      {
+        "oid": 531,
+        "turn_start_frame": 1007,
+        "turn_end_frame": 1082,
+        "turn_start_s": 201.4,
+        "turn_end_s": 216.4
+      },
+      {
+        "oid": 648,
+        "turn_start_frame": 1109,
+        "turn_end_frame": 1157,
+        "turn_start_s": 221.8,
+        "turn_end_s": 231.4
+      },
+      {
+        "oid": 644,
+        "turn_start_frame": 1119,
+        "turn_end_frame": 1168,
+        "turn_start_s": 223.8,
+        "turn_end_s": 233.6
+      },
+      {
+        "oid": 757,
+        "turn_start_frame": 1484,
+        "turn_end_frame": 1532,
+        "turn_start_s": 296.8,
+        "turn_end_s": 306.4
+      },
+      {
+        "oid": 781,
+        "turn_start_frame": 1495,
+        "turn_end_frame": 1548,
+        "turn_start_s": 299.0,
+        "turn_end_s": 309.6
+      },
+      {
+        "oid": 810,
+        "turn_start_frame": 1517,
+        "turn_end_frame": 1568,
+        "turn_start_s": 303.4,
+        "turn_end_s": 313.6
+      },
+      {
+        "oid": 824,
+        "turn_start_frame": 1537,
+        "turn_end_frame": 1593,
+        "turn_start_s": 307.4,
+        "turn_end_s": 318.6
+      },
+      {
+        "oid": 841,
+        "turn_start_frame": 1555,
+        "turn_end_frame": 1616,
+        "turn_start_s": 311.0,
+        "turn_end_s": 323.2
+      },
+      {
+        "oid": 839,
+        "turn_start_frame": 1565,
+        "turn_end_frame": 1629,
+        "turn_start_s": 313.0,
+        "turn_end_s": 325.8
+      },
+      {
+        "oid": 865,
+        "turn_start_frame": 1586,
+        "turn_end_frame": 1647,
+        "turn_start_s": 317.2,
+        "turn_end_s": 329.4
+      },
+      {
+        "oid": 887,
+        "turn_start_frame": 1625,
+        "turn_end_frame": 1682,
+        "turn_start_s": 325.0,
+        "turn_end_s": 336.4
+      },
+      {
+        "oid": 998,
+        "turn_start_frame": 1969,
+        "turn_end_frame": 2009,
+        "turn_start_s": 393.8,
+        "turn_end_s": 401.8
+      },
+      {
+        "oid": 1019,
+        "turn_start_frame": 1987,
+        "turn_end_frame": 2041,
+        "turn_start_s": 397.4,
+        "turn_end_s": 408.2
+      },
+      {
+        "oid": 1108,
+        "turn_start_frame": 2062,
+        "turn_end_frame": 2114,
+        "turn_start_s": 412.4,
+        "turn_end_s": 422.8
+      },
+      {
+        "oid": 1116,
+        "turn_start_frame": 2085,
+        "turn_end_frame": 2136,
+        "turn_start_s": 417.0,
+        "turn_end_s": 427.2
+      },
+      {
+        "oid": 1131,
+        "turn_start_frame": 2094,
+        "turn_end_frame": 2148,
+        "turn_start_s": 418.8,
+        "turn_end_s": 429.6
+      },
+      {
+        "oid": 1139,
+        "turn_start_frame": 2105,
+        "turn_end_frame": 2159,
+        "turn_start_s": 421.0,
+        "turn_end_s": 431.8
+      },
+      {
+        "oid": 1157,
+        "turn_start_frame": 2433,
+        "turn_end_frame": 2494,
+        "turn_start_s": 486.6,
+        "turn_end_s": 498.8
+      },
+      {
+        "oid": 1162,
+        "turn_start_frame": 2446,
+        "turn_end_frame": 2503,
+        "turn_start_s": 489.2,
+        "turn_end_s": 500.6
+      },
+      {
+        "oid": 1235,
+        "turn_start_frame": 2458,
+        "turn_end_frame": 2515,
+        "turn_start_s": 491.6,
+        "turn_end_s": 503.0
+      },
+      {
+        "oid": 1186,
+        "turn_start_frame": 2471,
+        "turn_end_frame": 2530,
+        "turn_start_s": 494.2,
+        "turn_end_s": 506.0
+      },
+      {
+        "oid": 1348,
+        "turn_start_frame": 2548,
+        "turn_end_frame": 2600,
+        "turn_start_s": 509.6,
+        "turn_end_s": 520.0
+      },
+      {
+        "oid": 1356,
+        "turn_start_frame": 2558,
+        "turn_end_frame": 2613,
+        "turn_start_s": 511.6,
+        "turn_end_s": 522.6
+      },
+      {
+        "oid": 1363,
+        "turn_start_frame": 2572,
+        "turn_end_frame": 2627,
+        "turn_start_s": 514.4,
+        "turn_end_s": 525.4
+      },
+      {
+        "oid": 1368,
+        "turn_start_frame": 2585,
+        "turn_end_frame": 2642,
+        "turn_start_s": 517.0,
+        "turn_end_s": 528.4
+      },
+      {
+        "oid": 1364,
+        "turn_start_frame": 2602,
+        "turn_end_frame": 2668,
+        "turn_start_s": 520.4,
+        "turn_end_s": 533.6
+      },
+      {
+        "oid": 1410,
+        "turn_start_frame": 2622,
+        "turn_end_frame": 2812,
+        "turn_start_s": 524.4,
+        "turn_end_s": 562.4
+      },
+      {
+        "oid": 1504,
+        "turn_start_frame": 2955,
+        "turn_end_frame": 2999,
+        "turn_start_s": 591.0,
+        "turn_end_s": 599.8
+      },
+      {
+        "oid": 1510,
+        "turn_start_frame": 2968,
+        "turn_end_frame": 3016,
+        "turn_start_s": 593.6,
+        "turn_end_s": 603.2
+      },
+      {
+        "oid": 1530,
+        "turn_start_frame": 2978,
+        "turn_end_frame": 3030,
+        "turn_start_s": 595.6,
+        "turn_end_s": 606.0
+      },
+      {
+        "oid": 1536,
+        "turn_start_frame": 2989,
+        "turn_end_frame": 3043,
+        "turn_start_s": 597.8,
+        "turn_end_s": 608.6
+      },
+      {
+        "oid": 1538,
+        "turn_start_frame": 3006,
+        "turn_end_frame": 3063,
+        "turn_start_s": 601.2,
+        "turn_end_s": 612.6
+      },
+      {
+        "oid": 1571,
+        "turn_start_frame": 3017,
+        "turn_end_frame": 3073,
+        "turn_start_s": 603.4,
+        "turn_end_s": 614.6
+      },
+      {
+        "oid": 1622,
+        "turn_start_frame": 3064,
+        "turn_end_frame": 3112,
+        "turn_start_s": 612.8,
+        "turn_end_s": 622.4
+      },
+      {
+        "oid": 1642,
+        "turn_start_frame": 3096,
+        "turn_end_frame": 3148,
+        "turn_start_s": 619.2,
+        "turn_end_s": 629.6
+      },
+      {
+        "oid": 1647,
+        "turn_start_frame": 3109,
+        "turn_end_frame": 3235,
+        "turn_start_s": 621.8,
+        "turn_end_s": 647.0
+      },
+      {
+        "oid": 1651,
+        "turn_start_frame": 3120,
+        "turn_end_frame": 3301,
+        "turn_start_s": 624.0,
+        "turn_end_s": 660.2
+      },
+      {
+        "oid": 1660,
+        "turn_start_frame": 3433,
+        "turn_end_frame": 3497,
+        "turn_start_s": 686.6,
+        "turn_end_s": 699.4
+      },
+      {
+        "oid": 1794,
+        "turn_start_frame": 3484,
+        "turn_end_frame": 3531,
+        "turn_start_s": 696.8,
+        "turn_end_s": 706.2
+      },
+      {
+        "oid": 1821,
+        "turn_start_frame": 3505,
+        "turn_end_frame": 3561,
+        "turn_start_s": 701.0,
+        "turn_end_s": 712.2
+      },
+      {
+        "oid": 1828,
+        "turn_start_frame": 3519,
+        "turn_end_frame": 3575,
+        "turn_start_s": 703.8,
+        "turn_end_s": 715.0
+      },
+      {
+        "oid": 1847,
+        "turn_start_frame": 3531,
+        "turn_end_frame": 3589,
+        "turn_start_s": 706.2,
+        "turn_end_s": 717.8
+      },
+      {
+        "oid": 1941,
+        "turn_start_frame": 3627,
+        "turn_end_frame": 3693,
+        "turn_start_s": 725.4,
+        "turn_end_s": 738.6
+      },
+      {
+        "oid": 1944,
+        "turn_start_frame": 3639,
+        "turn_end_frame": 3792,
+        "turn_start_s": 727.8,
+        "turn_end_s": 758.4
+      },
+      {
+        "oid": 1950,
+        "turn_start_frame": 3933,
+        "turn_end_frame": 3975,
+        "turn_start_s": 786.6,
+        "turn_end_s": 795.0
+      },
+      {
+        "oid": 1948,
+        "turn_start_frame": 3954,
+        "turn_end_frame": 4004,
+        "turn_start_s": 790.8,
+        "turn_end_s": 800.8
+      },
+      {
+        "oid": 2060,
+        "turn_start_frame": 4011,
+        "turn_end_frame": 4058,
+        "turn_start_s": 802.2,
+        "turn_end_s": 811.6
+      },
+      {
+        "oid": 2087,
+        "turn_start_frame": 4025,
+        "turn_end_frame": 4076,
+        "turn_start_s": 805.0,
+        "turn_end_s": 815.2
+      },
+      {
+        "oid": 2096,
+        "turn_start_frame": 4034,
+        "turn_end_frame": 4087,
+        "turn_start_s": 806.8,
+        "turn_end_s": 817.4
+      },
+      {
+        "oid": 2102,
+        "turn_start_frame": 4045,
+        "turn_end_frame": 4099,
+        "turn_start_s": 809.0,
+        "turn_end_s": 819.8
+      },
+      {
+        "oid": 2110,
+        "turn_start_frame": 4059,
+        "turn_end_frame": 4117,
+        "turn_start_s": 811.8,
+        "turn_end_s": 823.4
+      },
+      {
+        "oid": 2137,
+        "turn_start_frame": 4088,
+        "turn_end_frame": 4276,
+        "turn_start_s": 817.6,
+        "turn_end_s": 855.2
+      },
+      {
+        "oid": 2244,
+        "turn_start_frame": 4469,
+        "turn_end_frame": 4524,
+        "turn_start_s": 893.8,
+        "turn_end_s": 904.8
+      },
+      {
+        "oid": 2257,
+        "turn_start_frame": 4480,
+        "turn_end_frame": 4533,
+        "turn_start_s": 896.0,
+        "turn_end_s": 906.6
+      },
+      {
+        "oid": 2236,
+        "turn_start_frame": 4488,
+        "turn_end_frame": 4547,
+        "turn_start_s": 897.6,
+        "turn_end_s": 909.4
+      },
+      {
+        "oid": 2272,
+        "turn_start_frame": 4499,
+        "turn_end_frame": 4558,
+        "turn_start_s": 899.8,
+        "turn_end_s": 911.6
+      },
+      {
+        "oid": 2284,
+        "turn_start_frame": 4509,
+        "turn_end_frame": 4572,
+        "turn_start_s": 901.8,
+        "turn_end_s": 914.4
+      },
+      {
+        "oid": 2277,
+        "turn_start_frame": 4518,
+        "turn_end_frame": 4585,
+        "turn_start_s": 903.6,
+        "turn_end_s": 917.0
+      },
+      {
+        "oid": 2292,
+        "turn_start_frame": 4527,
+        "turn_end_frame": 4603,
+        "turn_start_s": 905.4,
+        "turn_end_s": 920.6
+      },
+      {
+        "oid": 2312,
+        "turn_start_frame": 4581,
+        "turn_end_frame": 4778,
+        "turn_start_s": 916.2,
+        "turn_end_s": 955.6
+      },
+      {
+        "oid": 2321,
+        "turn_start_frame": 4593,
+        "turn_end_frame": 4798,
+        "turn_start_s": 918.6,
+        "turn_end_s": 959.6
+      },
+      {
+        "oid": 2377,
+        "turn_start_frame": 4621,
+        "turn_end_frame": 4815,
+        "turn_start_s": 924.2,
+        "turn_end_s": 963.0
+      },
+      {
+        "oid": 2373,
+        "turn_start_frame": 4941,
+        "turn_end_frame": 4997,
+        "turn_start_s": 988.2,
+        "turn_end_s": 999.4
+      },
+      {
+        "oid": 2416,
+        "turn_start_frame": 4985,
+        "turn_end_frame": 5035,
+        "turn_start_s": 997.0,
+        "turn_end_s": 1007.0
+      },
+      {
+        "oid": 2471,
+        "turn_start_frame": 4996,
+        "turn_end_frame": 5046,
+        "turn_start_s": 999.2,
+        "turn_end_s": 1009.2
+      },
+      {
+        "oid": 2491,
+        "turn_start_frame": 5006,
+        "turn_end_frame": 5059,
+        "turn_start_s": 1001.2,
+        "turn_end_s": 1011.8
+      },
+      {
+        "oid": 2515,
+        "turn_start_frame": 5023,
+        "turn_end_frame": 5073,
+        "turn_start_s": 1004.6,
+        "turn_end_s": 1014.6
+      }
+    ],
+    "straddling_window_excluded": []
+  },
+  "trqs_ms": 5.3,
+  "runs": [
+    {
+      "mode": "static",
+      "latency_ms": 70456.52185752988,
+      "http_status": 200,
+      "request_part": {
+        "media_processing": "STATIC",
+        "video_metadata": {
+          "fps": 5
+        }
+      },
+      "usage": {
+        "promptTokenCount": 346670,
+        "candidatesTokenCount": 4704,
+        "totalTokenCount": 351374,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 9170
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 337500
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 4704
+          }
+        ]
+      },
+      "model_version": "gemini-4-argon",
+      "finish_reason": "STOP",
+      "text": "```json\n[\n  {\"box_2d\": [540, 250, 623, 275], \"start\": \"00:05\", \"end\": \"00:11\"},\n  {\"box_2d\": [546, 254, 620, 276], \"start\": \"00:11\", \"end\": \"00:18\"},\n  {\"box_2d\": [553, 254, 623, 278], \"start\": \"00:14\", \"end\": \"00:21\"},\n  {\"box_2d\": [556, 252, 620, 276], \"start\": \"00:18\", \"end\": \"00:24\"},\n  {\"box_2d\": [546, 252, 636, 280], \"start\": \"00:22\", \"end\": \"00:31\"},\n  {\"box_2d\": [323, 35, 363, 52], \"start\": \"00:54\", \"end\": \"00:59\"},\n  {\"box_2d\": [313, 35, 350, 50], \"start\": \"01:02\", \"end\": \"01:08\"},\n  {\"box_2d\": [196, 307, 230, 344], \"start\": \"01:08\", \"end\": \"01:13\"},\n  {\"box_2d\": [530, 248, 616, 276], \"start\": \"01:44\", \"end\": \"01:53\"},\n  {\"box_2d\": [546, 250, 633, 281], \"start\": \"01:49\", \"end\": \"01:56\"},\n  {\"box_2d\": [546, 250, 610, 272], \"start\": \"01:54\", \"end\": \"02:00\"},\n  {\"box_2d\": [540, 248, 610, 274], \"start\": \"01:57\", \"end\": \"02:05\"},\n  {\"box_2d\": [560, 254, 633, 280], \"start\": \"02:02\", \"end\": \"02:10\"},\n  {\"box_2d\": [550, 252, 623, 276], \"start\": \"02:07\", \"end\": \"02:12\"},\n  {\"box_2d\": [563, 254, 623, 276], \"start\": \"02:09\", \"end\": \"02:16\"},\n  {\"box_2d\": [556, 254, 636, 280], \"start\": \"02:12\", \"end\": \"02:19\"},\n  {\"box_2d\": [336, 35, 383, 56], \"start\": \"02:36\", \"end\": \"02:41\"},\n  {\"box_2d\": [356, 35, 390, 54], \"start\": \"02:43\", \"end\": \"02:48\"},\n  {\"box_2d\": [196, 306, 236, 348], \"start\": \"02:47\", \"end\": \"02:51\"},\n  {\"box_2d\": [543, 252, 620, 276], \"start\": \"03:27\", \"end\": \"03:37\"},\n  {\"box_2d\": [546, 250, 626, 276], \"start\": \"03:32\", \"end\": \"03:40\"},\n  {\"box_2d\": [546, 252, 623, 278], \"start\": \"03:36\", \"end\": \"03:43\"},\n  {\"box_2d\": [550, 250, 620, 272], \"start\": \"03:38\", \"end\": \"03:46\"},\n  {\"box_2d\": [556, 256, 620, 278], \"start\": \"03:54\", \"end\": \"04:01\"},\n  {\"box_2d\": [553, 250, 623, 276], \"start\": \"04:00\", \"end\": \"04:07\"},\n  {\"box_2d\": [193, 307, 233, 350], \"start\": \"04:22\", \"end\": \"04:26\"},\n  {\"box_2d\": [546, 252, 616, 276], \"start\": \"05:06\", \"end\": \"05:13\"},\n  {\"box_2d\": [546, 250, 613, 274], \"start\": \"05:11\", \"end\": \"05:20\"},\n  {\"box_2d\": [550, 252, 633, 281], \"start\": \"05:17\", \"end\": \"05:24\"},\n  {\"box_2d\": [546, 254, 616, 278], \"start\": \"05:25\", \"end\": \"05:32\"},\n  {\"box_2d\": [546, 252, 620, 274], \"start\": \"05:31\", \"end\": \"05:40\"},\n  {\"box_2d\": [556, 254, 626, 276], \"start\": \"05:36\", \"end\": \"05:42\"},\n  {\"box_2d\": [543, 250, 620, 274], \"start\": \"05:39\", \"end\": \"05:46\"},\n  {\"box_2d\": [203, 304, 240, 344], \"start\": \"05:56\", \"end\": \"05:59\"},\n  {\"box_2d\": [203, 304, 240, 343], \"start\": \"05:58\", \"end\": \"06:02\"},\n  {\"box_2d\": [323, 35, 360, 50], \"start\": \"06:04\", \"end\": \"06:09\"},\n  {\"box_2d\": [200, 307, 236, 354], \"start\": \"06:09\", \"end\": \"06:13\"},\n  {\"box_2d\": [200, 304, 236, 348], \"start\": \"06:12\", \"end\": \"06:17\"},\n  {\"box_2d\": [536, 250, 606, 274], \"start\": \"06:48\", \"end\": \"06:55\"},\n  {\"box_2d\": [550, 252, 616, 274], \"start\": \"06:51\", \"end\": \"07:02\"},\n  {\"box_2d\": [560, 252, 626, 276], \"start\": \"06:57\", \"end\": \"07:04\"},\n  {\"box_2d\": [556, 254, 636, 281], \"start\": \"07:03\", \"end\": \"07:12\"},\n  {\"box_2d\": [553, 250, 626, 276], \"start\": \"07:09\", \"end\": \"07:14\"},\n  {\"box_2d\": [546, 252, 620, 278], \"start\": \"07:13\", \"end\": \"07:20\"},\n  {\"box_2d\": [550, 250, 620, 274], \"start\": \"07:17\", \"end\": \"07:23\"},\n  {\"box_2d\": [563, 256, 620, 278], \"start\": \"07:20\", \"end\": \"07:26\"},\n  {\"box_2d\": [563, 254, 630, 276], \"start\": \"07:23\", \"end\": \"07:28\"},\n  {\"box_2d\": [556, 254, 623, 276], \"start\": \"07:25\", \"end\": \"07:31\"},\n  {\"box_2d\": [326, 37, 360, 52], \"start\": \"07:36\", \"end\": \"07:42\"},\n  {\"box_2d\": [203, 309, 236, 343], \"start\": \"07:37\", \"end\": \"07:42\"},\n  {\"box_2d\": [200, 304, 240, 344], \"start\": \"07:40\", \"end\": \"07:45\"},\n  {\"box_2d\": [200, 307, 236, 346], \"start\": \"07:53\", \"end\": \"07:57\"},\n  {\"box_2d\": [196, 307, 236, 346], \"start\": \"08:06\", \"end\": \"08:09\"},\n  {\"box_2d\": [196, 306, 233, 346], \"start\": \"08:08\", \"end\": \"08:12\"},\n  {\"box_2d\": [543, 248, 623, 276], \"start\": \"08:26\", \"end\": \"08:35\"},\n  {\"box_2d\": [550, 252, 616, 274], \"start\": \"08:30\", \"end\": \"08:38\"},\n  {\"box_2d\": [550, 250, 620, 276], \"start\": \"08:35\", \"end\": \"08:42\"},\n  {\"box_2d\": [556, 254, 630, 281], \"start\": \"08:38\", \"end\": \"08:46\"},\n  {\"box_2d\": [556, 256, 623, 278], \"start\": \"08:42\", \"end\": \"08:49\"},\n  {\"box_2d\": [556, 252, 630, 278], \"start\": \"09:00\", \"end\": \"09:07\"},\n  {\"box_2d\": [553, 250, 620, 274], \"start\": \"09:05\", \"end\": \"09:11\"},\n  {\"box_2d\": [196, 309, 233, 348], \"start\": \"09:20\", \"end\": \"09:24\"},\n  {\"box_2d\": [200, 307, 240, 344], \"start\": \"09:23\", \"end\": \"09:27\"},\n  {\"box_2d\": [546, 252, 623, 276], \"start\": \"10:05\", \"end\": \"10:12\"},\n  {\"box_2d\": [553, 252, 623, 278], \"start\": \"10:10\", \"end\": \"10:18\"},\n  {\"box_2d\": [560, 254, 623, 276], \"start\": \"10:15\", \"end\": \"10:21\"},\n  {\"box_2d\": [560, 254, 623, 276], \"start\": \"10:19\", \"end\": \"10:24\"},\n  {\"box_2d\": [546, 252, 616, 278], \"start\": \"10:22\", \"end\": \"10:28\"},\n  {\"box_2d\": [556, 254, 620, 278], \"start\": \"10:25\", \"end\": \"10:30\"},\n  {\"box_2d\": [553, 252, 626, 278], \"start\": \"10:27\", \"end\": \"10:33\"},\n  {\"box_2d\": [546, 252, 620, 276], \"start\": \"10:30\", \"end\": \"10:38\"},\n  {\"box_2d\": [553, 252, 626, 276], \"start\": \"10:34\", \"end\": \"10:40\"},\n  {\"box_2d\": [553, 252, 626, 276], \"start\": \"10:37\", \"end\": \"10:43\"},\n  {\"box_2d\": [553, 252, 626, 278], \"start\": \"10:41\", \"end\": \"10:47\"},\n  {\"box_2d\": [200, 306, 243, 352], \"start\": \"10:59\", \"end\": \"11:03\"},\n  {\"box_2d\": [196, 306, 236, 344], \"start\": \"11:13\", \"end\": \"11:17\"},\n  {\"box_2d\": [200, 304, 240, 344], \"start\": \"11:15\", \"end\": \"11:19\"},\n  {\"box_2d\": [536, 248, 616, 276], \"start\": \"11:46\", \"end\": \"11:54\"},\n  {\"box_2d\": [550, 250, 623, 276], \"start\": \"11:51\", \"end\": \"11:57\"},\n  {\"box_2d\": [546, 252, 613, 276], \"start\": \"11:55\", \"end\": \"12:04\"},\n  {\"box_2d\": [560, 254, 626, 278], \"start\": \"12:01\", \"end\": \"12:08\"},\n  {\"box_2d\": [550, 254, 626, 278], \"start\": \"12:05\", \"end\": \"12:12\"},\n  {\"box_2d\": [560, 254, 636, 281], \"start\": \"12:09\", \"end\": \"12:16\"},\n  {\"box_2d\": [546, 252, 623, 278], \"start\": \"12:14\", \"end\": \"12:20\"},\n  {\"box_2d\": [546, 252, 620, 276], \"start\": \"12:16\", \"end\": \"12:23\"},\n  {\"box_2d\": [560, 256, 623, 278], \"start\": \"12:20\", \"end\": \"12:26\"},\n  {\"box_2d\": [543, 250, 613, 276], \"start\": \"12:23\", \"end\": \"12:29\"},\n  {\"box_2d\": [200, 306, 236, 346], \"start\": \"12:41\", \"end\": \"12:44\"},\n  {\"box_2d\": [200, 307, 236, 346], \"start\": \"12:48\", \"end\": \"12:52\"},\n  {\"box_2d\": [196, 309, 233, 354], \"start\": \"12:57\", \"end\": \"13:01\"},\n  {\"box_2d\": [553, 252, 623, 278], \"start\": \"13:34\", \"end\": \"13:41\"},\n  {\"box_2d\": [543, 252, 616, 276], \"start\": \"13:38\", \"end\": \"13:46\"},\n  {\"box_2d\": [553, 254, 630, 280], \"start\": \"13:43\", \"end\": \"13:51\"},\n  {\"box_2d\": [556, 252, 626, 276], \"start\": \"13:48\", \"end\": \"13:54\"},\n  {\"box_2d\": [560, 254, 633, 278], \"start\": \"13:52\", \"end\": \"13:59\"},\n  {\"box_2d\": [560, 254, 626, 278], \"start\": \"13:56\", \"end\": \"14:02\"},\n  {\"box_2d\": [553, 252, 626, 276], \"start\": \"13:59\", \"end\": \"14:06\"},\n  {\"box_2d\": [556, 254, 623, 278], \"start\": \"14:03\", \"end\": \"14:09\"}\n]\n```",
+      "parsed": [
+        {
+          "box_2d": [
+            540,
+            250,
+            623,
+            275
+          ],
+          "start": "00:05",
+          "end": "00:11"
+        },
+        {
+          "box_2d": [
+            546,
+            254,
+            620,
+            276
+          ],
+          "start": "00:11",
+          "end": "00:18"
+        },
+        {
+          "box_2d": [
+            553,
+            254,
+            623,
+            278
+          ],
+          "start": "00:14",
+          "end": "00:21"
+        },
+        {
+          "box_2d": [
+            556,
+            252,
+            620,
+            276
+          ],
+          "start": "00:18",
+          "end": "00:24"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            636,
+            280
+          ],
+          "start": "00:22",
+          "end": "00:31"
+        },
+        {
+          "box_2d": [
+            323,
+            35,
+            363,
+            52
+          ],
+          "start": "00:54",
+          "end": "00:59"
+        },
+        {
+          "box_2d": [
+            313,
+            35,
+            350,
+            50
+          ],
+          "start": "01:02",
+          "end": "01:08"
+        },
+        {
+          "box_2d": [
+            196,
+            307,
+            230,
+            344
+          ],
+          "start": "01:08",
+          "end": "01:13"
+        },
+        {
+          "box_2d": [
+            530,
+            248,
+            616,
+            276
+          ],
+          "start": "01:44",
+          "end": "01:53"
+        },
+        {
+          "box_2d": [
+            546,
+            250,
+            633,
+            281
+          ],
+          "start": "01:49",
+          "end": "01:56"
+        },
+        {
+          "box_2d": [
+            546,
+            250,
+            610,
+            272
+          ],
+          "start": "01:54",
+          "end": "02:00"
+        },
+        {
+          "box_2d": [
+            540,
+            248,
+            610,
+            274
+          ],
+          "start": "01:57",
+          "end": "02:05"
+        },
+        {
+          "box_2d": [
+            560,
+            254,
+            633,
+            280
+          ],
+          "start": "02:02",
+          "end": "02:10"
+        },
+        {
+          "box_2d": [
+            550,
+            252,
+            623,
+            276
+          ],
+          "start": "02:07",
+          "end": "02:12"
+        },
+        {
+          "box_2d": [
+            563,
+            254,
+            623,
+            276
+          ],
+          "start": "02:09",
+          "end": "02:16"
+        },
+        {
+          "box_2d": [
+            556,
+            254,
+            636,
+            280
+          ],
+          "start": "02:12",
+          "end": "02:19"
+        },
+        {
+          "box_2d": [
+            336,
+            35,
+            383,
+            56
+          ],
+          "start": "02:36",
+          "end": "02:41"
+        },
+        {
+          "box_2d": [
+            356,
+            35,
+            390,
+            54
+          ],
+          "start": "02:43",
+          "end": "02:48"
+        },
+        {
+          "box_2d": [
+            196,
+            306,
+            236,
+            348
+          ],
+          "start": "02:47",
+          "end": "02:51"
+        },
+        {
+          "box_2d": [
+            543,
+            252,
+            620,
+            276
+          ],
+          "start": "03:27",
+          "end": "03:37"
+        },
+        {
+          "box_2d": [
+            546,
+            250,
+            626,
+            276
+          ],
+          "start": "03:32",
+          "end": "03:40"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            623,
+            278
+          ],
+          "start": "03:36",
+          "end": "03:43"
+        },
+        {
+          "box_2d": [
+            550,
+            250,
+            620,
+            272
+          ],
+          "start": "03:38",
+          "end": "03:46"
+        },
+        {
+          "box_2d": [
+            556,
+            256,
+            620,
+            278
+          ],
+          "start": "03:54",
+          "end": "04:01"
+        },
+        {
+          "box_2d": [
+            553,
+            250,
+            623,
+            276
+          ],
+          "start": "04:00",
+          "end": "04:07"
+        },
+        {
+          "box_2d": [
+            193,
+            307,
+            233,
+            350
+          ],
+          "start": "04:22",
+          "end": "04:26"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            616,
+            276
+          ],
+          "start": "05:06",
+          "end": "05:13"
+        },
+        {
+          "box_2d": [
+            546,
+            250,
+            613,
+            274
+          ],
+          "start": "05:11",
+          "end": "05:20"
+        },
+        {
+          "box_2d": [
+            550,
+            252,
+            633,
+            281
+          ],
+          "start": "05:17",
+          "end": "05:24"
+        },
+        {
+          "box_2d": [
+            546,
+            254,
+            616,
+            278
+          ],
+          "start": "05:25",
+          "end": "05:32"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            620,
+            274
+          ],
+          "start": "05:31",
+          "end": "05:40"
+        },
+        {
+          "box_2d": [
+            556,
+            254,
+            626,
+            276
+          ],
+          "start": "05:36",
+          "end": "05:42"
+        },
+        {
+          "box_2d": [
+            543,
+            250,
+            620,
+            274
+          ],
+          "start": "05:39",
+          "end": "05:46"
+        },
+        {
+          "box_2d": [
+            203,
+            304,
+            240,
+            344
+          ],
+          "start": "05:56",
+          "end": "05:59"
+        },
+        {
+          "box_2d": [
+            203,
+            304,
+            240,
+            343
+          ],
+          "start": "05:58",
+          "end": "06:02"
+        },
+        {
+          "box_2d": [
+            323,
+            35,
+            360,
+            50
+          ],
+          "start": "06:04",
+          "end": "06:09"
+        },
+        {
+          "box_2d": [
+            200,
+            307,
+            236,
+            354
+          ],
+          "start": "06:09",
+          "end": "06:13"
+        },
+        {
+          "box_2d": [
+            200,
+            304,
+            236,
+            348
+          ],
+          "start": "06:12",
+          "end": "06:17"
+        },
+        {
+          "box_2d": [
+            536,
+            250,
+            606,
+            274
+          ],
+          "start": "06:48",
+          "end": "06:55"
+        },
+        {
+          "box_2d": [
+            550,
+            252,
+            616,
+            274
+          ],
+          "start": "06:51",
+          "end": "07:02"
+        },
+        {
+          "box_2d": [
+            560,
+            252,
+            626,
+            276
+          ],
+          "start": "06:57",
+          "end": "07:04"
+        },
+        {
+          "box_2d": [
+            556,
+            254,
+            636,
+            281
+          ],
+          "start": "07:03",
+          "end": "07:12"
+        },
+        {
+          "box_2d": [
+            553,
+            250,
+            626,
+            276
+          ],
+          "start": "07:09",
+          "end": "07:14"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            620,
+            278
+          ],
+          "start": "07:13",
+          "end": "07:20"
+        },
+        {
+          "box_2d": [
+            550,
+            250,
+            620,
+            274
+          ],
+          "start": "07:17",
+          "end": "07:23"
+        },
+        {
+          "box_2d": [
+            563,
+            256,
+            620,
+            278
+          ],
+          "start": "07:20",
+          "end": "07:26"
+        },
+        {
+          "box_2d": [
+            563,
+            254,
+            630,
+            276
+          ],
+          "start": "07:23",
+          "end": "07:28"
+        },
+        {
+          "box_2d": [
+            556,
+            254,
+            623,
+            276
+          ],
+          "start": "07:25",
+          "end": "07:31"
+        },
+        {
+          "box_2d": [
+            326,
+            37,
+            360,
+            52
+          ],
+          "start": "07:36",
+          "end": "07:42"
+        },
+        {
+          "box_2d": [
+            203,
+            309,
+            236,
+            343
+          ],
+          "start": "07:37",
+          "end": "07:42"
+        },
+        {
+          "box_2d": [
+            200,
+            304,
+            240,
+            344
+          ],
+          "start": "07:40",
+          "end": "07:45"
+        },
+        {
+          "box_2d": [
+            200,
+            307,
+            236,
+            346
+          ],
+          "start": "07:53",
+          "end": "07:57"
+        },
+        {
+          "box_2d": [
+            196,
+            307,
+            236,
+            346
+          ],
+          "start": "08:06",
+          "end": "08:09"
+        },
+        {
+          "box_2d": [
+            196,
+            306,
+            233,
+            346
+          ],
+          "start": "08:08",
+          "end": "08:12"
+        },
+        {
+          "box_2d": [
+            543,
+            248,
+            623,
+            276
+          ],
+          "start": "08:26",
+          "end": "08:35"
+        },
+        {
+          "box_2d": [
+            550,
+            252,
+            616,
+            274
+          ],
+          "start": "08:30",
+          "end": "08:38"
+        },
+        {
+          "box_2d": [
+            550,
+            250,
+            620,
+            276
+          ],
+          "start": "08:35",
+          "end": "08:42"
+        },
+        {
+          "box_2d": [
+            556,
+            254,
+            630,
+            281
+          ],
+          "start": "08:38",
+          "end": "08:46"
+        },
+        {
+          "box_2d": [
+            556,
+            256,
+            623,
+            278
+          ],
+          "start": "08:42",
+          "end": "08:49"
+        },
+        {
+          "box_2d": [
+            556,
+            252,
+            630,
+            278
+          ],
+          "start": "09:00",
+          "end": "09:07"
+        },
+        {
+          "box_2d": [
+            553,
+            250,
+            620,
+            274
+          ],
+          "start": "09:05",
+          "end": "09:11"
+        },
+        {
+          "box_2d": [
+            196,
+            309,
+            233,
+            348
+          ],
+          "start": "09:20",
+          "end": "09:24"
+        },
+        {
+          "box_2d": [
+            200,
+            307,
+            240,
+            344
+          ],
+          "start": "09:23",
+          "end": "09:27"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            623,
+            276
+          ],
+          "start": "10:05",
+          "end": "10:12"
+        },
+        {
+          "box_2d": [
+            553,
+            252,
+            623,
+            278
+          ],
+          "start": "10:10",
+          "end": "10:18"
+        },
+        {
+          "box_2d": [
+            560,
+            254,
+            623,
+            276
+          ],
+          "start": "10:15",
+          "end": "10:21"
+        },
+        {
+          "box_2d": [
+            560,
+            254,
+            623,
+            276
+          ],
+          "start": "10:19",
+          "end": "10:24"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            616,
+            278
+          ],
+          "start": "10:22",
+          "end": "10:28"
+        },
+        {
+          "box_2d": [
+            556,
+            254,
+            620,
+            278
+          ],
+          "start": "10:25",
+          "end": "10:30"
+        },
+        {
+          "box_2d": [
+            553,
+            252,
+            626,
+            278
+          ],
+          "start": "10:27",
+          "end": "10:33"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            620,
+            276
+          ],
+          "start": "10:30",
+          "end": "10:38"
+        },
+        {
+          "box_2d": [
+            553,
+            252,
+            626,
+            276
+          ],
+          "start": "10:34",
+          "end": "10:40"
+        },
+        {
+          "box_2d": [
+            553,
+            252,
+            626,
+            276
+          ],
+          "start": "10:37",
+          "end": "10:43"
+        },
+        {
+          "box_2d": [
+            553,
+            252,
+            626,
+            278
+          ],
+          "start": "10:41",
+          "end": "10:47"
+        },
+        {
+          "box_2d": [
+            200,
+            306,
+            243,
+            352
+          ],
+          "start": "10:59",
+          "end": "11:03"
+        },
+        {
+          "box_2d": [
+            196,
+            306,
+            236,
+            344
+          ],
+          "start": "11:13",
+          "end": "11:17"
+        },
+        {
+          "box_2d": [
+            200,
+            304,
+            240,
+            344
+          ],
+          "start": "11:15",
+          "end": "11:19"
+        },
+        {
+          "box_2d": [
+            536,
+            248,
+            616,
+            276
+          ],
+          "start": "11:46",
+          "end": "11:54"
+        },
+        {
+          "box_2d": [
+            550,
+            250,
+            623,
+            276
+          ],
+          "start": "11:51",
+          "end": "11:57"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            613,
+            276
+          ],
+          "start": "11:55",
+          "end": "12:04"
+        },
+        {
+          "box_2d": [
+            560,
+            254,
+            626,
+            278
+          ],
+          "start": "12:01",
+          "end": "12:08"
+        },
+        {
+          "box_2d": [
+            550,
+            254,
+            626,
+            278
+          ],
+          "start": "12:05",
+          "end": "12:12"
+        },
+        {
+          "box_2d": [
+            560,
+            254,
+            636,
+            281
+          ],
+          "start": "12:09",
+          "end": "12:16"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            623,
+            278
+          ],
+          "start": "12:14",
+          "end": "12:20"
+        },
+        {
+          "box_2d": [
+            546,
+            252,
+            620,
+            276
+          ],
+          "start": "12:16",
+          "end": "12:23"
+        },
+        {
+          "box_2d": [
+            560,
+            256,
+            623,
+            278
+          ],
+          "start": "12:20",
+          "end": "12:26"
+        },
+        {
+          "box_2d": [
+            543,
+            250,
+            613,
+            276
+          ],
+          "start": "12:23",
+          "end": "12:29"
+        },
+        {
+          "box_2d": [
+            200,
+            306,
+            236,
+            346
+          ],
+          "start": "12:41",
+          "end": "12:44"
+        },
+        {
+          "box_2d": [
+            200,
+            307,
+            236,
+            346
+          ],
+          "start": "12:48",
+          "end": "12:52"
+        },
+        {
+          "box_2d": [
+            196,
+            309,
+            233,
+            354
+          ],
+          "start": "12:57",
+          "end": "13:01"
+        },
+        {
+          "box_2d": [
+            553,
+            252,
+            623,
+            278
+          ],
+          "start": "13:34",
+          "end": "13:41"
+        },
+        {
+          "box_2d": [
+            543,
+            252,
+            616,
+            276
+          ],
+          "start": "13:38",
+          "end": "13:46"
+        },
+        {
+          "box_2d": [
+            553,
+            254,
+            630,
+            280
+          ],
+          "start": "13:43",
+          "end": "13:51"
+        },
+        {
+          "box_2d": [
+            556,
+            252,
+            626,
+            276
+          ],
+          "start": "13:48",
+          "end": "13:54"
+        },
+        {
+          "box_2d": [
+            560,
+            254,
+            633,
+            278
+          ],
+          "start": "13:52",
+          "end": "13:59"
+        },
+        {
+          "box_2d": [
+            560,
+            254,
+            626,
+            278
+          ],
+          "start": "13:56",
+          "end": "14:02"
+        },
+        {
+          "box_2d": [
+            553,
+            252,
+            626,
+            276
+          ],
+          "start": "13:59",
+          "end": "14:06"
+        },
+        {
+          "box_2d": [
+            556,
+            254,
+            623,
+            278
+          ],
+          "start": "14:03",
+          "end": "14:09"
+        }
+      ],
+      "score": {
+        "answers": 98,
+        "true_positives": 41,
+        "false_positives": 57,
+        "missed_oids": [
+          446,
+          524,
+          644,
+          648,
+          757,
+          865,
+          887,
+          1108,
+          1116,
+          1139,
+          1157,
+          1186,
+          1348,
+          1363,
+          1410,
+          1510,
+          1530,
+          1538,
+          1622,
+          1642,
+          1821,
+          1847,
+          1941,
+          2096,
+          2110,
+          2257,
+          2277,
+          2284,
+          2373,
+          2416,
+          2491,
+          2515
+        ],
+        "precision": 0.418,
+        "recall": 0.562,
+        "mean_interval_iou": 0.475,
+        "detail": [
+          {
+            "answer": {
+              "box_2d": [
+                540,
+                250,
+                623,
+                275
+              ],
+              "start": "00:05",
+              "end": "00:11"
+            },
+            "box_iou": 0.401,
+            "matched_oid": 449,
+            "frame_offset": 10,
+            "outcome": "hit",
+            "interval_iou": 0.181,
+            "clock_error_s": -3.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                254,
+                620,
+                276
+              ],
+              "start": "00:11",
+              "end": "00:18"
+            },
+            "box_iou": 0.531,
+            "matched_oid": 499,
+            "frame_offset": -3,
+            "outcome": "hit",
+            "interval_iou": 0.623,
+            "clock_error_s": -0.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                254,
+                623,
+                278
+              ],
+              "start": "00:14",
+              "end": "00:21"
+            },
+            "box_iou": 0.494,
+            "matched_oid": 508,
+            "frame_offset": 1,
+            "outcome": "hit",
+            "interval_iou": 0.492,
+            "clock_error_s": -1.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                252,
+                620,
+                276
+              ],
+              "start": "00:18",
+              "end": "00:24"
+            },
+            "box_iou": 0.592,
+            "matched_oid": 460,
+            "frame_offset": -9,
+            "outcome": "hit",
+            "interval_iou": 0.492,
+            "clock_error_s": 0.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                636,
+                280
+              ],
+              "start": "00:22",
+              "end": "00:31"
+            },
+            "box_iou": 0.636,
+            "matched_oid": 531,
+            "frame_offset": -7,
+            "outcome": "hit",
+            "interval_iou": 0.605,
+            "clock_error_s": 0.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                323,
+                35,
+                363,
+                52
+              ],
+              "start": "00:54",
+              "end": "00:59"
+            },
+            "box_iou": 0.0,
+            "matched_oid": null,
+            "frame_offset": null,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                313,
+                35,
+                350,
+                50
+              ],
+              "start": "01:02",
+              "end": "01:08"
+            },
+            "box_iou": 0.167,
+            "matched_oid": 490,
+            "frame_offset": 6,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                196,
+                307,
+                230,
+                344
+              ],
+              "start": "01:08",
+              "end": "01:13"
+            },
+            "box_iou": 0.725,
+            "matched_oid": 549,
+            "frame_offset": 6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                530,
+                248,
+                616,
+                276
+              ],
+              "start": "01:44",
+              "end": "01:53"
+            },
+            "box_iou": 0.76,
+            "matched_oid": 671,
+            "frame_offset": 8,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                250,
+                633,
+                281
+              ],
+              "start": "01:49",
+              "end": "01:56"
+            },
+            "box_iou": 0.647,
+            "matched_oid": 678,
+            "frame_offset": -3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                250,
+                610,
+                272
+              ],
+              "start": "01:54",
+              "end": "02:00"
+            },
+            "box_iou": 0.549,
+            "matched_oid": 739,
+            "frame_offset": -5,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                540,
+                248,
+                610,
+                274
+              ],
+              "start": "01:57",
+              "end": "02:05"
+            },
+            "box_iou": 0.716,
+            "matched_oid": 781,
+            "frame_offset": 8,
+            "outcome": "hit",
+            "interval_iou": 0.484,
+            "clock_error_s": -2.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                560,
+                254,
+                633,
+                280
+              ],
+              "start": "02:02",
+              "end": "02:10"
+            },
+            "box_iou": 0.683,
+            "matched_oid": 810,
+            "frame_offset": 3,
+            "outcome": "hit",
+            "interval_iou": 0.576,
+            "clock_error_s": -1.4
+          },
+          {
+            "answer": {
+              "box_2d": [
+                550,
+                252,
+                623,
+                276
+              ],
+              "start": "02:07",
+              "end": "02:12"
+            },
+            "box_iou": 0.571,
+            "matched_oid": 824,
+            "frame_offset": -1,
+            "outcome": "hit",
+            "interval_iou": 0.407,
+            "clock_error_s": -0.4
+          },
+          {
+            "answer": {
+              "box_2d": [
+                563,
+                254,
+                623,
+                276
+              ],
+              "start": "02:09",
+              "end": "02:16"
+            },
+            "box_iou": 0.588,
+            "matched_oid": 841,
+            "frame_offset": 6,
+            "outcome": "hit",
+            "interval_iou": 0.361,
+            "clock_error_s": -2.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                254,
+                636,
+                280
+              ],
+              "start": "02:12",
+              "end": "02:19"
+            },
+            "box_iou": 0.698,
+            "matched_oid": 839,
+            "frame_offset": 1,
+            "outcome": "hit",
+            "interval_iou": 0.443,
+            "clock_error_s": -1.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                336,
+                35,
+                383,
+                56
+              ],
+              "start": "02:36",
+              "end": "02:41"
+            },
+            "box_iou": 0.003,
+            "matched_oid": 918,
+            "frame_offset": 7,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                356,
+                35,
+                390,
+                54
+              ],
+              "start": "02:43",
+              "end": "02:48"
+            },
+            "box_iou": 0.252,
+            "matched_oid": 735,
+            "frame_offset": -4,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                196,
+                306,
+                236,
+                348
+              ],
+              "start": "02:47",
+              "end": "02:51"
+            },
+            "box_iou": 0.705,
+            "matched_oid": 848,
+            "frame_offset": 8,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                543,
+                252,
+                620,
+                276
+              ],
+              "start": "03:27",
+              "end": "03:37"
+            },
+            "box_iou": 0.612,
+            "matched_oid": 904,
+            "frame_offset": 6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                250,
+                626,
+                276
+              ],
+              "start": "03:32",
+              "end": "03:40"
+            },
+            "box_iou": 0.709,
+            "matched_oid": 998,
+            "frame_offset": 6,
+            "outcome": "hit",
+            "interval_iou": 0.64,
+            "clock_error_s": -1.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                623,
+                278
+              ],
+              "start": "03:36",
+              "end": "03:43"
+            },
+            "box_iou": 0.801,
+            "matched_oid": 1019,
+            "frame_offset": 4,
+            "outcome": "hit",
+            "interval_iou": 0.468,
+            "clock_error_s": -1.4
+          },
+          {
+            "answer": {
+              "box_2d": [
+                550,
+                250,
+                620,
+                272
+              ],
+              "start": "03:38",
+              "end": "03:46"
+            },
+            "box_iou": 0.709,
+            "matched_oid": 1019,
+            "frame_offset": -6,
+            "outcome": "hit",
+            "interval_iou": 0.745,
+            "clock_error_s": 0.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                256,
+                620,
+                278
+              ],
+              "start": "03:54",
+              "end": "04:01"
+            },
+            "box_iou": 0.709,
+            "matched_oid": 1117,
+            "frame_offset": -3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                250,
+                623,
+                276
+              ],
+              "start": "04:00",
+              "end": "04:07"
+            },
+            "box_iou": 0.629,
+            "matched_oid": 1131,
+            "frame_offset": -10,
+            "outcome": "hit",
+            "interval_iou": 0.655,
+            "clock_error_s": 1.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                193,
+                307,
+                233,
+                350
+              ],
+              "start": "04:22",
+              "end": "04:26"
+            },
+            "box_iou": 0.292,
+            "matched_oid": 1036,
+            "frame_offset": 2,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                616,
+                276
+              ],
+              "start": "05:06",
+              "end": "05:13"
+            },
+            "box_iou": 0.599,
+            "matched_oid": 1162,
+            "frame_offset": 9,
+            "outcome": "hit",
+            "interval_iou": 0.27,
+            "clock_error_s": -3.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                250,
+                613,
+                274
+              ],
+              "start": "05:11",
+              "end": "05:20"
+            },
+            "box_iou": 0.656,
+            "matched_oid": 1235,
+            "frame_offset": -1,
+            "outcome": "hit",
+            "interval_iou": 0.705,
+            "clock_error_s": -0.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                550,
+                252,
+                633,
+                281
+              ],
+              "start": "05:17",
+              "end": "05:24"
+            },
+            "box_iou": 0.708,
+            "matched_oid": 1191,
+            "frame_offset": -6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                254,
+                616,
+                278
+              ],
+              "start": "05:25",
+              "end": "05:32"
+            },
+            "box_iou": 0.561,
+            "matched_oid": 1319,
+            "frame_offset": -7,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                620,
+                274
+              ],
+              "start": "05:31",
+              "end": "05:40"
+            },
+            "box_iou": 0.647,
+            "matched_oid": 1356,
+            "frame_offset": -1,
+            "outcome": "hit",
+            "interval_iou": 0.729,
+            "clock_error_s": -0.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                254,
+                626,
+                276
+              ],
+              "start": "05:36",
+              "end": "05:42"
+            },
+            "box_iou": 0.584,
+            "matched_oid": 1368,
+            "frame_offset": -3,
+            "outcome": "hit",
+            "interval_iou": 0.413,
+            "clock_error_s": -1.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                543,
+                250,
+                620,
+                274
+              ],
+              "start": "05:39",
+              "end": "05:46"
+            },
+            "box_iou": 0.638,
+            "matched_oid": 1364,
+            "frame_offset": 2,
+            "outcome": "hit",
+            "interval_iou": 0.392,
+            "clock_error_s": -1.4
+          },
+          {
+            "answer": {
+              "box_2d": [
+                203,
+                304,
+                240,
+                344
+              ],
+              "start": "05:56",
+              "end": "05:59"
+            },
+            "box_iou": 0.244,
+            "matched_oid": 1254,
+            "frame_offset": -6,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                203,
+                304,
+                240,
+                343
+              ],
+              "start": "05:58",
+              "end": "06:02"
+            },
+            "box_iou": 0.232,
+            "matched_oid": 1271,
+            "frame_offset": 7,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                323,
+                35,
+                360,
+                50
+              ],
+              "start": "06:04",
+              "end": "06:09"
+            },
+            "box_iou": 0.177,
+            "matched_oid": 1277,
+            "frame_offset": -7,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                200,
+                307,
+                236,
+                354
+              ],
+              "start": "06:09",
+              "end": "06:13"
+            },
+            "box_iou": 0.314,
+            "matched_oid": 1318,
+            "frame_offset": -7,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                200,
+                304,
+                236,
+                348
+              ],
+              "start": "06:12",
+              "end": "06:17"
+            },
+            "box_iou": 0.295,
+            "matched_oid": 1342,
+            "frame_offset": -10,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                536,
+                250,
+                606,
+                274
+              ],
+              "start": "06:48",
+              "end": "06:55"
+            },
+            "box_iou": 0.734,
+            "matched_oid": 1429,
+            "frame_offset": -10,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                550,
+                252,
+                616,
+                274
+              ],
+              "start": "06:51",
+              "end": "07:02"
+            },
+            "box_iou": 0.526,
+            "matched_oid": 1504,
+            "frame_offset": -4,
+            "outcome": "hit",
+            "interval_iou": 0.804,
+            "clock_error_s": 0.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                560,
+                252,
+                626,
+                276
+              ],
+              "start": "06:57",
+              "end": "07:04"
+            },
+            "box_iou": 0.559,
+            "matched_oid": 1536,
+            "frame_offset": -1,
+            "outcome": "hit",
+            "interval_iou": 0.542,
+            "clock_error_s": -0.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                254,
+                636,
+                281
+              ],
+              "start": "07:03",
+              "end": "07:12"
+            },
+            "box_iou": 0.544,
+            "matched_oid": 1571,
+            "frame_offset": -2,
+            "outcome": "hit",
+            "interval_iou": 0.746,
+            "clock_error_s": -0.4
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                250,
+                626,
+                276
+              ],
+              "start": "07:09",
+              "end": "07:14"
+            },
+            "box_iou": 0.341,
+            "matched_oid": 1606,
+            "frame_offset": -5,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                620,
+                278
+              ],
+              "start": "07:13",
+              "end": "07:20"
+            },
+            "box_iou": 0.5,
+            "matched_oid": 1626,
+            "frame_offset": 5,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                550,
+                250,
+                620,
+                274
+              ],
+              "start": "07:17",
+              "end": "07:23"
+            },
+            "box_iou": 0.458,
+            "matched_oid": 1633,
+            "frame_offset": -3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                563,
+                256,
+                620,
+                278
+              ],
+              "start": "07:20",
+              "end": "07:26"
+            },
+            "box_iou": 0.472,
+            "matched_oid": 1647,
+            "frame_offset": 6,
+            "outcome": "hit",
+            "interval_iou": 0.162,
+            "clock_error_s": -1.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                563,
+                254,
+                630,
+                276
+              ],
+              "start": "07:23",
+              "end": "07:28"
+            },
+            "box_iou": 0.472,
+            "matched_oid": 1651,
+            "frame_offset": 0,
+            "outcome": "hit",
+            "interval_iou": 0.112,
+            "clock_error_s": -1.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                254,
+                623,
+                276
+              ],
+              "start": "07:25",
+              "end": "07:31"
+            },
+            "box_iou": 0.671,
+            "matched_oid": 1660,
+            "frame_offset": 9,
+            "outcome": "hit",
+            "interval_iou": 0.0,
+            "clock_error_s": -61.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                326,
+                37,
+                360,
+                52
+              ],
+              "start": "07:36",
+              "end": "07:42"
+            },
+            "box_iou": 0.0,
+            "matched_oid": null,
+            "frame_offset": null,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                203,
+                309,
+                236,
+                343
+              ],
+              "start": "07:37",
+              "end": "07:42"
+            },
+            "box_iou": 0.392,
+            "matched_oid": 1483,
+            "frame_offset": -3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                200,
+                304,
+                240,
+                344
+              ],
+              "start": "07:40",
+              "end": "07:45"
+            },
+            "box_iou": 0.791,
+            "matched_oid": 1490,
+            "frame_offset": 10,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                200,
+                307,
+                236,
+                346
+              ],
+              "start": "07:53",
+              "end": "07:57"
+            },
+            "box_iou": 0.253,
+            "matched_oid": 1592,
+            "frame_offset": -2,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                196,
+                307,
+                236,
+                346
+              ],
+              "start": "08:06",
+              "end": "08:09"
+            },
+            "box_iou": 0.229,
+            "matched_oid": 1712,
+            "frame_offset": 9,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                196,
+                306,
+                233,
+                346
+              ],
+              "start": "08:08",
+              "end": "08:12"
+            },
+            "box_iou": 0.347,
+            "matched_oid": 1715,
+            "frame_offset": 6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                543,
+                248,
+                623,
+                276
+              ],
+              "start": "08:26",
+              "end": "08:35"
+            },
+            "box_iou": 0.598,
+            "matched_oid": 1660,
+            "frame_offset": -10,
+            "outcome": "hit",
+            "interval_iou": 0.632,
+            "clock_error_s": -0.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                550,
+                252,
+                616,
+                274
+              ],
+              "start": "08:30",
+              "end": "08:38"
+            },
+            "box_iou": 0.734,
+            "matched_oid": 1669,
+            "frame_offset": -6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                550,
+                250,
+                620,
+                276
+              ],
+              "start": "08:35",
+              "end": "08:42"
+            },
+            "box_iou": 0.699,
+            "matched_oid": 1673,
+            "frame_offset": -6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                254,
+                630,
+                281
+              ],
+              "start": "08:38",
+              "end": "08:46"
+            },
+            "box_iou": 0.658,
+            "matched_oid": 1794,
+            "frame_offset": -10,
+            "outcome": "hit",
+            "interval_iou": 0.854,
+            "clock_error_s": 1.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                256,
+                623,
+                278
+              ],
+              "start": "08:42",
+              "end": "08:49"
+            },
+            "box_iou": 0.576,
+            "matched_oid": 1828,
+            "frame_offset": 4,
+            "outcome": "hit",
+            "interval_iou": 0.409,
+            "clock_error_s": -1.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                252,
+                630,
+                278
+              ],
+              "start": "09:00",
+              "end": "09:07"
+            },
+            "box_iou": 0.541,
+            "matched_oid": 1904,
+            "frame_offset": 0,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                250,
+                620,
+                274
+              ],
+              "start": "09:05",
+              "end": "09:11"
+            },
+            "box_iou": 0.491,
+            "matched_oid": 1944,
+            "frame_offset": 9,
+            "outcome": "hit",
+            "interval_iou": 0.101,
+            "clock_error_s": -2.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                196,
+                309,
+                233,
+                348
+              ],
+              "start": "09:20",
+              "end": "09:24"
+            },
+            "box_iou": 0.243,
+            "matched_oid": 1737,
+            "frame_offset": -2,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                200,
+                307,
+                240,
+                344
+              ],
+              "start": "09:23",
+              "end": "09:27"
+            },
+            "box_iou": 0.271,
+            "matched_oid": 1809,
+            "frame_offset": -10,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                623,
+                276
+              ],
+              "start": "10:05",
+              "end": "10:12"
+            },
+            "box_iou": 0.634,
+            "matched_oid": 1950,
+            "frame_offset": 0,
+            "outcome": "hit",
+            "interval_iou": 0.549,
+            "clock_error_s": -1.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                252,
+                623,
+                278
+              ],
+              "start": "10:10",
+              "end": "10:18"
+            },
+            "box_iou": 0.761,
+            "matched_oid": 1948,
+            "frame_offset": -1,
+            "outcome": "hit",
+            "interval_iou": 0.673,
+            "clock_error_s": -0.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                560,
+                254,
+                623,
+                276
+              ],
+              "start": "10:15",
+              "end": "10:21"
+            },
+            "box_iou": 0.565,
+            "matched_oid": 1959,
+            "frame_offset": 0,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                560,
+                254,
+                623,
+                276
+              ],
+              "start": "10:19",
+              "end": "10:24"
+            },
+            "box_iou": 0.509,
+            "matched_oid": 2062,
+            "frame_offset": 2,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                616,
+                278
+              ],
+              "start": "10:22",
+              "end": "10:28"
+            },
+            "box_iou": 0.717,
+            "matched_oid": 2060,
+            "frame_offset": -2,
+            "outcome": "hit",
+            "interval_iou": 0.612,
+            "clock_error_s": -0.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                254,
+                620,
+                278
+              ],
+              "start": "10:25",
+              "end": "10:30"
+            },
+            "box_iou": 0.741,
+            "matched_oid": 2087,
+            "frame_offset": -4,
+            "outcome": "hit",
+            "interval_iou": 0.5,
+            "clock_error_s": 0.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                252,
+                626,
+                278
+              ],
+              "start": "10:27",
+              "end": "10:33"
+            },
+            "box_iou": 0.71,
+            "matched_oid": 2102,
+            "frame_offset": 7,
+            "outcome": "hit",
+            "interval_iou": 0.323,
+            "clock_error_s": -2.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                620,
+                276
+              ],
+              "start": "10:30",
+              "end": "10:38"
+            },
+            "box_iou": 0.765,
+            "matched_oid": 2102,
+            "frame_offset": -8,
+            "outcome": "hit",
+            "interval_iou": 0.745,
+            "clock_error_s": 1.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                252,
+                626,
+                276
+              ],
+              "start": "10:34",
+              "end": "10:40"
+            },
+            "box_iou": 0.634,
+            "matched_oid": 2119,
+            "frame_offset": -5,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                252,
+                626,
+                276
+              ],
+              "start": "10:37",
+              "end": "10:43"
+            },
+            "box_iou": 0.608,
+            "matched_oid": 2137,
+            "frame_offset": -1,
+            "outcome": "hit",
+            "interval_iou": 0.146,
+            "clock_error_s": -0.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                252,
+                626,
+                278
+              ],
+              "start": "10:41",
+              "end": "10:47"
+            },
+            "box_iou": 0.67,
+            "matched_oid": 2149,
+            "frame_offset": -3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                200,
+                306,
+                243,
+                352
+              ],
+              "start": "10:59",
+              "end": "11:03"
+            },
+            "box_iou": 0.247,
+            "matched_oid": 2103,
+            "frame_offset": 7,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                196,
+                306,
+                236,
+                344
+              ],
+              "start": "11:13",
+              "end": "11:17"
+            },
+            "box_iou": 0.593,
+            "matched_oid": 2193,
+            "frame_offset": 10,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                200,
+                304,
+                240,
+                344
+              ],
+              "start": "11:15",
+              "end": "11:19"
+            },
+            "box_iou": 0.499,
+            "matched_oid": 2193,
+            "frame_offset": 0,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                536,
+                248,
+                616,
+                276
+              ],
+              "start": "11:46",
+              "end": "11:54"
+            },
+            "box_iou": 0.871,
+            "matched_oid": 2181,
+            "frame_offset": 3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                550,
+                250,
+                623,
+                276
+              ],
+              "start": "11:51",
+              "end": "11:57"
+            },
+            "box_iou": 0.475,
+            "matched_oid": 2244,
+            "frame_offset": 10,
+            "outcome": "hit",
+            "interval_iou": 0.243,
+            "clock_error_s": -2.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                613,
+                276
+              ],
+              "start": "11:55",
+              "end": "12:04"
+            },
+            "box_iou": 0.701,
+            "matched_oid": 2236,
+            "frame_offset": 10,
+            "outcome": "hit",
+            "interval_iou": 0.452,
+            "clock_error_s": -2.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                560,
+                254,
+                626,
+                278
+              ],
+              "start": "12:01",
+              "end": "12:08"
+            },
+            "box_iou": 0.692,
+            "matched_oid": 2272,
+            "frame_offset": -10,
+            "outcome": "hit",
+            "interval_iou": 0.6,
+            "clock_error_s": 1.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                550,
+                254,
+                626,
+                278
+              ],
+              "start": "12:05",
+              "end": "12:12"
+            },
+            "box_iou": 0.636,
+            "matched_oid": 2292,
+            "frame_offset": -3,
+            "outcome": "hit",
+            "interval_iou": 0.43,
+            "clock_error_s": -0.4
+          },
+          {
+            "answer": {
+              "box_2d": [
+                560,
+                254,
+                636,
+                281
+              ],
+              "start": "12:09",
+              "end": "12:16"
+            },
+            "box_iou": 0.714,
+            "matched_oid": 2311,
+            "frame_offset": 3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                623,
+                278
+              ],
+              "start": "12:14",
+              "end": "12:20"
+            },
+            "box_iou": 0.638,
+            "matched_oid": 2312,
+            "frame_offset": 7,
+            "outcome": "hit",
+            "interval_iou": 0.096,
+            "clock_error_s": -2.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                546,
+                252,
+                620,
+                276
+              ],
+              "start": "12:16",
+              "end": "12:23"
+            },
+            "box_iou": 0.629,
+            "matched_oid": 2321,
+            "frame_offset": 9,
+            "outcome": "hit",
+            "interval_iou": 0.105,
+            "clock_error_s": -2.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                560,
+                256,
+                623,
+                278
+              ],
+              "start": "12:20",
+              "end": "12:26"
+            },
+            "box_iou": 0.548,
+            "matched_oid": 2377,
+            "frame_offset": 2,
+            "outcome": "hit",
+            "interval_iou": 0.046,
+            "clock_error_s": -4.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                543,
+                250,
+                613,
+                276
+              ],
+              "start": "12:23",
+              "end": "12:29"
+            },
+            "box_iou": 0.646,
+            "matched_oid": 2377,
+            "frame_offset": -10,
+            "outcome": "hit",
+            "interval_iou": 0.124,
+            "clock_error_s": -1.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                200,
+                306,
+                236,
+                346
+              ],
+              "start": "12:41",
+              "end": "12:44"
+            },
+            "box_iou": 0.687,
+            "matched_oid": 2280,
+            "frame_offset": -4,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                200,
+                307,
+                236,
+                346
+              ],
+              "start": "12:48",
+              "end": "12:52"
+            },
+            "box_iou": 0.595,
+            "matched_oid": 2376,
+            "frame_offset": -5,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                196,
+                309,
+                233,
+                354
+              ],
+              "start": "12:57",
+              "end": "13:01"
+            },
+            "box_iou": 0.554,
+            "matched_oid": 2436,
+            "frame_offset": 9,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                252,
+                623,
+                278
+              ],
+              "start": "13:34",
+              "end": "13:41"
+            },
+            "box_iou": 0.744,
+            "matched_oid": 2482,
+            "frame_offset": -1,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                543,
+                252,
+                616,
+                276
+              ],
+              "start": "13:38",
+              "end": "13:46"
+            },
+            "box_iou": 0.607,
+            "matched_oid": 2471,
+            "frame_offset": 2,
+            "outcome": "hit",
+            "interval_iou": 0.614,
+            "clock_error_s": -1.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                254,
+                630,
+                280
+              ],
+              "start": "13:43",
+              "end": "13:51"
+            },
+            "box_iou": 0.622,
+            "matched_oid": 2497,
+            "frame_offset": -6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                252,
+                626,
+                276
+              ],
+              "start": "13:48",
+              "end": "13:54"
+            },
+            "box_iou": 0.538,
+            "matched_oid": 2526,
+            "frame_offset": -5,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                560,
+                254,
+                633,
+                278
+              ],
+              "start": "13:52",
+              "end": "13:59"
+            },
+            "box_iou": 0.632,
+            "matched_oid": 2543,
+            "frame_offset": 3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                560,
+                254,
+                626,
+                278
+              ],
+              "start": "13:56",
+              "end": "14:02"
+            },
+            "box_iou": 0.644,
+            "matched_oid": 2553,
+            "frame_offset": -7,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                553,
+                252,
+                626,
+                276
+              ],
+              "start": "13:59",
+              "end": "14:06"
+            },
+            "box_iou": 0.611,
+            "matched_oid": 2562,
+            "frame_offset": 3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                556,
+                254,
+                623,
+                278
+              ],
+              "start": "14:03",
+              "end": "14:09"
+            },
+            "box_iou": 0.636,
+            "matched_oid": 2588,
+            "frame_offset": 10,
+            "outcome": "wrong car"
+          }
+        ]
+      }
+    },
+    {
+      "mode": "agentic",
+      "latency_ms": 73762.96726986766,
+      "http_status": 200,
+      "request_part": {
+        "media_processing": "AGENTIC"
+      },
+      "usage": {
+        "promptTokenCount": 534,
+        "candidatesTokenCount": 2638,
+        "totalTokenCount": 76193,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 534
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 2638
+          }
+        ],
+        "toolUsePromptTokenCount": 73021,
+        "toolUsePromptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 4506
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 68515
+          }
+        ]
+      },
+      "model_version": "gemini-4-argon",
+      "finish_reason": "STOP",
+      "text": "```json\n[\n  {\"box_2d\": [507, 232, 597, 268], \"start\": \"00:05\", \"end\": \"00:11\"},\n  {\"box_2d\": [520, 240, 597, 268], \"start\": \"00:15\", \"end\": \"00:22\"},\n  {\"box_2d\": [467, 223, 560, 255], \"start\": \"00:21\", \"end\": \"00:28\"},\n  {\"box_2d\": [467, 232, 540, 260], \"start\": \"00:32\", \"end\": \"00:38\"},\n  {\"box_2d\": [470, 230, 557, 262], \"start\": \"00:42\", \"end\": \"00:49\"},\n  {\"box_2d\": [523, 243, 603, 272], \"start\": \"01:55\", \"end\": \"02:02\"},\n  {\"box_2d\": [510, 238, 607, 266], \"start\": \"02:03\", \"end\": \"02:10\"},\n  {\"box_2d\": [520, 243, 607, 275], \"start\": \"02:12\", \"end\": \"02:21\"},\n  {\"box_2d\": [463, 223, 550, 258], \"start\": \"03:38\", \"end\": \"03:44\"},\n  {\"box_2d\": [510, 234, 597, 268], \"start\": \"03:49\", \"end\": \"04:01\"},\n  {\"box_2d\": [510, 238, 597, 266], \"start\": \"03:54\", \"end\": \"04:03\"},\n  {\"box_2d\": [513, 243, 590, 268], \"start\": \"05:06\", \"end\": \"05:12\"},\n  {\"box_2d\": [467, 236, 540, 262], \"start\": \"05:13\", \"end\": \"05:18\"},\n  {\"box_2d\": [467, 232, 567, 268], \"start\": \"05:27\", \"end\": \"05:37\"},\n  {\"box_2d\": [500, 240, 577, 268], \"start\": \"05:37\", \"end\": \"05:45\"},\n  {\"box_2d\": [483, 240, 583, 273], \"start\": \"06:51\", \"end\": \"06:58\"},\n  {\"box_2d\": [480, 245, 550, 272], \"start\": \"06:57\", \"end\": \"07:05\"},\n  {\"box_2d\": [460, 225, 560, 257], \"start\": \"07:01\", \"end\": \"07:08\"},\n  {\"box_2d\": [500, 236, 587, 268], \"start\": \"07:08\", \"end\": \"07:17\"},\n  {\"box_2d\": [500, 242, 600, 277], \"start\": \"07:19\", \"end\": \"07:29\"},\n  {\"box_2d\": [500, 243, 580, 272], \"start\": \"07:25\", \"end\": \"07:34\"},\n  {\"box_2d\": [483, 232, 573, 264], \"start\": \"08:30\", \"end\": \"08:38\"},\n  {\"box_2d\": [500, 242, 577, 268], \"start\": \"08:33\", \"end\": \"08:41\"},\n  {\"box_2d\": [467, 236, 550, 266], \"start\": \"08:44\", \"end\": \"08:51\"},\n  {\"box_2d\": [453, 236, 537, 266], \"start\": \"09:02\", \"end\": \"09:10\"},\n  {\"box_2d\": [517, 242, 610, 272], \"start\": \"10:10\", \"end\": \"10:15\"},\n  {\"box_2d\": [473, 232, 560, 266], \"start\": \"10:20\", \"end\": \"10:26\"},\n  {\"box_2d\": [483, 236, 570, 266], \"start\": \"10:28\", \"end\": \"10:36\"},\n  {\"box_2d\": [480, 227, 560, 257], \"start\": \"10:32\", \"end\": \"10:40\"},\n  {\"box_2d\": [513, 236, 587, 266], \"start\": \"11:46\", \"end\": \"11:53\"},\n  {\"box_2d\": [497, 230, 587, 262], \"start\": \"11:51\", \"end\": \"11:59\"},\n  {\"box_2d\": [453, 228, 537, 258], \"start\": \"11:56\", \"end\": \"12:03\"},\n  {\"box_2d\": [470, 232, 557, 264], \"start\": \"12:00\", \"end\": \"12:08\"},\n  {\"box_2d\": [450, 236, 530, 262], \"start\": \"12:10\", \"end\": \"12:17\"},\n  {\"box_2d\": [437, 232, 513, 260], \"start\": \"12:16\", \"end\": \"12:25\"},\n  {\"box_2d\": [473, 228, 553, 260], \"start\": \"12:20\", \"end\": \"12:29\"},\n  {\"box_2d\": [457, 230, 537, 260], \"start\": \"13:27\", \"end\": \"13:34\"},\n  {\"box_2d\": [437, 234, 513, 262], \"start\": \"13:36\", \"end\": \"13:44\"},\n  {\"box_2d\": [487, 240, 577, 272], \"start\": \"13:39\", \"end\": \"13:48\"}\n]\n```",
+      "parsed": [
+        {
+          "box_2d": [
+            507,
+            232,
+            597,
+            268
+          ],
+          "start": "00:05",
+          "end": "00:11"
+        },
+        {
+          "box_2d": [
+            520,
+            240,
+            597,
+            268
+          ],
+          "start": "00:15",
+          "end": "00:22"
+        },
+        {
+          "box_2d": [
+            467,
+            223,
+            560,
+            255
+          ],
+          "start": "00:21",
+          "end": "00:28"
+        },
+        {
+          "box_2d": [
+            467,
+            232,
+            540,
+            260
+          ],
+          "start": "00:32",
+          "end": "00:38"
+        },
+        {
+          "box_2d": [
+            470,
+            230,
+            557,
+            262
+          ],
+          "start": "00:42",
+          "end": "00:49"
+        },
+        {
+          "box_2d": [
+            523,
+            243,
+            603,
+            272
+          ],
+          "start": "01:55",
+          "end": "02:02"
+        },
+        {
+          "box_2d": [
+            510,
+            238,
+            607,
+            266
+          ],
+          "start": "02:03",
+          "end": "02:10"
+        },
+        {
+          "box_2d": [
+            520,
+            243,
+            607,
+            275
+          ],
+          "start": "02:12",
+          "end": "02:21"
+        },
+        {
+          "box_2d": [
+            463,
+            223,
+            550,
+            258
+          ],
+          "start": "03:38",
+          "end": "03:44"
+        },
+        {
+          "box_2d": [
+            510,
+            234,
+            597,
+            268
+          ],
+          "start": "03:49",
+          "end": "04:01"
+        },
+        {
+          "box_2d": [
+            510,
+            238,
+            597,
+            266
+          ],
+          "start": "03:54",
+          "end": "04:03"
+        },
+        {
+          "box_2d": [
+            513,
+            243,
+            590,
+            268
+          ],
+          "start": "05:06",
+          "end": "05:12"
+        },
+        {
+          "box_2d": [
+            467,
+            236,
+            540,
+            262
+          ],
+          "start": "05:13",
+          "end": "05:18"
+        },
+        {
+          "box_2d": [
+            467,
+            232,
+            567,
+            268
+          ],
+          "start": "05:27",
+          "end": "05:37"
+        },
+        {
+          "box_2d": [
+            500,
+            240,
+            577,
+            268
+          ],
+          "start": "05:37",
+          "end": "05:45"
+        },
+        {
+          "box_2d": [
+            483,
+            240,
+            583,
+            273
+          ],
+          "start": "06:51",
+          "end": "06:58"
+        },
+        {
+          "box_2d": [
+            480,
+            245,
+            550,
+            272
+          ],
+          "start": "06:57",
+          "end": "07:05"
+        },
+        {
+          "box_2d": [
+            460,
+            225,
+            560,
+            257
+          ],
+          "start": "07:01",
+          "end": "07:08"
+        },
+        {
+          "box_2d": [
+            500,
+            236,
+            587,
+            268
+          ],
+          "start": "07:08",
+          "end": "07:17"
+        },
+        {
+          "box_2d": [
+            500,
+            242,
+            600,
+            277
+          ],
+          "start": "07:19",
+          "end": "07:29"
+        },
+        {
+          "box_2d": [
+            500,
+            243,
+            580,
+            272
+          ],
+          "start": "07:25",
+          "end": "07:34"
+        },
+        {
+          "box_2d": [
+            483,
+            232,
+            573,
+            264
+          ],
+          "start": "08:30",
+          "end": "08:38"
+        },
+        {
+          "box_2d": [
+            500,
+            242,
+            577,
+            268
+          ],
+          "start": "08:33",
+          "end": "08:41"
+        },
+        {
+          "box_2d": [
+            467,
+            236,
+            550,
+            266
+          ],
+          "start": "08:44",
+          "end": "08:51"
+        },
+        {
+          "box_2d": [
+            453,
+            236,
+            537,
+            266
+          ],
+          "start": "09:02",
+          "end": "09:10"
+        },
+        {
+          "box_2d": [
+            517,
+            242,
+            610,
+            272
+          ],
+          "start": "10:10",
+          "end": "10:15"
+        },
+        {
+          "box_2d": [
+            473,
+            232,
+            560,
+            266
+          ],
+          "start": "10:20",
+          "end": "10:26"
+        },
+        {
+          "box_2d": [
+            483,
+            236,
+            570,
+            266
+          ],
+          "start": "10:28",
+          "end": "10:36"
+        },
+        {
+          "box_2d": [
+            480,
+            227,
+            560,
+            257
+          ],
+          "start": "10:32",
+          "end": "10:40"
+        },
+        {
+          "box_2d": [
+            513,
+            236,
+            587,
+            266
+          ],
+          "start": "11:46",
+          "end": "11:53"
+        },
+        {
+          "box_2d": [
+            497,
+            230,
+            587,
+            262
+          ],
+          "start": "11:51",
+          "end": "11:59"
+        },
+        {
+          "box_2d": [
+            453,
+            228,
+            537,
+            258
+          ],
+          "start": "11:56",
+          "end": "12:03"
+        },
+        {
+          "box_2d": [
+            470,
+            232,
+            557,
+            264
+          ],
+          "start": "12:00",
+          "end": "12:08"
+        },
+        {
+          "box_2d": [
+            450,
+            236,
+            530,
+            262
+          ],
+          "start": "12:10",
+          "end": "12:17"
+        },
+        {
+          "box_2d": [
+            437,
+            232,
+            513,
+            260
+          ],
+          "start": "12:16",
+          "end": "12:25"
+        },
+        {
+          "box_2d": [
+            473,
+            228,
+            553,
+            260
+          ],
+          "start": "12:20",
+          "end": "12:29"
+        },
+        {
+          "box_2d": [
+            457,
+            230,
+            537,
+            260
+          ],
+          "start": "13:27",
+          "end": "13:34"
+        },
+        {
+          "box_2d": [
+            437,
+            234,
+            513,
+            262
+          ],
+          "start": "13:36",
+          "end": "13:44"
+        },
+        {
+          "box_2d": [
+            487,
+            240,
+            577,
+            272
+          ],
+          "start": "13:39",
+          "end": "13:48"
+        }
+      ],
+      "score": {
+        "answers": 39,
+        "true_positives": 20,
+        "false_positives": 19,
+        "missed_oids": [
+          446,
+          449,
+          499,
+          508,
+          524,
+          531,
+          648,
+          757,
+          781,
+          810,
+          824,
+          839,
+          865,
+          887,
+          998,
+          1019,
+          1108,
+          1116,
+          1131,
+          1139,
+          1162,
+          1186,
+          1348,
+          1356,
+          1363,
+          1364,
+          1410,
+          1510,
+          1530,
+          1538,
+          1571,
+          1622,
+          1647,
+          1660,
+          1794,
+          1821,
+          1847,
+          1941,
+          1944,
+          1950,
+          2060,
+          2087,
+          2102,
+          2110,
+          2137,
+          2244,
+          2257,
+          2277,
+          2284,
+          2292,
+          2377,
+          2491,
+          2515
+        ],
+        "precision": 0.513,
+        "recall": 0.274,
+        "mean_interval_iou": 0.552,
+        "detail": [
+          {
+            "answer": {
+              "box_2d": [
+                507,
+                232,
+                597,
+                268
+              ],
+              "start": "00:05",
+              "end": "00:11"
+            },
+            "box_iou": 0.325,
+            "matched_oid": 442,
+            "frame_offset": 6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                520,
+                240,
+                597,
+                268
+              ],
+              "start": "00:15",
+              "end": "00:22"
+            },
+            "box_iou": 0.368,
+            "matched_oid": 460,
+            "frame_offset": 8,
+            "outcome": "hit",
+            "interval_iou": 0.338,
+            "clock_error_s": -2.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                467,
+                223,
+                560,
+                255
+              ],
+              "start": "00:21",
+              "end": "00:28"
+            },
+            "box_iou": 0.278,
+            "matched_oid": 544,
+            "frame_offset": 8,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                467,
+                232,
+                540,
+                260
+              ],
+              "start": "00:32",
+              "end": "00:38"
+            },
+            "box_iou": 0.665,
+            "matched_oid": 606,
+            "frame_offset": 2,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                470,
+                230,
+                557,
+                262
+              ],
+              "start": "00:42",
+              "end": "00:49"
+            },
+            "box_iou": 0.407,
+            "matched_oid": 644,
+            "frame_offset": 10,
+            "outcome": "hit",
+            "interval_iou": 0.458,
+            "clock_error_s": -1.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                523,
+                243,
+                603,
+                272
+              ],
+              "start": "01:55",
+              "end": "02:02"
+            },
+            "box_iou": 0.694,
+            "matched_oid": 739,
+            "frame_offset": -9,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                510,
+                238,
+                607,
+                266
+              ],
+              "start": "02:03",
+              "end": "02:10"
+            },
+            "box_iou": 0.745,
+            "matched_oid": 762,
+            "frame_offset": -10,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                520,
+                243,
+                607,
+                275
+              ],
+              "start": "02:12",
+              "end": "02:21"
+            },
+            "box_iou": 0.648,
+            "matched_oid": 841,
+            "frame_offset": -7,
+            "outcome": "hit",
+            "interval_iou": 0.742,
+            "clock_error_s": 1.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                463,
+                223,
+                550,
+                258
+              ],
+              "start": "03:38",
+              "end": "03:44"
+            },
+            "box_iou": 0.585,
+            "matched_oid": 1029,
+            "frame_offset": 5,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                510,
+                234,
+                597,
+                268
+              ],
+              "start": "03:49",
+              "end": "04:01"
+            },
+            "box_iou": 0.525,
+            "matched_oid": 1083,
+            "frame_offset": -10,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                510,
+                238,
+                597,
+                266
+              ],
+              "start": "03:54",
+              "end": "04:03"
+            },
+            "box_iou": 0.458,
+            "matched_oid": 1117,
+            "frame_offset": 0,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                513,
+                243,
+                590,
+                268
+              ],
+              "start": "05:06",
+              "end": "05:12"
+            },
+            "box_iou": 0.773,
+            "matched_oid": 1157,
+            "frame_offset": -2,
+            "outcome": "hit",
+            "interval_iou": 0.431,
+            "clock_error_s": -0.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                467,
+                236,
+                540,
+                262
+              ],
+              "start": "05:13",
+              "end": "05:18"
+            },
+            "box_iou": 0.68,
+            "matched_oid": 1235,
+            "frame_offset": -5,
+            "outcome": "hit",
+            "interval_iou": 0.448,
+            "clock_error_s": 1.4
+          },
+          {
+            "answer": {
+              "box_2d": [
+                467,
+                232,
+                567,
+                268
+              ],
+              "start": "05:27",
+              "end": "05:37"
+            },
+            "box_iou": 0.434,
+            "matched_oid": 1334,
+            "frame_offset": -3,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                500,
+                240,
+                577,
+                268
+              ],
+              "start": "05:37",
+              "end": "05:45"
+            },
+            "box_iou": 0.688,
+            "matched_oid": 1368,
+            "frame_offset": -2,
+            "outcome": "hit",
+            "interval_iou": 0.707,
+            "clock_error_s": 0.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                483,
+                240,
+                583,
+                273
+              ],
+              "start": "06:51",
+              "end": "06:58"
+            },
+            "box_iou": 0.477,
+            "matched_oid": 1504,
+            "frame_offset": -1,
+            "outcome": "hit",
+            "interval_iou": 0.8,
+            "clock_error_s": 0.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                480,
+                245,
+                550,
+                272
+              ],
+              "start": "06:57",
+              "end": "07:05"
+            },
+            "box_iou": 0.779,
+            "matched_oid": 1536,
+            "frame_offset": 4,
+            "outcome": "hit",
+            "interval_iou": 0.627,
+            "clock_error_s": -0.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                460,
+                225,
+                560,
+                257
+              ],
+              "start": "07:01",
+              "end": "07:08"
+            },
+            "box_iou": 0.325,
+            "matched_oid": 1563,
+            "frame_offset": 5,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                500,
+                236,
+                587,
+                268
+              ],
+              "start": "07:08",
+              "end": "07:17"
+            },
+            "box_iou": 0.369,
+            "matched_oid": 1595,
+            "frame_offset": -6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                500,
+                242,
+                600,
+                277
+              ],
+              "start": "07:19",
+              "end": "07:29"
+            },
+            "box_iou": 0.419,
+            "matched_oid": 1642,
+            "frame_offset": 0,
+            "outcome": "hit",
+            "interval_iou": 0.926,
+            "clock_error_s": -0.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                500,
+                243,
+                580,
+                272
+              ],
+              "start": "07:25",
+              "end": "07:34"
+            },
+            "box_iou": 0.627,
+            "matched_oid": 1651,
+            "frame_offset": -7,
+            "outcome": "hit",
+            "interval_iou": 0.253,
+            "clock_error_s": 1.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                483,
+                232,
+                573,
+                264
+              ],
+              "start": "08:30",
+              "end": "08:38"
+            },
+            "box_iou": 0.442,
+            "matched_oid": 1669,
+            "frame_offset": 2,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                500,
+                242,
+                577,
+                268
+              ],
+              "start": "08:33",
+              "end": "08:41"
+            },
+            "box_iou": 0.775,
+            "matched_oid": 1673,
+            "frame_offset": 7,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                467,
+                236,
+                550,
+                266
+              ],
+              "start": "08:44",
+              "end": "08:51"
+            },
+            "box_iou": 0.413,
+            "matched_oid": 1828,
+            "frame_offset": 0,
+            "outcome": "hit",
+            "interval_iou": 0.632,
+            "clock_error_s": 0.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                453,
+                236,
+                537,
+                266
+              ],
+              "start": "09:02",
+              "end": "09:10"
+            },
+            "box_iou": 0.591,
+            "matched_oid": 1923,
+            "frame_offset": 4,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                517,
+                242,
+                610,
+                272
+              ],
+              "start": "10:10",
+              "end": "10:15"
+            },
+            "box_iou": 0.494,
+            "matched_oid": 1948,
+            "frame_offset": 1,
+            "outcome": "hit",
+            "interval_iou": 0.4,
+            "clock_error_s": -0.8
+          },
+          {
+            "answer": {
+              "box_2d": [
+                473,
+                232,
+                560,
+                266
+              ],
+              "start": "10:20",
+              "end": "10:26"
+            },
+            "box_iou": 0.566,
+            "matched_oid": 2062,
+            "frame_offset": 0,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                483,
+                236,
+                570,
+                266
+              ],
+              "start": "10:28",
+              "end": "10:36"
+            },
+            "box_iou": 0.694,
+            "matched_oid": 2096,
+            "frame_offset": -6,
+            "outcome": "hit",
+            "interval_iou": 0.759,
+            "clock_error_s": 1.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                480,
+                227,
+                560,
+                257
+              ],
+              "start": "10:32",
+              "end": "10:40"
+            },
+            "box_iou": 0.446,
+            "matched_oid": 2119,
+            "frame_offset": 9,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                513,
+                236,
+                587,
+                266
+              ],
+              "start": "11:46",
+              "end": "11:53"
+            },
+            "box_iou": 0.57,
+            "matched_oid": 2181,
+            "frame_offset": 5,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                497,
+                230,
+                587,
+                262
+              ],
+              "start": "11:51",
+              "end": "11:59"
+            },
+            "box_iou": 0.336,
+            "matched_oid": 2231,
+            "frame_offset": -9,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                453,
+                228,
+                537,
+                258
+              ],
+              "start": "11:56",
+              "end": "12:03"
+            },
+            "box_iou": 0.405,
+            "matched_oid": 2236,
+            "frame_offset": 10,
+            "outcome": "hit",
+            "interval_iou": 0.412,
+            "clock_error_s": -1.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                470,
+                232,
+                557,
+                264
+              ],
+              "start": "12:00",
+              "end": "12:08"
+            },
+            "box_iou": 0.548,
+            "matched_oid": 2272,
+            "frame_offset": 0,
+            "outcome": "hit",
+            "interval_iou": 0.683,
+            "clock_error_s": 0.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                450,
+                236,
+                530,
+                262
+              ],
+              "start": "12:10",
+              "end": "12:17"
+            },
+            "box_iou": 0.621,
+            "matched_oid": 2311,
+            "frame_offset": 7,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                437,
+                232,
+                513,
+                260
+              ],
+              "start": "12:16",
+              "end": "12:25"
+            },
+            "box_iou": 0.427,
+            "matched_oid": 2312,
+            "frame_offset": 6,
+            "outcome": "hit",
+            "interval_iou": 0.226,
+            "clock_error_s": -0.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                473,
+                228,
+                553,
+                260
+              ],
+              "start": "12:20",
+              "end": "12:29"
+            },
+            "box_iou": 0.612,
+            "matched_oid": 2321,
+            "frame_offset": -5,
+            "outcome": "hit",
+            "interval_iou": 0.223,
+            "clock_error_s": 1.4
+          },
+          {
+            "answer": {
+              "box_2d": [
+                457,
+                230,
+                537,
+                260
+              ],
+              "start": "13:27",
+              "end": "13:34"
+            },
+            "box_iou": 0.635,
+            "matched_oid": 2373,
+            "frame_offset": 9,
+            "outcome": "hit",
+            "interval_iou": 0.476,
+            "clock_error_s": -1.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                437,
+                234,
+                513,
+                262
+              ],
+              "start": "13:36",
+              "end": "13:44"
+            },
+            "box_iou": 0.716,
+            "matched_oid": 2416,
+            "frame_offset": 9,
+            "outcome": "hit",
+            "interval_iou": 0.643,
+            "clock_error_s": -1.0
+          },
+          {
+            "answer": {
+              "box_2d": [
+                487,
+                240,
+                577,
+                272
+              ],
+              "start": "13:39",
+              "end": "13:48"
+            },
+            "box_iou": 0.603,
+            "matched_oid": 2471,
+            "frame_offset": 1,
+            "outcome": "hit",
+            "interval_iou": 0.865,
+            "clock_error_s": -0.2
+          }
+        ]
+      }
+    }
+  ]
+}

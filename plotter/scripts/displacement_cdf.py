@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import os
 
 import duckdb
 import matplotlib
@@ -30,7 +31,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-_ROOT = Path("/home/satyam/dev/frameql/datasets/processed")
+_ROOT = Path(os.environ.get("TRQS_DATA_DIR", Path(__file__).resolve().parents[2] / "datasets" / "processed"))
 
 # label -> (path under the processed tree, units, objects to sample)
 _DATASETS = {

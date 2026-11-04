@@ -35,13 +35,14 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import os
 
 import duckdb
 import numpy as np
 
-# …/papers/plotter/tools/this.py -> the repository root.
-REPO_ROOT = Path(__file__).absolute().parents[3]
-DATA_ROOT = REPO_ROOT / "datasets/processed"
+# plotter/tools/this.py -> the repository root.
+REPO_ROOT = Path(__file__).absolute().parents[2]
+DATA_ROOT = Path(os.environ.get("TRQS_DATA_DIR", REPO_ROOT / "datasets/processed"))
 CACHE = Path(__file__).absolute().parents[1] / "data/cooccurrence_stats.json"
 
 # (dataset, subset, label, domain) -- one long continuous video per dataset.

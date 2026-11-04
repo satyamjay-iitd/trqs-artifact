@@ -1,0 +1,435 @@
+{
+  "model": "gemini-4-argon",
+  "clip": "papers/vldb27/suite/vlm/clip/uav0006_180_210.mp4",
+  "prompt": "This is a 30-second aerial video of road traffic recorded at 5 frames per second.\n\nIdentify every car that makes a right turn during the video.\n\nReturn ONLY a JSON array and nothing else. Each element must be:\n{\"box_2d\": [ymin, xmin, ymax, xmax], \"start\": \"MM:SS\", \"end\": \"MM:SS\"}\n\n- box_2d locates that car at the moment its turn begins, in normalised 0-1000 coordinates.\n- start and end bound the turn itself, not the car's whole time on screen.\n- If no car turns right, return [].\n",
+  "objects_in_window": 125,
+  "ground_truth": {
+    "video": "ytstream/uav_0006",
+    "window_s": [
+      180,
+      210
+    ],
+    "window_frames": [
+      900,
+      1050
+    ],
+    "fps": 5,
+    "approach": [
+      230,
+      280,
+      340,
+      540
+    ],
+    "exit_right": [
+      800,
+      40,
+      960,
+      130
+    ],
+    "query": "REGIONS (approach = [230, 280, 340, 540], exit_right = [800, 40, 960, 130])\nSELECT (v: class=car)\nWHERE DURATION(v.center INSIDE approach, 3) THEN DURATION(v.center INSIDE exit_right, 3)",
+    "turns_in_whole_video": 78,
+    "turns": [
+      {
+        "oid": 446,
+        "turn_start_frame": 928,
+        "turn_end_frame": 989,
+        "turn_start_s": 185.6,
+        "turn_end_s": 197.8
+      },
+      {
+        "oid": 449,
+        "turn_start_frame": 943,
+        "turn_end_frame": 996,
+        "turn_start_s": 188.6,
+        "turn_end_s": 199.2
+      },
+      {
+        "oid": 499,
+        "turn_start_frame": 958,
+        "turn_end_frame": 1007,
+        "turn_start_s": 191.6,
+        "turn_end_s": 201.4
+      },
+      {
+        "oid": 508,
+        "turn_start_frame": 975,
+        "turn_end_frame": 1032,
+        "turn_start_s": 195.0,
+        "turn_end_s": 206.4
+      },
+      {
+        "oid": 460,
+        "turn_start_frame": 986,
+        "turn_end_frame": 1048,
+        "turn_start_s": 197.2,
+        "turn_end_s": 209.6
+      }
+    ],
+    "straddling_window_excluded": [
+      {
+        "oid": 524,
+        "turn_start_frame": 996,
+        "turn_end_frame": 1066,
+        "turn_start_s": 199.2,
+        "turn_end_s": 213.2
+      },
+      {
+        "oid": 531,
+        "turn_start_frame": 1007,
+        "turn_end_frame": 1082,
+        "turn_start_s": 201.4,
+        "turn_end_s": 216.4
+      }
+    ]
+  },
+  "trqs_ms": 5.3,
+  "runs": [
+    {
+      "mode": "static",
+      "latency_ms": 12954.461600631475,
+      "http_status": 200,
+      "request_part": {
+        "media_processing": "STATIC",
+        "video_metadata": {
+          "fps": 5
+        }
+      },
+      "usage": {
+        "promptTokenCount": 11720,
+        "candidatesTokenCount": 337,
+        "totalTokenCount": 12057,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 470
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 11250
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 337
+          }
+        ]
+      },
+      "text": "```json\n[{\"box_2d\": [540, 267, 636, 294], \"start\": \"00:05\", \"end\": \"00:12\"},\n{\"box_2d\": [776, 294, 860, 316], \"start\": \"00:12\", \"end\": \"00:16\"},\n{\"box_2d\": [773, 294, 853, 316], \"start\": \"00:17\", \"end\": \"00:22\"},\n{\"box_2d\": [656, 279, 736, 300], \"start\": \"00:19\", \"end\": \"00:23\"},\n{\"box_2d\": [780, 294, 866, 316], \"start\": \"00:20\", \"end\": \"00:25\"},\n{\"box_2d\": [750, 290, 840, 316], \"start\": \"00:23\", \"end\": \"00:28\"},\n{\"box_2d\": [790, 294, 883, 320], \"start\": \"00:25\", \"end\": \"00:29\"}]\n```",
+      "parsed": [
+        {
+          "box_2d": [
+            540,
+            267,
+            636,
+            294
+          ],
+          "start": "00:05",
+          "end": "00:12"
+        },
+        {
+          "box_2d": [
+            776,
+            294,
+            860,
+            316
+          ],
+          "start": "00:12",
+          "end": "00:16"
+        },
+        {
+          "box_2d": [
+            773,
+            294,
+            853,
+            316
+          ],
+          "start": "00:17",
+          "end": "00:22"
+        },
+        {
+          "box_2d": [
+            656,
+            279,
+            736,
+            300
+          ],
+          "start": "00:19",
+          "end": "00:23"
+        },
+        {
+          "box_2d": [
+            780,
+            294,
+            866,
+            316
+          ],
+          "start": "00:20",
+          "end": "00:25"
+        },
+        {
+          "box_2d": [
+            750,
+            290,
+            840,
+            316
+          ],
+          "start": "00:23",
+          "end": "00:28"
+        },
+        {
+          "box_2d": [
+            790,
+            294,
+            883,
+            320
+          ],
+          "start": "00:25",
+          "end": "00:29"
+        }
+      ],
+      "score": {
+        "answers": 7,
+        "true_positives": 2,
+        "false_positives": 5,
+        "missed_oids": [
+          446,
+          499,
+          508
+        ],
+        "precision": 0.286,
+        "recall": 0.4,
+        "mean_interval_iou": 0.125,
+        "detail": [
+          {
+            "answer": {
+              "box_2d": [
+                540,
+                267,
+                636,
+                294
+              ],
+              "start": "00:05",
+              "end": "00:12"
+            },
+            "box_iou": 0.436,
+            "matched_oid": 449,
+            "frame_offset": 7,
+            "outcome": "hit",
+            "interval_iou": 0.25,
+            "clock_error_s": -3.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                776,
+                294,
+                860,
+                316
+              ],
+              "start": "00:12",
+              "end": "00:16"
+            },
+            "box_iou": 0.611,
+            "matched_oid": 460,
+            "frame_offset": 5,
+            "outcome": "hit",
+            "interval_iou": 0.0,
+            "clock_error_s": -5.2
+          },
+          {
+            "answer": {
+              "box_2d": [
+                773,
+                294,
+                853,
+                316
+              ],
+              "start": "00:17",
+              "end": "00:22"
+            },
+            "box_iou": 0.247,
+            "matched_oid": 518,
+            "frame_offset": 2,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                656,
+                279,
+                736,
+                300
+              ],
+              "start": "00:19",
+              "end": "00:23"
+            },
+            "box_iou": 0.59,
+            "matched_oid": 531,
+            "frame_offset": 0,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                780,
+                294,
+                866,
+                316
+              ],
+              "start": "00:20",
+              "end": "00:25"
+            },
+            "box_iou": 0.059,
+            "matched_oid": 537,
+            "frame_offset": 7,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                750,
+                290,
+                840,
+                316
+              ],
+              "start": "00:23",
+              "end": "00:28"
+            },
+            "box_iou": 0.443,
+            "matched_oid": 548,
+            "frame_offset": 6,
+            "outcome": "wrong car"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                790,
+                294,
+                883,
+                320
+              ],
+              "start": "00:25",
+              "end": "00:29"
+            },
+            "box_iou": 0.448,
+            "matched_oid": 548,
+            "frame_offset": -6,
+            "outcome": "wrong car"
+          }
+        ]
+      }
+    },
+    {
+      "mode": "agentic",
+      "latency_ms": 23665.583519265056,
+      "http_status": 200,
+      "request_part": {
+        "media_processing": "AGENTIC"
+      },
+      "usage": {
+        "promptTokenCount": 533,
+        "candidatesTokenCount": 185,
+        "totalTokenCount": 15218,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 533
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 185
+          }
+        ],
+        "toolUsePromptTokenCount": 14500,
+        "toolUsePromptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 1615
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 12885
+          }
+        ]
+      },
+      "text": "[{\"box_2d\": [540, 260, 623, 290], \"start\": \"00:07\", \"end\": \"00:13\"}, {\"box_2d\": [520, 255, 603, 286], \"start\": \"00:16\", \"end\": \"00:22\"}]",
+      "parsed": [
+        {
+          "box_2d": [
+            540,
+            260,
+            623,
+            290
+          ],
+          "start": "00:07",
+          "end": "00:13"
+        },
+        {
+          "box_2d": [
+            520,
+            255,
+            603,
+            286
+          ],
+          "start": "00:16",
+          "end": "00:22"
+        }
+      ],
+      "score": {
+        "answers": 2,
+        "true_positives": 2,
+        "false_positives": 0,
+        "missed_oids": [
+          446,
+          499,
+          508
+        ],
+        "precision": 1.0,
+        "recall": 0.4,
+        "mean_interval_iou": 0.366,
+        "detail": [
+          {
+            "answer": {
+              "box_2d": [
+                540,
+                260,
+                623,
+                290
+              ],
+              "start": "00:07",
+              "end": "00:13"
+            },
+            "box_iou": 0.617,
+            "matched_oid": 449,
+            "frame_offset": -1,
+            "outcome": "hit",
+            "interval_iou": 0.371,
+            "clock_error_s": -1.6
+          },
+          {
+            "answer": {
+              "box_2d": [
+                520,
+                255,
+                603,
+                286
+              ],
+              "start": "00:16",
+              "end": "00:22"
+            },
+            "box_iou": 0.595,
+            "matched_oid": 460,
+            "frame_offset": 2,
+            "outcome": "hit",
+            "interval_iou": 0.362,
+            "clock_error_s": -1.2
+          }
+        ]
+      }
+    }
+  ],
+  "trqs_note": "5 warm runs of queries/UAV-rightturn.trql over the whole 19.6 min video (78 turns, 23 MB peak); one query answers every window, so this is an upper bound for any sub-window."
+}

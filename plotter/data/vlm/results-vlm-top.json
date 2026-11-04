@@ -1,0 +1,226 @@
+{
+  "model": "gemini-4-argon",
+  "clip": "papers/vldb27/suite/vlm/clip/uav0006_180_210.mp4",
+  "prompt": "This is a 30-second aerial video of road traffic recorded at 5 frames per second.\n\nIdentify every car that enters from the top of the frame and then turns right (the car's own right) during the video.\n\nReturn ONLY a JSON array and nothing else. Each element must be:\n{\"box_2d\": [ymin, xmin, ymax, xmax], \"start\": \"MM:SS\", \"end\": \"MM:SS\"}\n\n- box_2d locates that car at the moment its turn begins, in normalised 0-1000 coordinates.\n- start and end bound the turn itself, not the car's whole time on screen.\n- If no car does this, return [].\n",
+  "objects_in_window": 125,
+  "event": "every car that enters from the top of the frame and then turns right (the car's own right)",
+  "ground_truth": {
+    "video": "ytstream/uav_0006",
+    "window_s": [
+      180,
+      210
+    ],
+    "window_frames": [
+      900,
+      1050
+    ],
+    "fps": 5,
+    "query_file": "UAV-rightturn-top.trql",
+    "region_names": [
+      "from_top",
+      "exit_west"
+    ],
+    "approach": [
+      25,
+      0,
+      80,
+      60
+    ],
+    "exit_right": [
+      0,
+      155,
+      40,
+      215
+    ],
+    "query": "REGIONS (from_top = [25, 0, 80, 60], exit_west = [0, 155, 40, 215])\nSELECT (v: class=car)\nWHERE DURATION(v.center INSIDE from_top, 3) THEN DURATION(v.center INSIDE exit_west, 3)",
+    "turns_in_whole_video": 22,
+    "turns": [
+      {
+        "oid": 476,
+        "turn_start_frame": 929,
+        "turn_end_frame": 949,
+        "turn_start_s": 185.8,
+        "turn_end_s": 189.8
+      },
+      {
+        "oid": 510,
+        "turn_start_frame": 968,
+        "turn_end_frame": 989,
+        "turn_start_s": 193.6,
+        "turn_end_s": 197.8
+      },
+      {
+        "oid": 534,
+        "turn_start_frame": 1000,
+        "turn_end_frame": 1014,
+        "turn_start_s": 200.0,
+        "turn_end_s": 202.8
+      }
+    ],
+    "straddling_window_excluded": []
+  },
+  "trqs_ms": 6.3,
+  "runs": [
+    {
+      "mode": "static",
+      "latency_ms": 5429.737441241741,
+      "http_status": 200,
+      "request_part": {
+        "media_processing": "STATIC",
+        "video_metadata": {
+          "fps": 5
+        }
+      },
+      "usage": {
+        "promptTokenCount": 11735,
+        "candidatesTokenCount": 48,
+        "totalTokenCount": 11783,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 485
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 11250
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 48
+          }
+        ]
+      },
+      "model_version": "gemini-4-argon",
+      "finish_reason": "STOP",
+      "text": "[{\"box_2d\": [77, 79, 177, 114], \"start\": \"00:13\", \"end\": \"00:17\"}]",
+      "parsed": [
+        {
+          "box_2d": [
+            77,
+            79,
+            177,
+            114
+          ],
+          "start": "00:13",
+          "end": "00:17"
+        }
+      ],
+      "score": {
+        "answers": 1,
+        "true_positives": 0,
+        "false_positives": 1,
+        "missed_oids": [
+          476,
+          510,
+          534
+        ],
+        "precision": 0.0,
+        "recall": 0.0,
+        "mean_interval_iou": 0.0,
+        "detail": [
+          {
+            "answer": {
+              "box_2d": [
+                77,
+                79,
+                177,
+                114
+              ],
+              "start": "00:13",
+              "end": "00:17"
+            },
+            "box_iou": 0.343,
+            "matched_oid": 514,
+            "frame_offset": 2,
+            "outcome": "wrong car"
+          }
+        ]
+      }
+    },
+    {
+      "mode": "agentic",
+      "latency_ms": 21772.430699318647,
+      "http_status": 200,
+      "request_part": {
+        "media_processing": "AGENTIC"
+      },
+      "usage": {
+        "promptTokenCount": 548,
+        "candidatesTokenCount": 154,
+        "totalTokenCount": 13580,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 548
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 154
+          }
+        ],
+        "toolUsePromptTokenCount": 12878,
+        "toolUsePromptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 1628
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 11250
+          }
+        ]
+      },
+      "model_version": "gemini-4-argon",
+      "finish_reason": "STOP",
+      "text": "[{\"box_2d\": [174, 59, 250, 81], \"start\": \"00:15\", \"end\": \"00:18\"}]",
+      "parsed": [
+        {
+          "box_2d": [
+            174,
+            59,
+            250,
+            81
+          ],
+          "start": "00:15",
+          "end": "00:18"
+        }
+      ],
+      "score": {
+        "answers": 1,
+        "true_positives": 1,
+        "false_positives": 0,
+        "missed_oids": [
+          476,
+          534
+        ],
+        "precision": 1.0,
+        "recall": 0.333,
+        "mean_interval_iou": 0.652,
+        "detail": [
+          {
+            "answer": {
+              "box_2d": [
+                174,
+                59,
+                250,
+                81
+              ],
+              "start": "00:15",
+              "end": "00:18"
+            },
+            "box_iou": 0.513,
+            "matched_oid": 510,
+            "frame_offset": 2,
+            "outcome": "hit",
+            "interval_iou": 0.652,
+            "clock_error_s": 1.4
+          }
+        ]
+      }
+    }
+  ]
+}

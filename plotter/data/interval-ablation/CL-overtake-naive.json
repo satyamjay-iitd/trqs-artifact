@@ -1,0 +1,36 @@
+{
+  "query_id": "CL-overtake",
+  "query": "SELECT (a:, b:) WHERE DURATION(a.cx < b.cx, 5) THEN DURATION(a.cy < 160, 1) THEN DURATION(a.cx > b.cx, 5)",
+  "interval_repr": "naive",
+  "scale": 1,
+  "max_gap": 1,
+  "max_error_px": 0.0,
+  "objects": 591,
+  "rows": 222,
+  "avg_ms": 43807.094499,
+  "times_ms": [
+    45212.463071000006,
+    43754.688636,
+    42454.13179
+  ],
+  "peak_mem_mb": 4556.0,
+  "storage_mb": 0,
+  "db_stats": {
+    "num_objs": 591,
+    "avg_traj_len": 93.77495769881557,
+    "avg_span": 94.20304568527919,
+    "total_segments": 12067,
+    "avg_segments": 20.41793570219966,
+    "poly_segments": 638,
+    "direct_segments": 11429,
+    "mixed_segments": 0,
+    "total_canonical": 651
+  },
+  "stages": {
+    "selection_ms": 1.5969730000000002,
+    "poly_ms": 6.522868,
+    "lift_ms": 6.956231,
+    "temporal_ms": 43187.549947,
+    "other_ms": 600.738556
+  }
+}

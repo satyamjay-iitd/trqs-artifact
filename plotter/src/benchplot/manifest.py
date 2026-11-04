@@ -24,7 +24,7 @@ DEFAULT_MANIFEST = Path("manifest.toml")
 
 # Relative to the manifest's own directory; the repository root is where the
 # benchmark scripts write.
-DEFAULT_DB = "../../bench.db"
+DEFAULT_DB = "../bench.db"
 DEFAULT_OUT_DIR = "plots"
 DEFAULT_FORMAT = "png"
 FORMATS = ("png", "pdf", "svg", "eps")

@@ -13,9 +13,9 @@ precision against the reference answer differs by at most 1.5 points at any
 budget drawn (0.956 to 0.971 at the widest), so a panel of it separated
 nothing.
 
-The three databases come from `data/ablation/run.sh`, which builds one binary and
-one set of artifacts per degree — the `.trql` filename does not record the
-degree, so each needs its own tree. `data/ablation-instrumented/` holds the same
+The three recorded databases are in `data/ablation/`, one per degree.
+Regenerating them requires a separate binary and artifact tree per degree:
+the `.trql` filename does not record the polynomial degree. `data/ablation-instrumented/` holds the same
 matrix re-run from `--features instrument` builds, which is where the time
 panel's stage split comes from.
 
@@ -113,7 +113,7 @@ def load_stages(data_dir: Path, query: str) -> pd.DataFrame:
         db = data_dir / f"{deg}-inst.db"
         if not db.is_file():
             raise SystemExit(
-                f"no instrumented database at {db} — see data/ablation/run.sh, "
+                f"no instrumented database at {db} — rerun the degree benchmarks, "
                 "rebuilt with `--features instrument`"
             )
         with sqlite3.connect(f"file:{db}?mode=ro", uri=True) as conn:
@@ -146,10 +146,19 @@ def main() -> None:
     )
     ap.add_argument("--query", default="I24-convoy")
     ap.add_argument("--out", type=Path, default=here / "plots" / "comparison-cubic-quadratic-plot.pdf")
+    # The figure shares its row in the paper with `interval_ablation.pdf`, so it
+    # draws the three tightest budgets at under two thirds of a column. The two
+    # widest were the first to go: by then the degrees have stopped separating.
+    ap.add_argument("--drop-widest", type=int, default=2,
+                    help="leave out this many of the widest budgets (default 2)")
+    ap.add_argument("--width", type=float, default=2.05, help="figure width, inches")
     args = ap.parse_args()
 
     df = load(args.data_dir)
     df = df[df["query"] == args.query].sort_values("err")
+    if args.drop_widest:
+        keep = sorted(df["err"].unique())[: -args.drop_widest]
+        df = df[df["err"].isin(keep)]
     if df.empty:
         raise SystemExit(f"no runs for {args.query} in {args.data_dir}")
     stages = load_stages(args.stage_dir, args.query)
@@ -158,7 +167,7 @@ def main() -> None:
     # bottom so it is drawn once. Kept shallow: the figure sits in a single
     # column of the paper, where height is what it costs the page.
     fig, axes = plt.subplots(
-        3, 1, figsize=(3.4, 2.3), sharex=True, constrained_layout=True
+        3, 1, figsize=(args.width, 2.3), sharex=True, constrained_layout=True
     )
     # The budgets are a percentile ladder of the dataset's own motion, not an
     # arithmetic one; plotted at equal spacing so the tight end, where the
@@ -237,7 +246,7 @@ def main() -> None:
         axes[2].bar(pos, d["segments"] * _SEGMENT_BYTES[deg] / 2**20, **bars)
 
     # Headroom for the degree numerals standing on the bars.
-    axes[0].set_ylim(0, axes[0].get_ylim()[1] * 1.1)
+    axes[0].set_ylim(0, axes[0].get_ylim()[1] * 1.2)
     for ax, ylabel in zip(axes, ("Time (ms)", "Segments (M)", "Segment MB")):
         ax.set_ylabel(ylabel, fontsize=6.5, labelpad=2)
         ax.tick_params(labelsize=5.5, pad=1.5)
@@ -249,23 +258,18 @@ def main() -> None:
     axes[-1].set_xlabel(r"Error budget $\varepsilon$", fontsize=6.5, labelpad=2)
     axes[-1].set_xlim(-0.6, len(budgets) - 0.4)
 
-    # Three entries fit inside the panel they describe, in the top right, which
-    # the bars leave clear once the budget opens. The panel is grown to make the
-    # room rather than taking it from the bars.
-    axes[0].set_ylim(0, axes[0].get_ylim()[1] * 1.28)
+    # At two thirds of a column the three entries no longer fit inside the
+    # panel, so they sit in a row just above it.
     axes[0].legend(
-        fontsize=7,
+        fontsize=6,
         ncol=len(_STAGES),
-        loc="upper right",
-        bbox_to_anchor=(1.0, 1.0),
-        borderaxespad=0.2,
-        frameon=True,
-        framealpha=0.85,
-        edgecolor="none",
-        facecolor="white",
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1.0),
+        borderaxespad=0.1,
+        frameon=False,
         handlelength=0.9,
         handletextpad=0.3,
-        columnspacing=0.8,
+        columnspacing=0.7,
         borderpad=0.05,
     )
     # The degrees are named once, in the panel whose curves leave the most room.
@@ -277,10 +281,12 @@ def main() -> None:
     if verbatim > 0.02:
         handles.append(Patch(facecolor=_tint("0.45"), edgecolor="black", linewidth=0.2))
         labels.append("verbatim")
+    # Grown, like the time panel, so the degree legend clears the bars.
+    axes[1].set_ylim(0, axes[1].get_ylim()[1] * 1.35)
     axes[1].legend(
         handles,
         labels,
-        fontsize=8,
+        fontsize=6,
         ncol=len(labels),
         loc="upper right",
         bbox_to_anchor=(1.0, 1.0),

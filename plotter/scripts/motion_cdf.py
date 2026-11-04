@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import os
 
 import duckdb
 import matplotlib
@@ -35,7 +36,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-_ROOT = Path("/home/satyam/dev/frameql/datasets/processed")
+_ROOT = Path(os.environ.get("TRQS_DATA_DIR", Path(__file__).resolve().parents[2] / "datasets" / "processed"))
 
 # label -> sub-dataset under the processed tree. DETRAC is read from the
 # integer-pixel copy the figure measures, not the float original.

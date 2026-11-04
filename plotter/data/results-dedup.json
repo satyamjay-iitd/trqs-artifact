@@ -1,0 +1,24 @@
+{
+  "VIRAT-meet": {
+    "scale": 10,
+    "rows_frame_expanded": 994990,
+    "rows_deduped": 20920,
+    "ms_frame_expanded": 9846.576193347573,
+    "ms_deduped": 856.8277899175882,
+    "answer_rows": 440,
+    "answers_identical": true,
+    "recall_deduped": 1.0,
+    "precision_deduped": 1.0
+  },
+  "DETRAC-meet": {
+    "scale": 10,
+    "rows_frame_expanded": 384010,
+    "rows_deduped": 382730,
+    "ms_frame_expanded": 599.8128764331341,
+    "ms_deduped": 1737.1654100716114,
+    "answer_rows": 240,
+    "answers_identical": true,
+    "recall_deduped": 1.0,
+    "precision_deduped": 1.0
+  }
+}

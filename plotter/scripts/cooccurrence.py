@@ -10,16 +10,16 @@ Unlike the rest of the plotter this reads a *dataset*, not `bench.db`, so it is 
 script rather than a `[[plots]]` kind:
 
     uv run python scripts/cooccurrence.py \
-        --db /data/trql_data/processed/ytstream/shibuya_0/duckdb.db
+        --db <processed-dataset>/duckdb.db
 
-Needs the `duckdb` CLI on PATH; the rows come out through it as CSV so the
-plotter keeps its dependency on matplotlib alone.
+Requires the DuckDB CLI executable on PATH; rows are read as CSV.
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
+import os
 import subprocess
 from itertools import combinations
 from math import comb
@@ -31,7 +31,9 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
-_DEFAULT_DB = Path("/data/trql_data/processed/ytstream/shibuya_0/duckdb.db")
+_DEFAULT_DB = Path(os.environ.get(
+    "TRQS_DATA_DIR", Path(__file__).resolve().parents[2] / "datasets" / "processed"
+)) / "ytstream/shibuya_0/duckdb.db"
 
 
 def read_frames(db: Path) -> list[tuple[int, list[int]]]:

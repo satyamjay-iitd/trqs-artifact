@@ -1,0 +1,453 @@
+{
+  "model": "gemini-4-argon",
+  "clip": "papers/vldb27/suite/vlm/clip/uav0006_180_780.mp4",
+  "prompt": "This is a 10-minute aerial video of road traffic recorded at 5 frames per second.\n\nIdentify every car that enters from the top of the frame and then turns right (the car's own right) during the video.\n\nReturn ONLY a JSON array and nothing else. Each element must be:\n{\"box_2d\": [ymin, xmin, ymax, xmax], \"start\": \"MM:SS\", \"end\": \"MM:SS\"}\n\n- box_2d locates that car at the moment its turn begins, in normalised 0-1000 coordinates.\n- start and end bound the turn itself, not the car's whole time on screen.\n- If no car does this, return [].\n",
+  "objects_in_window": 1529,
+  "event": "every car that enters from the top of the frame and then turns right (the car's own right)",
+  "ground_truth": {
+    "video": "ytstream/uav_0006",
+    "window_s": [
+      180,
+      780
+    ],
+    "window_frames": [
+      900,
+      3900
+    ],
+    "fps": 5,
+    "query_file": "UAV-rightturn-top.trql",
+    "region_names": [
+      "from_top",
+      "exit_west"
+    ],
+    "approach": [
+      25,
+      0,
+      80,
+      60
+    ],
+    "exit_right": [
+      0,
+      155,
+      40,
+      215
+    ],
+    "query": "REGIONS (from_top = [25, 0, 80, 60], exit_west = [0, 155, 40, 215])\nSELECT (v: class=car)\nWHERE DURATION(v.center INSIDE from_top, 3) THEN DURATION(v.center INSIDE exit_west, 3)",
+    "turns_in_whole_video": 22,
+    "turns": [
+      {
+        "oid": 476,
+        "turn_start_frame": 929,
+        "turn_end_frame": 949,
+        "turn_start_s": 185.8,
+        "turn_end_s": 189.8
+      },
+      {
+        "oid": 510,
+        "turn_start_frame": 968,
+        "turn_end_frame": 989,
+        "turn_start_s": 193.6,
+        "turn_end_s": 197.8
+      },
+      {
+        "oid": 534,
+        "turn_start_frame": 1000,
+        "turn_end_frame": 1014,
+        "turn_start_s": 200.0,
+        "turn_end_s": 202.8
+      },
+      {
+        "oid": 605,
+        "turn_start_frame": 1056,
+        "turn_end_frame": 1069,
+        "turn_start_s": 211.2,
+        "turn_end_s": 213.8
+      },
+      {
+        "oid": 680,
+        "turn_start_frame": 1432,
+        "turn_end_frame": 1455,
+        "turn_start_s": 286.4,
+        "turn_end_s": 291.0
+      },
+      {
+        "oid": 786,
+        "turn_start_frame": 1496,
+        "turn_end_frame": 1526,
+        "turn_start_s": 299.2,
+        "turn_end_s": 305.2
+      },
+      {
+        "oid": 820,
+        "turn_start_frame": 1528,
+        "turn_end_frame": 1547,
+        "turn_start_s": 305.6,
+        "turn_end_s": 309.4
+      },
+      {
+        "oid": 849,
+        "turn_start_frame": 1557,
+        "turn_end_frame": 1573,
+        "turn_start_s": 311.4,
+        "turn_end_s": 314.6
+      },
+      {
+        "oid": 979,
+        "turn_start_frame": 1940,
+        "turn_end_frame": 1957,
+        "turn_start_s": 388.0,
+        "turn_end_s": 391.4
+      },
+      {
+        "oid": 1110,
+        "turn_start_frame": 2057,
+        "turn_end_frame": 2081,
+        "turn_start_s": 411.4,
+        "turn_end_s": 416.2
+      },
+      {
+        "oid": 1132,
+        "turn_start_frame": 2084,
+        "turn_end_frame": 2102,
+        "turn_start_s": 416.8,
+        "turn_end_s": 420.4
+      },
+      {
+        "oid": 1151,
+        "turn_start_frame": 2111,
+        "turn_end_frame": 2128,
+        "turn_start_s": 422.2,
+        "turn_end_s": 425.6
+      },
+      {
+        "oid": 1278,
+        "turn_start_frame": 2477,
+        "turn_end_frame": 2493,
+        "turn_start_s": 495.4,
+        "turn_end_s": 498.6
+      },
+      {
+        "oid": 1764,
+        "turn_start_frame": 3457,
+        "turn_end_frame": 3469,
+        "turn_start_s": 691.4,
+        "turn_end_s": 693.8
+      },
+      {
+        "oid": 1826,
+        "turn_start_frame": 3505,
+        "turn_end_frame": 3529,
+        "turn_start_s": 701.0,
+        "turn_end_s": 705.8
+      },
+      {
+        "oid": 1857,
+        "turn_start_frame": 3533,
+        "turn_end_frame": 3552,
+        "turn_start_s": 706.6,
+        "turn_end_s": 710.4
+      },
+      {
+        "oid": 1869,
+        "turn_start_frame": 3548,
+        "turn_end_frame": 3565,
+        "turn_start_s": 709.6,
+        "turn_end_s": 713.0
+      }
+    ],
+    "straddling_window_excluded": []
+  },
+  "trqs_ms": 6.3,
+  "runs": [
+    {
+      "mode": "static",
+      "latency_ms": 31498.354809358716,
+      "http_status": 200,
+      "request_part": {
+        "media_processing": "STATIC",
+        "video_metadata": {
+          "fps": 5
+        }
+      },
+      "usage": {
+        "promptTokenCount": 231185,
+        "candidatesTokenCount": 284,
+        "totalTokenCount": 231469,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 6185
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 225000
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 284
+          }
+        ]
+      },
+      "model_version": "gemini-4-argon",
+      "finish_reason": "STOP",
+      "text": "```json\n[\n  {\"box_2d\": [117, 17, 194, 52], \"start\": \"00:34\", \"end\": \"00:44\"},\n  {\"box_2d\": [72, 13, 189, 52], \"start\": \"02:39\", \"end\": \"02:49\"},\n  {\"box_2d\": [72, 13, 194, 52], \"start\": \"02:46\", \"end\": \"03:00\"},\n  {\"box_2d\": [117, 15, 200, 56], \"start\": \"03:49\", \"end\": \"04:01\"},\n  {\"box_2d\": [76, 13, 193, 52], \"start\": \"06:11\", \"end\": \"06:21\"},\n  {\"box_2d\": [92, 11, 209, 51], \"start\": \"09:22\", \"end\": \"09:28\"}\n]\n```",
+      "parsed": [
+        {
+          "box_2d": [
+            117,
+            17,
+            194,
+            52
+          ],
+          "start": "00:34",
+          "end": "00:44"
+        },
+        {
+          "box_2d": [
+            72,
+            13,
+            189,
+            52
+          ],
+          "start": "02:39",
+          "end": "02:49"
+        },
+        {
+          "box_2d": [
+            72,
+            13,
+            194,
+            52
+          ],
+          "start": "02:46",
+          "end": "03:00"
+        },
+        {
+          "box_2d": [
+            117,
+            15,
+            200,
+            56
+          ],
+          "start": "03:49",
+          "end": "04:01"
+        },
+        {
+          "box_2d": [
+            76,
+            13,
+            193,
+            52
+          ],
+          "start": "06:11",
+          "end": "06:21"
+        },
+        {
+          "box_2d": [
+            92,
+            11,
+            209,
+            51
+          ],
+          "start": "09:22",
+          "end": "09:28"
+        }
+      ],
+      "score": {
+        "answers": 6,
+        "true_positives": 0,
+        "false_positives": 6,
+        "missed_oids": [
+          476,
+          510,
+          534,
+          605,
+          680,
+          786,
+          820,
+          849,
+          979,
+          1110,
+          1132,
+          1151,
+          1278,
+          1764,
+          1826,
+          1857,
+          1869
+        ],
+        "precision": 0.0,
+        "recall": 0.0,
+        "mean_interval_iou": 0.0,
+        "detail": [
+          {
+            "answer": {
+              "box_2d": [
+                117,
+                17,
+                194,
+                52
+              ],
+              "start": "00:34",
+              "end": "00:44"
+            },
+            "box_iou": 0.002,
+            "matched_oid": 620,
+            "frame_offset": -3,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                72,
+                13,
+                189,
+                52
+              ],
+              "start": "02:39",
+              "end": "02:49"
+            },
+            "box_iou": 0.0,
+            "matched_oid": null,
+            "frame_offset": null,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                72,
+                13,
+                194,
+                52
+              ],
+              "start": "02:46",
+              "end": "03:00"
+            },
+            "box_iou": 0.0,
+            "matched_oid": null,
+            "frame_offset": null,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                117,
+                15,
+                200,
+                56
+              ],
+              "start": "03:49",
+              "end": "04:01"
+            },
+            "box_iou": 0.083,
+            "matched_oid": 1115,
+            "frame_offset": 10,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                76,
+                13,
+                193,
+                52
+              ],
+              "start": "06:11",
+              "end": "06:21"
+            },
+            "box_iou": 0.0,
+            "matched_oid": null,
+            "frame_offset": null,
+            "outcome": "no object matched"
+          },
+          {
+            "answer": {
+              "box_2d": [
+                92,
+                11,
+                209,
+                51
+              ],
+              "start": "09:22",
+              "end": "09:28"
+            },
+            "box_iou": 0.0,
+            "matched_oid": null,
+            "frame_offset": null,
+            "outcome": "no object matched"
+          }
+        ]
+      }
+    },
+    {
+      "mode": "agentic",
+      "latency_ms": 26978.468233719468,
+      "http_status": 200,
+      "request_part": {
+        "media_processing": "AGENTIC"
+      },
+      "usage": {
+        "promptTokenCount": 549,
+        "candidatesTokenCount": 447,
+        "totalTokenCount": 68537,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 549
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 447
+          }
+        ],
+        "toolUsePromptTokenCount": 67541,
+        "toolUsePromptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 4511
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 63030
+          }
+        ]
+      },
+      "model_version": "gemini-4-argon",
+      "finish_reason": "STOP",
+      "text": "```json\n[]\n```",
+      "parsed": [],
+      "score": {
+        "answers": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "missed_oids": [
+          476,
+          510,
+          534,
+          605,
+          680,
+          786,
+          820,
+          849,
+          979,
+          1110,
+          1132,
+          1151,
+          1278,
+          1764,
+          1826,
+          1857,
+          1869
+        ],
+        "precision": 0.0,
+        "recall": 0.0,
+        "mean_interval_iou": 0.0,
+        "detail": []
+      }
+    }
+  ]
+}

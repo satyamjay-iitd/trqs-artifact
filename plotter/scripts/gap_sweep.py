@@ -60,7 +60,7 @@ def load(db: Path) -> pd.DataFrame:
 def main() -> None:
     here = Path(__file__).resolve().parent.parent
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--db", type=Path, default=here.parent.parent / "bench.db")
+    ap.add_argument("--db", type=Path, default=here.parent / "bench.db")
     ap.add_argument("--out", type=Path, default=here / "plots" / "gap_sweep.pdf")
     args = ap.parse_args()
 

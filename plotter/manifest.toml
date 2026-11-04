@@ -1,4 +1,5 @@
-# Every figure in the VLDB'27 evaluation, and the settings that draw it.
+# Manifest-based plots and the preserved MIRIS figure for VLDB'27.
+# Polynomial-degree and interval-set ablations use scripts/; see README.md.
 #
 #   uv run benchplot render            # all of them
 #   uv run benchplot render -n speedup # one of them
@@ -8,7 +9,7 @@
 
 [defaults]
 # Where `trql-cli … bench --bench-db` writes: the repository root.
-db = "../../bench.db"
+db = "../bench.db"
 out_dir = "plots"
 format = "pdf"
 # How a (query, err) point measured more than once is collapsed:
@@ -19,6 +20,12 @@ aggregate = "latest"
 # unselective control — but off the charts. A plot that names `queries`
 # overrides this; one that sets its own `exclude` replaces it.
 exclude = ["I24-lane-any"]
+
+[[plots]]
+name = "miris_timeline_plot"
+kind = "static_pdf"
+source = "data/miris_timeline_plot.pdf"
+format = "pdf"
 
 [[plots]]
 name = "speedup"
@@ -145,9 +152,9 @@ ratio_labels = false
 recall_labels = true
 # The second relational baseline: the same query over a copy of each clip with
 # every frame that repeats its predecessor dropped, measured at the same tiling
-# by papers/vldb27/suite/bench_dedup.py. Drawn as a dotted rule per clip -- it
+# by suite/bench_dedup.py. Drawn as a dotted rule per clip -- it
 # does not see the error budget either.
-baselines = "../vldb27/suite/results-dedup.json"
+baselines = "data/results-dedup.json"
 # One panel of a three-panel row spanning both columns: ~0.42 of a 7 in text
 # width, and published at the size it is drawn.
 width = 2.95
@@ -297,7 +304,7 @@ queries = [
 ]
 scales = [1]
 width = 3.4
-height = 1.5
+height = 1.1
 
 [plots.budgets]
 "I24-journey4" = [30, 55, 148, 364, 487]
@@ -380,7 +387,7 @@ legend_names = true
 # "NS-crossing" = [0, 1, 4, 12, 16, 20, 24, 250]
 
 # Rekall on its own tutorial query, beside the frame-expanded SQL and the
-# engine, against input size (papers/vldb27/suite/bench_rekall.py). Reads that
+# engine, against input size (suite/bench_rekall.py). Reads that
 # script's JSON rather than bench.db, since the Rekall column is not a
 # `trql-cli bench` run.
 #
