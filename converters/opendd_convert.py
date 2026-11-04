@@ -52,7 +52,7 @@ dropped frame; openDD's tracks are dense enough for that to hold.
 
 Run with the project venv::
 
-    /home/satyam/dev/frameql/datasets/.venv/bin/python convert.py --help
+    .trqs-pyenv/bin/python converters/opendd_convert.py --help
 """
 
 from __future__ import annotations
@@ -65,8 +65,8 @@ import sys
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DATASETS_ROOT = SCRIPT_DIR.parent.parent  # raw/openDD -> raw -> datasets root
-sys.path.insert(0, str(DATASETS_ROOT))
+DATASETS_ROOT = SCRIPT_DIR.parent / "datasets"
+sys.path.insert(0, str(SCRIPT_DIR))
 
 from common import Bbox, Obj, build_duckdb  # noqa: E402
 
@@ -255,8 +255,8 @@ def convert_one(
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--raw", type=Path, default=SCRIPT_DIR,
-                    help="directory holding rdb*/ (default: this script's)")
+    ap.add_argument("--raw", type=Path, default=DATASETS_ROOT / "raw" / "openDD",
+                    help="directory holding rdb*/ (default: datasets/raw/openDD)")
     ap.add_argument("--out", type=Path,
                     default=DATASETS_ROOT / "processed" / DATASET,
                     help="processed output root")

@@ -1,4 +1,4 @@
-"""Shared helpers for converting raw datasets into the FrameQL common format.
+"""Shared helpers for converting raw datasets into the TrQS common format.
 
 Target layout produced for every dataset::
 

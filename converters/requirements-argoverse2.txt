@@ -1,0 +1,7 @@
+-r requirements.txt
+numpy==2.4.6
+pandas==2.3.3
+pyarrow==21.0.0
+matplotlib==3.11.0
+# Optional geometric validation helper (not used by conversion).
+shapely==2.1.2
