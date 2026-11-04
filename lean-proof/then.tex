@@ -1,0 +1,297 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{stmaryrd}   % \llbracket, \rrbracket, \fatsemi
+\usepackage{mathtools}
+\usepackage[margin=1in]{geometry}
+
+% --- notation ---------------------------------------------------------------
+\newcommand{\sem}[1]{\llbracket #1 \rrbracket}      % denotation
+\newcommand{\Then}{\mathbin{\fatsemi}}              % THEN operator
+\newcommand{\ThenG}[2]{\mathbin{\fatsemi}_{[#1,\,#2]}} % THEN with gap [gmin,gmax]
+\newcommand{\Empty}{\bot}                           % empty / undefined result
+\newcommand{\size}[1]{\lvert #1 \rvert}
+\newcommand{\R}[5]{\langle #1,\, #2,\, #3,\, #4,\, #5 \rangle} % split repr.
+\newcommand{\gmin}{g_{\min}}
+\newcommand{\gmax}{g_{\max}}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\title{The \textsc{Then} Operation on Interval Sets\\
+       \large (adjacency and bounded-gap concatenation)}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent
+This note states, in human-readable form, the definitions of the \textsc{Then}
+(sequential concatenation) operator---both the gap-free version and the
+generalisation that allows a bounded gap between the two intervals---together
+with the equivalences that are machine-checked in
+\texttt{Intervalset/Then.lean} and \texttt{Intervalset/ThenWithGap.lean}.
+Sections~\ref{sec:then-single}--\ref{sec:then-correct} treat the gap-free case;
+Section~\ref{sec:gap} generalises to a bounded gap and recovers the gap-free
+case as the specialisation $\gmin = \gmax = 0$.
+
+% ===========================================================================
+\section{Intervals and interval sets}
+
+\begin{definition}[Interval]
+An \emph{interval} $I = [a, b]$ is a pair of natural numbers with $a \le b$.
+Its \emph{size} is $\size{I} = b - a + 1 \ge 1$.
+\end{definition}
+
+\begin{definition}[Interval set]
+An \emph{interval set} is a finite set of intervals. We write membership as
+$I \in A$.
+\end{definition}
+
+% ===========================================================================
+\section{\textsc{Then} on single intervals}
+\label{sec:then-single}
+
+Two intervals concatenate exactly when the second begins on the frame
+immediately after the first ends:
+\[
+  [a_1, b_1] \Then [a_2, b_2] \;=\;
+  \begin{cases}
+    [a_1, b_2] & \text{if } a_2 = b_1 + 1,\\[2pt]
+    \Empty     & \text{otherwise.}
+  \end{cases}
+\]
+
+% ===========================================================================
+\section{\textsc{Then} on interval sets: enumeration semantics}
+
+The reference (``ground truth'') semantics enumerates all pairs, one from each
+set, and keeps the non-empty concatenations:
+\[
+  A \Then B \;=\;
+  \bigl\{\, I_1 \Then I_2 \;\bigm|\; I_1 \in A,\; I_2 \in B,\;
+            I_1 \Then I_2 \neq \Empty \,\bigr\}.
+\]
+This is correct but quadratic in $\size{A}\cdot\size{B}$.
+
+% ===========================================================================
+\section{The compact representation}
+
+\begin{definition}[Split interval set]
+A \emph{split interval set} $R = \R{s}{l}{r}{e}{c}$ denotes the set of all
+intervals that start in $[s, l]$, end in $[r, e]$, and have size at least $c$:
+\[
+  \sem{R} \;=\;
+  \bigl\{\, [a, b] \;\bigm|\;
+            s \le a \le l,\;\;
+            r \le b \le e,\;\;
+            b - a + 1 \ge c \,\bigr\}.
+\]
+\end{definition}
+
+\noindent
+Geometrically, in the $(\text{start},\text{stop})$ plane $\sem{R}$ is the
+axis-aligned box $[s, l] \times [r, e]$ with the lower-left corner clipped by
+the diagonal half-plane $\text{stop} - \text{start} + 1 \ge c$.
+
+% ===========================================================================
+\section{\textsc{Then} on the compact representation}
+
+Let $A = \R{s_1}{l_1}{r_1}{e_1}{c_1}$ and $B = \R{s_2}{l_2}{r_2}{e_2}{c_2}$,
+with $c_1, c_2 \ge 1$.\footnote{Assuming $c \ge 1$ is no loss of generality:
+every interval has size $\ge 1$, so $c = 0$ and $c = 1$ denote the same set.}
+
+\paragraph{Feasibility.}
+A result interval $[a,b]$ exists only if some split point $m$ (the stop of the
+first half, with $m+1$ the start of the second) is simultaneously legal for
+both operands. Such an $m$ can exist at all only when
+\[
+  \Phi(A, B)\;:\equiv\;
+  \max(r_1,\, s_2 - 1)\;\le\;\min(e_1,\, l_2 - 1).
+\]
+If $\Phi$ fails, $A \Then B = \Empty$.
+
+\paragraph{Result.}
+When $\Phi(A,B)$ holds, the concatenation is again a single split interval set:
+\[
+  A \Then B \;=\; \R{\,s_1\,}{\,L\,}{\,R\,}{\,e_2\,}{\,c_1 + c_2\,},
+\]
+where
+\[
+  L \;=\; \min\!\bigl(l_1,\; e_1 - c_1 + 1,\; l_2 - c_1\bigr),
+  \qquad
+  R \;=\; \max\!\bigl(r_2,\; r_1 + c_2,\; s_2 + c_2 - 1\bigr).
+\]
+
+\noindent
+Intuition for the bounds:
+\begin{itemize}
+  \item \textbf{Start} $a$: inherited lower bound $s_1$; the upper bound $L$ is
+        the tightest of ``$A$'s own cap'' $l_1$, ``leave room for $c_1$ frames
+        before $A$'s latest stop'' $e_1 - c_1 + 1$, and ``leave room for $c_1$
+        frames before $B$'s latest start'' $l_2 - c_1$.
+  \item \textbf{Stop} $b$: inherited upper bound $e_2$; the lower bound $R$ is
+        the tightest of ``$B$'s own floor'' $r_2$, ``$c_2$ frames past $A$'s
+        earliest stop'' $r_1 + c_2$, and ``$c_2$ frames past $B$'s earliest
+        start'' $s_2 + c_2 - 1$.
+  \item \textbf{Size}: the two halves contribute $c_1$ and $c_2$ frames with no
+        gap and no overlap, so the result needs size $\ge c_1 + c_2$
+        (i.e.\ $g_{\min} = 0$ in the gap-free case).
+\end{itemize}
+
+% ===========================================================================
+\section{Correctness}
+\label{sec:then-correct}
+
+\begin{theorem}[\texttt{thenOp\_spec}]
+For all split interval sets $A, B$ with $c_1, c_2 \ge 1$ and every interval
+$I$,
+\[
+  I \in \sem{A \Then B}
+  \quad\Longleftrightarrow\quad
+  \exists\, I_1 \in \sem{A},\, I_2 \in \sem{B}.\;\; I_1 \Then I_2 = I.
+\]
+Equivalently, the compact operation computes exactly the enumeration semantics:
+\[
+  \sem{A \Then B} \;=\; \sem{A} \Then \sem{B}.
+\]
+\end{theorem}
+
+\noindent
+The proof is fully formalised in Lean~4 / Mathlib and depends only on the
+standard axioms (\texttt{propext}, \texttt{Classical.choice},
+\texttt{Quot.sound}); see \texttt{thenOp\_spec} in
+\texttt{lean-prove/Intervalset/Then.lean}.
+
+\paragraph{Implementation caveat (natural-number arithmetic).}
+Over $\mathbb{N}$ the subtractions in $L$ must be evaluated as
+$e_1 + 1 - c_1$ and $l_2 - c_1$ (not $e_1 - c_1 + 1$), and the feasibility
+guard must additionally check $c_1 \le l_2$, so that truncated subtraction is
+never silently floored to $0$. Both are reflected in the verified definition.
+
+% ===========================================================================
+\section{\textsc{Then} with a bounded gap}
+\label{sec:gap}
+
+We now generalise to a \emph{gap} of $g$ frames between the two intervals,
+where $g$ is constrained to a window $[\gmin, \gmax]$ (with $\gmin \le \gmax$).
+The gap-free operator is the special case $\gmin = \gmax = 0$.
+
+% ---------------------------------------------------------------------------
+\subsection{Single intervals}
+
+Writing the gap as $g = a_2 - b_1 - 1$ (the number of frames strictly between
+the two intervals), the concatenation keeps the pair iff $g \in [\gmin, \gmax]$:
+\[
+  [a_1, b_1] \ThenG{\gmin}{\gmax} [a_2, b_2] \;=\;
+  \begin{cases}
+    [a_1, b_2] & \text{if } b_1 + 1 + \gmin \le a_2 \le b_1 + 1 + \gmax,\\[2pt]
+    \Empty     & \text{otherwise.}
+  \end{cases}
+\]
+The result interval $[a_1, b_2]$ \emph{spans the gap}, so its size is
+$\size{[a_1,b_1]} + \size{[a_2,b_2]} + g$. The enumeration semantics on sets is
+again the set of all non-empty pairwise concatenations,
+$A \ThenG{\gmin}{\gmax} B = \{\, I_1 \ThenG{\gmin}{\gmax} I_2 \mid I_1 \in A,\,
+I_2 \in B,\, \neq \Empty \,\}$.
+
+% ---------------------------------------------------------------------------
+\subsection{Compact representation}
+
+Let $A = \R{s_1}{l_1}{r_1}{e_1}{c_1}$, $B = \R{s_2}{l_2}{r_2}{e_2}{c_2}$ with
+$c_1, c_2 \ge 1$ and $\gmin \le \gmax$.
+
+\paragraph{Feasibility.}
+A result now needs a first stop $m$ \emph{and} a gap $g \in [\gmin, \gmax]$ with
+the second interval starting at $m + 1 + g$. Both must be jointly realisable:
+\[
+  \Phi_g(A, B)\;:\equiv\;
+  \underbrace{r_1 \le e_1}_{\text{first stop exists}}
+  \;\wedge\;
+  \max(r_1 + \gmin,\; s_2 - 1) \;\le\; \min(e_1 + \gmax,\; l_2 - 1).
+\]
+If $\Phi_g$ fails, $A \ThenG{\gmin}{\gmax} B = \Empty$.
+
+\paragraph{Result.}
+When $\Phi_g(A,B)$ holds,
+\[
+  A \ThenG{\gmin}{\gmax} B \;=\;
+  \R{\,s_1\,}{\,L\,}{\,R\,}{\,e_2\,}{\,c_1 + c_2 + \gmin\,},
+\]
+where
+\[
+  L \;=\; \min\!\bigl(l_1,\; e_1 + 1 - c_1,\; l_2 - c_1 - \gmin\bigr),
+  \qquad
+  R \;=\; \max\!\bigl(r_2,\; r_1 + c_2 + \gmin,\; s_2 + c_2 - 1\bigr).
+\]
+
+\noindent
+Changes relative to the gap-free case:
+\begin{itemize}
+  \item \textbf{Size}: the gap contributes at least $\gmin$ extra frames, so the
+        result needs size $\ge c_1 + c_2 + \gmin$. This is exactly the
+        $g_{\min}$ term: $c' = c_1 + c_2 + \gmin$.
+  \item \textbf{Start} $a$: the term $e_1 + 1 - c_1$ is \emph{unchanged}---a
+        larger gap does not relax it, because the first stop $m$ is capped by
+        $e_1$ no matter how big the gap is. Only the $B$-facing term tightens to
+        $l_2 - c_1 - \gmin$ (room must be left for the gap as well).
+  \item \textbf{Stop} $b$: the cross term becomes $r_1 + c_2 + \gmin$ (the gap
+        pushes $B$'s earliest reachable stop further to the right).
+\end{itemize}
+
+\paragraph{Derivation sketch.}
+Membership of $[a,b]$ requires a first stop $m \in [\max(r_1, a + c_1 - 1),\,
+e_1]$ and a gap $g \in [\gmin, \gmax]$, and every constraint coming from $B$
+depends on $m$ and $g$ only through the sum $t = m + g$. Since $m$ and $g$ range
+over intervals independently, $t$ ranges over
+$[\max(r_1, a{+}c_1{-}1) + \gmin,\; e_1 + \gmax]$, and a witness exists iff this
+range is non-empty and meets the $B$-required range
+$[s_2 - 1,\; \min(l_2 - 1,\; b - c_2)]$. Expanding that condition and projecting
+onto $(a,b)$ yields $\Phi_g$, $L$, $R$ and the size bound above.
+
+% ---------------------------------------------------------------------------
+\subsection{Correctness}
+
+\begin{theorem}[\texttt{thenGapOp\_spec}]
+For all split interval sets $A, B$ with $c_1, c_2 \ge 1$, all $\gmin \le \gmax$,
+and every interval $I$,
+\[
+  I \in \sem{A \ThenG{\gmin}{\gmax} B}
+  \;\Longleftrightarrow\;
+  \exists\, I_1 \in \sem{A},\, I_2 \in \sem{B}.\;\;
+  I_1 \ThenG{\gmin}{\gmax} I_2 = I.
+\]
+\end{theorem}
+
+\noindent
+As before the proof is fully formalised in Lean~4 / Mathlib and uses only the
+standard axioms (\texttt{propext}, \texttt{Classical.choice},
+\texttt{Quot.sound}); see \texttt{thenGapOp\_spec} in
+\texttt{lean-prove/Intervalset/ThenWithGap.lean}.
+
+\begin{theorem}[\texttt{thenGapOp\_zero\_zero}: conservative extension]
+For all $A, B$,
+\[
+  A \ThenG{0}{0} B \;=\; A \Then B .
+\]
+\end{theorem}
+
+\noindent
+On the compact representation this holds \emph{definitionally} (the Lean proof
+is \texttt{rfl} and depends on \emph{no} axioms): with $\gmin = \gmax = 0$ every
+$+\,0$ and $-\,0$ disappears and the two operations are syntactically the same
+after reduction. Hence the bounded-gap algebra is a conservative extension of
+the gap-free one, and the two correctness theorems necessarily agree at
+$\gmin = \gmax = 0$.
+
+\paragraph{Implementation caveat (natural-number arithmetic).}
+As in the gap-free case the $L$ subtractions are evaluated as $e_1 + 1 - c_1$
+and $l_2 - c_1 - \gmin$, and the feasibility guard additionally checks
+$c_1 + \gmin \le l_2$ so the term $l_2 - c_1 - \gmin$ is never silently floored
+to $0$ in $\mathbb{N}$.
+
+\end{document}

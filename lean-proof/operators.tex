@@ -1,0 +1,262 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{stmaryrd}   % \llbracket, \rrbracket, \fatsemi
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+
+% --- notation ---------------------------------------------------------------
+\newcommand{\sem}[1]{\llbracket #1 \rrbracket}            % denotation
+\newcommand{\Empty}{\bot}                                 % empty / undefined
+\newcommand{\size}[1]{\lvert #1 \rvert}
+\newcommand{\R}[5]{\langle #1,\, #2,\, #3,\, #4,\, #5 \rangle} % split repr.
+\newcommand{\gmin}{g_{\min}}
+\newcommand{\gmax}{g_{\max}}
+
+% operators
+\newcommand{\Then}{\mathbin{\fatsemi}}                    % THEN
+\newcommand{\ThenG}[2]{\mathbin{\fatsemi_{[#1,\,#2]}}}    % THEN with gap
+\newcommand{\opname}[1]{\mathbin{\textsc{#1}}}
+\newcommand{\Ovl}{\opname{ovl}}                           % OVERLAP
+\newcommand{\Cont}{\opname{cont}}                         % CONTAINS
+\newcommand{\Eq}{\opname{eq}}                             % EQUAL
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+
+\title{Interval-Set Operators on the Split Representation\\
+       \large definitions and machine-checked correctness}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent
+This note collects, in human-readable form, the binary operators defined on the
+compact \emph{split interval set} representation, together with the equivalences
+proved in Lean~4 / Mathlib (one file per operator under
+\texttt{lean-prove/Intervalset/}).  Every theorem is fully formal and uses only
+the standard axioms \texttt{propext}, \texttt{Classical.choice},
+\texttt{Quot.sound}.
+
+% ===========================================================================
+\section{Preliminaries}
+
+\begin{definition}[Interval]
+An \emph{interval} $I = [a, b]$ is a pair of naturals with $a \le b$; its
+\emph{size} is $\size{I} = b - a + 1 \ge 1$.
+\end{definition}
+
+\begin{definition}[Split interval set]
+A \emph{split interval set} $R = \R{s}{l}{r}{e}{c}$ denotes all intervals that
+start in $[s, l]$, end in $[r, e]$, and have size at least $c$:
+\[
+  \sem{R} = \bigl\{\, [a, b] \;\bigm|\;
+            s \le a \le l,\;\; r \le b \le e,\;\; b - a + 1 \ge c \,\bigr\}.
+\]
+In the $(\text{start},\text{stop})$ plane this is the box $[s,l]\times[r,e]$ with
+the lower-left corner clipped by the diagonal $\text{stop}-\text{start}+1 \ge c$.
+\end{definition}
+
+\paragraph{Enumeration semantics.}
+Each operator is first given on \emph{single} intervals as a partial map
+$I_1 \mathbin{\textsc{op}} I_2 \in \{[\,\cdot\,,\cdot\,], \Empty\}$.  It is lifted
+to sets by enumerating all pairs and keeping the non-empty results:
+\[
+  A \mathbin{\textsc{op}} B \;=\;
+  \bigl\{\, I_1 \mathbin{\textsc{op}} I_2 \;\bigm|\; I_1 \in A,\; I_2 \in B,\;
+            I_1 \mathbin{\textsc{op}} I_2 \neq \Empty \,\bigr\}.
+\]
+
+\paragraph{Correctness statement.}
+For each operator we define a function on split interval sets returning an
+\texttt{Option} (a representation, or \texttt{none} for $\Empty$), and prove that,
+for every interval $i$,
+\[
+  i \in \sem{A \mathbin{\textsc{op}} B}
+  \quad\Longleftrightarrow\quad
+  \exists\, I_1 \in \sem{A},\, I_2 \in \sem{B}.\;\;
+  I_1 \mathbin{\textsc{op}} I_2 = i .
+\]
+Equivalently $\sem{A \mathbin{\textsc{op}} B} = \sem{A} \mathbin{\textsc{op}}
+\sem{B}$: the compact operator computes exactly the enumeration semantics.
+
+\paragraph{Conventions.}
+We assume the relevant size bounds are $\ge 1$ where stated (harmless: every
+interval has size $\ge 1$, so $c=0$ and $c=1$ denote the same set).  All
+``$-$'' below are natural-number subtractions; the feasibility guards are chosen
+so no subtraction is silently floored to $0$.  We write $A=\R{s_1}{l_1}{r_1}{e_1}{c_1}$
+and $B=\R{s_2}{l_2}{r_2}{e_2}{c_2}$, and a result $\R{s'}{l'}{r'}{e'}{c'}$.
+
+% ===========================================================================
+\section{\textsc{Then} — concatenation (\emph{meets})}
+\label{sec:then}
+\textit{File: \texttt{Then.lean}, theorem \texttt{thenOp\_spec}; assumes
+$c_1,c_2\ge1$.}
+
+\[
+  [a_1,b_1] \Then [a_2,b_2] =
+  \begin{cases} [a_1,b_2] & a_2 = b_1+1,\\ \Empty & \text{otherwise.}\end{cases}
+\]
+The second interval must start on the very next frame (Allen's \emph{meets}).
+When the feasibility guard
+\[
+  r_1 \le e_1,\;\; r_1+1 \le l_2,\;\; s_2 \le e_1+1,\;\; s_2 \le l_2,\;\; c_1 \le l_2
+\]
+holds,
+\[
+  A \Then B = \R{s_1}{\,l'\,}{\,r'\,}{e_2}{\,c_1+c_2\,},\quad
+  \begin{aligned}
+    l' &= \min(l_1,\; e_1+1-c_1,\; l_2-c_1),\\
+    r' &= \max(r_2,\; r_1+c_2,\; s_2+c_2-1).
+  \end{aligned}
+\]
+The result spans both intervals; its size is $c_1+c_2$.
+
+% ===========================================================================
+\section{\textsc{Then}$_{[\gmin,\gmax]}$ — bounded-gap concatenation (\emph{before})}
+\label{sec:theng}
+\textit{File: \texttt{ThenWithGap.lean}, theorem \texttt{thenGapOp\_spec}; assumes
+$c_1,c_2\ge1$ and $\gmin\le\gmax$.}
+
+\[
+  [a_1,b_1] \ThenG{\gmin}{\gmax} [a_2,b_2] =
+  \begin{cases} [a_1,b_2] & b_1+1+\gmin \le a_2 \le b_1+1+\gmax,\\
+                \Empty & \text{otherwise,}\end{cases}
+\]
+i.e.\ a gap of $g\in[\gmin,\gmax]$ frames is allowed between the two intervals
+(Allen's \emph{before} for $\gmin\ge1$; \textsc{Then} is the case
+$\gmin=\gmax=0$, proved as \texttt{thenGapOp\_zero\_zero}).  When
+\[
+  r_1 \le e_1,\;\; r_1+\gmin+1 \le l_2,\;\; s_2 \le e_1+\gmax+1,\;\; s_2 \le l_2,\;\; c_1+\gmin \le l_2,
+\]
+\[
+  A \ThenG{\gmin}{\gmax} B = \R{s_1}{\,l'\,}{\,r'\,}{e_2}{\,c_1+c_2+\gmin\,},\quad
+  \begin{aligned}
+    l' &= \min(l_1,\; e_1+1-c_1,\; l_2-c_1-\gmin),\\
+    r' &= \max(r_2,\; r_1+c_2+\gmin,\; s_2+c_2-1).
+  \end{aligned}
+\]
+The minimum gap $\gmin$ enters the size bound ($c'=c_1+c_2+\gmin$) and the
+$B$-facing bounds; the start bound $e_1+1-c_1$ is \emph{not} relaxed by the gap,
+since the first stop is still capped by $e_1$.
+
+% ===========================================================================
+\section{\textsc{Overlap} (Allen's \emph{overlaps})}
+\label{sec:overlap}
+\textit{File: \texttt{Overlap.lean}, theorem \texttt{overlapOp\_spec}; assumes
+$c_1,c_2\ge1$.}
+
+\[
+  [a_1,b_1] \Ovl [a_2,b_2] =
+  \begin{cases} [a_1,b_2] & a_1 < a_2 \le b_1 < b_2,\\
+                \Empty & \text{otherwise.}\end{cases}
+\]
+The intervals properly overlap (second starts strictly later, ends strictly
+later) and are merged.  When
+\[
+  r_1 \le e_1,\;\; s_2 \le e_1,\;\; s_2 \le l_2,\;\; s_1+1 \le e_1,\;\; s_1+1 \le l_2,
+\]
+\[
+  A \Ovl B = \R{s_1}{\,l'\,}{\,r'\,}{e_2}{\,c'\,},\quad
+  \begin{aligned}
+    l' &= \min(l_1,\; e_1+1-c_1,\; e_1-1,\; l_2-1),\\
+    r' &= \max(r_2,\; r_1+1,\; s_2+c_2-1,\; s_2+1),\\
+    c' &= \max(c_1+1,\; c_2+1,\; 3).
+  \end{aligned}
+\]
+The size floor $3$ is the smallest proper overlap $[a,a+2]$; the strictness
+$a_1<a_2$ contributes the $e_1-1$, $l_2-1$ start caps and the $c_2+1$ size term.
+
+% ===========================================================================
+\section{\textsc{Contains} (Allen's \emph{contains})}
+\label{sec:contains}
+\textit{File: \texttt{Contains.lean}, theorem \texttt{containsOp\_spec}; assumes
+$c_2\ge1$.}
+
+\[
+  [a_1,b_1] \Cont [a_2,b_2] =
+  \begin{cases} [a_1,b_1] & a_1 < a_2 \;\wedge\; b_2 < b_1,\\
+                \Empty & \text{otherwise.}\end{cases}
+\]
+The second interval lies strictly inside the first, which is kept.  When
+\[
+  s_2 \le l_2,\;\; r_2 \le e_2,\;\; s_1+1 \le l_2,\;\; c_2 \le e_2,
+\]
+\[
+  A \Cont B = \R{s_1}{\,l'\,}{\,r'\,}{e_1}{\,c'\,},\quad
+  \begin{aligned}
+    l' &= \min(l_1,\; l_2-1,\; e_2-c_2),\\
+    r' &= \max(r_1,\; r_2+1,\; s_2+c_2),\\
+    c' &= \max(c_1,\; c_2+2).
+  \end{aligned}
+\]
+The result inherits $A$'s start floor $s_1$ and stop cap $e_1$, but tightens the
+start cap and stop floor on both sides to leave strict room for the enclosed
+interval; enclosing a size-$c_2$ interval needs size $\ge c_2+2$.
+
+% ===========================================================================
+\section{\textsc{Equal} (Allen's \emph{equals})}
+\label{sec:equal}
+\textit{File: \texttt{Equal.lean}, theorem \texttt{equalsOp\_spec}.}
+
+\[
+  [a_1,b_1] \Eq [a_2,b_2] =
+  \begin{cases} [a_1,b_1] & a_1=a_2 \;\wedge\; b_1=b_2,\\
+                \Empty & \text{otherwise.}\end{cases}
+\]
+An interval is kept iff it occurs identically in both operands, so
+$\sem{A \Eq B} = \sem{A}\cap\sem{B}$.  This is the field-wise intersection:
+\[
+  A \Eq B = \R{\max(s_1,s_2)}{\min(l_1,l_2)}{\max(r_1,r_2)}{\min(e_1,e_2)}{\max(c_1,c_2)},
+\]
+defined when $\max(s_1,s_2)\le\min(e_1,e_2)$ and
+$\max(c_1,c_2)\le\min(e_1,e_2)-\max(s_1,s_2)+1$.  (This operator coincides with
+set intersection / \textsc{And}.)
+
+% ===========================================================================
+\section{Summary}
+
+\renewcommand{\arraystretch}{1.5}
+\begin{table}[h]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llllll@{}}
+\toprule
+Op & $s'$ & $l'$ & $r'$ & $e'$ & $c'$ \\
+\midrule
+\textsc{Then}
+  & $s_1$ & $\min(l_1, e_1{+}1{-}c_1, l_2{-}c_1)$
+  & $\max(r_2, r_1{+}c_2, s_2{+}c_2{-}1)$ & $e_2$ & $c_1{+}c_2$ \\
+\textsc{Then}$_{[\gmin,\gmax]}$
+  & $s_1$ & $\min(l_1, e_1{+}1{-}c_1, l_2{-}c_1{-}\gmin)$
+  & $\max(r_2, r_1{+}c_2{+}\gmin, s_2{+}c_2{-}1)$ & $e_2$ & $c_1{+}c_2{+}\gmin$ \\
+\textsc{Overlap}
+  & $s_1$ & $\min(l_1, e_1{+}1{-}c_1, e_1{-}1, l_2{-}1)$
+  & $\max(r_2, r_1{+}1, s_2{+}c_2{-}1, s_2{+}1)$ & $e_2$ & $\max(c_1{+}1, c_2{+}1, 3)$ \\
+\textsc{Contains}
+  & $s_1$ & $\min(l_1, l_2{-}1, e_2{-}c_2)$
+  & $\max(r_1, r_2{+}1, s_2{+}c_2)$ & $e_1$ & $\max(c_1, c_2{+}2)$ \\
+\textsc{Equal}
+  & $\max(s_1,s_2)$ & $\min(l_1,l_2)$ & $\max(r_1,r_2)$ & $\min(e_1,e_2)$ & $\max(c_1,c_2)$ \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Compact result fields (subject to each operator's feasibility guard and
+the well-formedness conditions $s'\le e'$, $c'\le e'-s'+1$).}
+\end{table}
+
+\noindent
+Note how the result inherits its \emph{start} side ($s',l'$) from whichever
+operand supplies the result's left endpoint and its \emph{stop} side ($r',e'$)
+from whichever supplies the right endpoint: \textsc{Then}/\textsc{Then}$_{[\cdot]}$
+and \textsc{Overlap} take $s_1$ from $A$ and $e_2$ from $B$; \textsc{Contains}
+keeps both from $A$; \textsc{Equal} intersects.
+
+\end{document}
