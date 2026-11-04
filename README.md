@@ -1,9 +1,8 @@
 # TrQS artifact
 
 Source and evaluation harness for the TrQS spatio-temporal query engine.
-**Datasets are not included** -- they are third-party, large, and in one case
-(openDD) under a NoDerivatives licence that forbids redistributing a converted
-copy. Converters are provided instead.
+**Datasets are not included.** Obtain them separately and follow their licences;
+use the supplied converters to prepare inputs.
 
 ## Layout
 
@@ -13,27 +12,52 @@ copy. Converters are provided instead.
 | `suite/` | the evaluation workload: TrQL queries, hand-written reference SQL, drivers |
 | `suite/sql-ref/` | reference SQL per query, written against the DSL's denotation, not generated from the engine -- this is what the exactness gate compares against |
 | `suite/vlm/` | the Gemini comparison: harness, prompts, raw responses, scoring |
-| `plotter/` | `benchplot`, which renders every figure in the paper from `bench.db` |
+| `plotter/` | plot renderers, recorded auxiliary measurements, and the preserved MIRIS PDF |
 | `scripts/detect_track.py` | the ingest worker: detector + tracker -> the `objects`/`bbox` schema |
-| `converters/` | dataset converters and their shared helpers |
+| `converters/` | 18 dataset converters, shared helpers, and projection dependencies; see its README for coverage |
+| `lean-proof/` | interval-set algebra proofs and pinned Lean/mathlib dependencies |
 | `bench.db` | the measurements behind the paper's figures (SQLite), filtered to the queries and error budgets the figures actually read |
 
-## What is in `bench.db`
+## Building and preparing inputs
 
-Only what the figures need: the eleven queries the manifest names, and for the
-six workload queries only the error budgets some figure asks for. Exploratory
-runs -- wider sweeps, candidate queries that were measured and rejected -- are
-not here. Every figure renders pixel-identically from this file and from the
-full database it was filtered out of.
+The engine requires Rust/Cargo 1.92+, a C/C++ compiler toolchain, and the
+**DuckDB 1.5.5 shared library** (`libduckdb.so` on Linux). DuckDB is not bundled;
+install the matching library before building. For a library outside the system
+search paths, set `DUCKDB_LIB_DIR` to its directory when building and add that
+directory to `LD_LIBRARY_PATH` when running the binaries on Linux.
+Python 3.13+, uv, and FFmpeg (`ffmpeg` and `ffprobe`) are used by the converters,
+suite, and plotter.
 
-## Reproducing the figures without re-running anything
-
-`bench.db` holds the measurements, so the figures can be redrawn directly:
+Run from the repository root:
 
 ```sh
-cd plotter && uv run benchplot render          # all figures
-cd plotter && uv run benchplot render --only main
+cargo build --locked --release --manifest-path engine/Cargo.toml \
+  -p trql-cli -p trql-tui -p trql-server
+python3 -m venv .trqs-pyenv
+.trqs-pyenv/bin/python -m pip install -r converters/requirements.txt
 ```
+
+The binaries are in `engine/target/release/`. Follow the
+[converter README](converters/README.md) for supported datasets, raw input
+layouts, and conversion commands. Each processed sub-dataset contains
+`duckdb.db`, `metadata.json`, and a video when available. SoccerTrack and
+nuScenes converters are not included; SoccerNet is distinct from SoccerTrack.
+
+## Reproducing the figures from recorded measurements
+
+The root `bench.db` and `plotter/data/` contain the measurements needed by the
+figures. No datasets or API keys are needed to render them:
+
+```sh
+cd plotter
+uv run --locked benchplot render
+uv run --locked python scripts/degree_ablation.py
+uv run --locked python scripts/interval_ablation.py
+```
+
+Outputs go to `plotter/plots/`. See the [plotter README](plotter/README.md) for
+individual figures and new measurements. The MIRIS figure is a preserved PDF;
+its generator and execution repository are not included.
 
 ## Re-running the measurements
 
@@ -42,27 +66,108 @@ Needs the datasets. Each is converted into a common schema --
 `<max_gap>_<max_error_px>.trql` artifact:
 
 ```sh
-cargo build --release
-trql-cli --dataset <family> --sub-dataset <name> \
+mkdir -p results/suite
+engine/target/release/trql-cli --dataset <family> --sub-dataset <name> \
          --max-gap 1 --max-error-px 0 dataset build
-trql-cli --dataset <family> --sub-dataset <name> \
+engine/target/release/trql-cli --dataset <family> --sub-dataset <name> \
          --max-gap 1 --max-error-px 0 bench <id> "<TrQL query>" 1 3 \
-         --sql suite/sql-ref/<id>.sql --bench-db bench.db
+         --sql suite/sql-ref/<id>.sql --bench-db results/suite/bench.db
 ```
 
-`--sql` is what makes a run trustworthy: it runs the hand-written reference in
-DuckDB on the same data and refuses the result unless the two answers agree
-exactly on object tuples and interval endpoints.
+Always pass `--bench-db` for new measurements: the CLI otherwise defaults to
+the supplied root `bench.db`. The commands above preserve that database and
+`plotter/data/`; plotting new measurements requires selecting their paths as
+described in the [plotter README](plotter/README.md#recorded-inputs-and-new-measurements).
 
-## Two things a reader should know
+The final `1 3` means dataset replication factor 1 and three query executions.
+`--sql` runs the hand-written reference in DuckDB on the same input and reports
+tuple and interval agreement. At `--max-gap 1 --max-error-px 0`, a disagreement
+causes an error; higher gaps or error budgets can intentionally change answers.
+`--gt answers.csv` additionally scores query precision, recall, F1, and temporal
+IoU. The CSV must use object IDs aligned to the engine's dense indices.
 
-**Coordinate units differ by dataset.** i24-Motion and openDD are world
-coordinates (centimetres); the rest are pixels. The error budget is in those
-same units, so budgets are not comparable across datasets -- each figure labels
-its own.
+See [suite/README.md](suite/README.md) for the development workload and baselines,
+[suite/vlm/README.md](suite/vlm/README.md) for the recorded Gemini comparison,
+and [lean-proof/README.md](lean-proof/README.md) for checking the proofs.
 
-**`max_error_px = 0` is not always the right reference point.** It means
-*exact to the stored coordinate*. For openDD, whose positions are accurate to
-about 10 cm, demanding centimetre-exactness forces the fitter to split down to
-~3 points per segment and reports 3.2x compression; at a budget justified by
-the data's own accuracy it is ~47x. Pick the floor from the data, not from 0.
+## Running detection and tracking
+
+The annotation-based benchmarks above do not need a detector rerun. To generate
+predictions, first prepare a sub-dataset containing a source `video.mp4` and its
+ground-truth `duckdb.db`. Create a separate inference environment:
+
+```sh
+python3 -m venv .venv-detect
+.venv-detect/bin/python -m pip install -r scripts/requirements-detect.txt
+.venv-detect/bin/python -c 'import torch; print(torch.cuda.is_available())'
+```
+
+The supplied presets use FP16 and are intended for a compatible NVIDIA GPU and
+PyTorch installation. Model weights are downloaded on first use. List the
+presets, then run one prepared clip. This uses the recorded DETRAC configuration:
+YOLO11x, BoT-SORT, confidence 0.25, image size 960, FP16, COCO classes 2/5/7.
+
+```sh
+DATA_ROOT=datasets/processed
+FAMILY=detrac
+CLIP=MVI_40191
+PRESET=yolo11l-bytetrack-traffic
+
+engine/target/release/trql-cli --data-dir "$DATA_ROOT" \
+  --dataset "$FAMILY" detect configs
+engine/target/release/trql-cli --data-dir "$DATA_ROOT" \
+  --dataset "$FAMILY" detect run --sub "$CLIP" --config "$PRESET" \
+  --model yolo11x.pt --tracker botsort.yaml --imgsz 960 --classes 2 5 7 \
+  --python .venv-detect/bin/python --script scripts/detect_track.py
+```
+
+This calls `scripts/detect_track.py`, aligns predicted track IDs to the source
+annotations, and writes box-level precision, recall, and F1 to `metrics.json`.
+These localization scores are distinct from query-result scores. Outputs live
+under `$DATA_ROOT/predicted/$FAMILY/$CLIP/<reported-config-id>/`: `duckdb.db`, video link,
+metadata, `detect.log`, `alignment.json`, and `metrics.json`. Failed jobs are
+reported per clip; inspect their errors rather than relying on the batch exit
+status alone. Existing predictions are skipped unless `--force` is supplied.
+
+Overrides become part of the output configuration name, which the
+command reports. Use `--class-alias person=pedestrian` when matching that label
+convention. Batch selection uses repeated `--sub`, `--from-file`, or `--all`.
+
+Build the resulting predictions with:
+
+```sh
+PREDICTED_CONFIG=yolo11l-bytetrack-traffic@myolo11x-tbotsort-sz960-cls2.5.7
+engine/target/release/trql-cli --data-dir "$DATA_ROOT" --dataset predicted \
+  --sub-dataset "$FAMILY/$CLIP/$PREDICTED_CONFIG" \
+  --max-gap 1 --max-error-px 0 dataset build
+```
+
+The worker is also called by the TUI's `d` action and
+`suite/vlm/ingest_cost.py`. The VLM timer has its own documented estimated-cost
+methodology; it does not claim that its detector generated the annotated tracks.
+
+Launch the TUI from the repository root:
+
+```sh
+engine/target/release/trql-tui --data-dir "$PWD/datasets/processed" \
+  --python "$PWD/.venv-detect/bin/python" \
+  --detect-script "$PWD/scripts/detect_track.py"
+```
+
+Select the family with the arrow keys, press Right to focus its sub-datasets,
+select a clip, then press `d`. Choose a detector preset with Up/Down and press
+Enter to run; `L` opens the log and `q` exits. The TUI's
+`YOLO11x · BoT-SORT · traffic` preset uses classes 0/1/2/3/5/7. It verifies the
+interactive detection path, but reproducing DETRAC's narrower 2/5/7 class filter
+requires the CLI command above. The TUI does not expose those overrides.
+
+## Coordinate units and fitting error
+
+Coordinate and time units are dataset-specific; consult each converter's
+metadata and documentation. Fitting error uses stored coordinate units, even
+though the CLI option is named `max_error_px`. Budgets therefore cannot be
+compared directly across datasets.
+
+Zero error means exactness to stored coordinates. Choose fitting budgets with
+the source data's precision in mind; demanding finer precision can greatly
+increase the number of segments.

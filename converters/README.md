@@ -42,8 +42,7 @@ datasets may have no video or may expose one as a separate viewpoint.
 
 The converters support datasets beyond the paper's main workload. SoccerNet tracking
 is different from the paper's SoccerTrack v2 panorama input. The SoccerTrack
-converter and raw inputs are not included, and a nuScenes converter is
-not included.
+and nuScenes converters are not included.
 
 ## Dataset-specific steps
 
@@ -119,4 +118,3 @@ set the converter's `--raw` to that same `argoverse2/` directory. The optional
 `fetch_logs.py` downloads annotations/poses/maps; it is unnecessary when these
 raw files are already available. `validate.py` checks city transforms and
 `plot_map.py` visualizes a log; neither is a required conversion stage.
-
