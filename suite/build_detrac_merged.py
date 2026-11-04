@@ -19,7 +19,7 @@ gives: UA-DETRAC annotates in floats, `trql-storage` stores integers, and a
 reference query reading the floats asks a question of data the engine never
 sees.
 
-    uv run papers/vldb27/suite/build_detrac_merged.py
+    uv run suite/build_detrac_merged.py
 """
 
 from __future__ import annotations
@@ -29,7 +29,9 @@ from pathlib import Path
 
 import duckdb
 
-_ROOT = Path("/home/satyam/dev/frameql/datasets/processed")
+from paths import PROCESSED
+
+_ROOT = PROCESSED
 _SRC = _ROOT / "detrac"
 _DST = _ROOT / "detrac_px_merged" / "all"
 

@@ -20,7 +20,7 @@ without it the drop is ambiguous: a run's last row and a gap's last row look
 alike, and reading one as the other asserts an object was present while it was
 absent.
 
-    uv run papers/vldb27/suite/build_dedup.py
+    uv run suite/build_dedup.py
 """
 
 from __future__ import annotations
@@ -30,7 +30,9 @@ from pathlib import Path
 
 import duckdb
 
-_ROOT = Path("/home/satyam/dev/frameql/datasets/processed")
+from paths import PROCESSED
+
+_ROOT = PROCESSED
 
 # source sub-dataset -> the dedup copy written beside it. The pair the figure
 # draws: a parking lot where almost nothing moves, and a motorway junction where

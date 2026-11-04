@@ -32,16 +32,20 @@ import duckdb
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from frames import PROCESSED, ROOT  # noqa: E402
+from paths import OUTPUT, PROCESSED, ROOT  # noqa: E402
 from queries import SUITE  # noqa: E402
 from run_suite import CLI, targets  # noqa: E402
 
-SQL_DIR = Path(__file__).resolve().parent / "sql"
+SQL_DIR = OUTPUT / "sql"
 
 
 def compile_dsl(dsl: str) -> str:
+    compiler = ROOT / "engine" / "target" / "release" / "examples" / "compile"
+    command = [str(compiler), dsl] if compiler.is_file() else [
+        "cargo", "run", "--locked", "--release", "-q", "--manifest-path",
+        str(ROOT / "engine" / "Cargo.toml"), "-p", "trql-sql", "--example", "compile", "--", dsl]
     proc = subprocess.run(
-        ["cargo", "run", "-q", "-p", "trql-sql", "--example", "compile", "--", dsl],
+        command,
         capture_output=True, text=True, cwd=ROOT,
     )
     if proc.returncode != 0:
@@ -60,7 +64,8 @@ def run_sql(sql: str, dataset: str, sub: str, threads: int = 1) -> set[tuple]:
     db = PROCESSED / dataset / sub / "duckdb.db"
     proc = subprocess.run(
         ["duckdb", "-readonly", "-json", str(db)],
-        input=f"SET threads={threads};\n" + sql, capture_output=True, text=True,
+        input=f"SET threads={int(threads)};\n" + sql,
+        capture_output=True, text=True,
     )
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.strip()[:400])
@@ -95,7 +100,7 @@ def run_engine(dataset: str, sub: str, dsl: str) -> set[tuple]:
     """The engine's spans, flattened to the same `(oid…, s, e)` shape as the SQL."""
     with tempfile.NamedTemporaryFile(suffix=".json") as out:
         proc = subprocess.run(
-            [str(CLI), "--dataset", dataset, "--sub-dataset", sub,
+            [str(CLI), "--data-dir", str(PROCESSED), "--dataset", dataset, "--sub-dataset", sub,
              "--format", "json", "run", dsl, out.name],
             capture_output=True, text=True, cwd=ROOT,
         )
@@ -117,11 +122,13 @@ def main() -> int:
     ap.add_argument("--query", nargs="+")
     ap.add_argument("--dataset", action="append")
     ap.add_argument("--check", action="store_true", help="run the SQL and diff it")
+    ap.add_argument("--strict", action="store_true",
+                    help="exit nonzero when --check finds different answers")
     ap.add_argument("--limit", type=int, default=1,
                     help="sub-datasets to check per query (default 1)")
     args = ap.parse_args()
 
-    SQL_DIR.mkdir(exist_ok=True)
+    SQL_DIR.mkdir(parents=True, exist_ok=True)
     todo = SUITE
     if args.dataset:
         todo = [q for q in todo if q.dataset in args.dataset]
@@ -158,6 +165,8 @@ def main() -> int:
             else:
                 print(f"{q.id:8s} {sub:20s} DIFFER engine={len(a)} sql={len(b)} "
                       f"only-engine={len(a - b)} only-sql={len(b - a)}")
+                if args.strict:
+                    bad += 1
     return 1 if bad else 0
 
 

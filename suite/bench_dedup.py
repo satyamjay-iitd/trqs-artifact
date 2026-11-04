@@ -14,7 +14,7 @@ Tiling matches `trql-cli`'s `--db-repeat` (`sqlrun::tiled_duckdb`): replica i
 shifts frames by i * (max_fid + 1) and oids by i * (max_oid + 1), so the
 baseline sees the same grown database the engine was measured on.
 
-    uv run papers/vldb27/suite/bench_dedup.py --repeat 10
+    uv run suite/bench_dedup.py --repeat 10
 """
 
 from __future__ import annotations
@@ -26,8 +26,10 @@ from pathlib import Path
 
 import duckdb
 
-_ROOT = Path("/home/satyam/dev/frameql/datasets/processed")
-_SUITE = Path("/home/satyam/dev/frameql/papers/vldb27/suite")
+from paths import OUTPUT, PROCESSED, SCRATCH, SUITE
+
+_ROOT = PROCESSED
+_SUITE = SUITE
 
 # query id -> (frame-expanded sub-dataset, deduplicated sub-dataset). Each id
 # has its own `sql-ref/<id>.sql` and `sql-dedup/<id>.sql`; both clips here run
@@ -92,10 +94,12 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repeat", type=int, default=10, help="tiling factor (--db-repeat)")
     ap.add_argument("--runs", type=int, default=3, help="timed repeats per query")
-    ap.add_argument("--out", type=Path, default=_SUITE / "results-dedup.json")
+    ap.add_argument("--out", type=Path, default=OUTPUT / "results-dedup.json")
     args = ap.parse_args()
 
-    tmp = Path("/home/satyam/.claude/jobs/c5f85dd3/tmp")
+    tmp = SCRATCH
+    tmp.mkdir(parents=True, exist_ok=True)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
 
     out = {}
     for name, (full_rel, ded_rel) in _CLIPS.items():

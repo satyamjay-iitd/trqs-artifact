@@ -4,7 +4,7 @@
 Six queries per dataset over soccernet, i24_motion, clevrer_merged and nuscenes,
 spanning 1 to 4 bound objects and exercising THEN, DURATION, CONTAINS and
 OVERLAP. Each `Query` carries everything the paper table needs (arity, operators,
-prose) beside the DSL itself, so `tables/workload.tex` is generated rather than
+prose) beside the DSL itself, so descriptions remain consistent rather than
 maintained by hand.
 
 Two properties of the language shape how these are written, and both are
@@ -193,6 +193,7 @@ CLEVRER = [
         "SELECT (a: class=\"gray metal cube\", b: class=\"red rubber sphere\") "
         f"WHERE DURATION({_FAR}, 5) THEN[0..60] DURATION({_NEAR}, 1) "
         f"THEN[0..60] DURATION({_FAR}, 1)",
+        requires=["gray metal cube", "red rubber sphere"],
         notes="Same shape as the draft table's Q4 so old and new numbers compare, "
               "but written in the syntax the parser accepts.",
     ),

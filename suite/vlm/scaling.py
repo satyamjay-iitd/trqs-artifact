@@ -17,7 +17,7 @@ Three things are being separated here, and they are easy to confuse:
   and then milliseconds; the model re-reads the video every time. This is the
   only one of the three that the figure's cost panel claims.
 
-    uv run papers/vldb27/suite/vlm/scaling.py
+    uv run suite/vlm/scaling.py
 """
 
 from __future__ import annotations
@@ -25,7 +25,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-_HERE = Path(__file__).resolve().parent
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from paths import VLM
+
+_HERE = VLM
 
 #: `(window, query, results file)`.
 CELLS = [("30 s", "Q1", "results-vlm.json"),

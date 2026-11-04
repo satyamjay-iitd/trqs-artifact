@@ -26,8 +26,8 @@ and the boundary rule keeps a turn only when that whole transition falls inside
 the clip. Scoring a model against the dwell would credit it for an interval no
 one can see.
 
-    uv run papers/vldb27/suite/vlm/groundtruth.py
-    uv run papers/vldb27/suite/vlm/groundtruth.py --start 180 --end 780 \
+    uv run suite/vlm/groundtruth.py
+    uv run suite/vlm/groundtruth.py --start 180 --end 780 \
         --query queries/UAV-rightturn-top.trql
 """
 
@@ -37,16 +37,20 @@ import argparse
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import duckdb
 from PIL import Image, ImageDraw
 
-_REPO = Path("/home/satyam/dev/frameql")
-_HERE = _REPO / "papers/vldb27/suite/vlm"
-_DB = _REPO / "datasets/processed/ytstream/uav_0006/duckdb.db"
-_VIDEO = _REPO / "datasets/processed/ytstream/uav_0006/video.mp4"
-_CLI = _REPO / "target/release/trql-cli"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from paths import CLI, PROCESSED, ROOT, VLM
+
+_REPO = ROOT
+_HERE = VLM
+_DB = PROCESSED / "ytstream/uav_0006/duckdb.db"
+_VIDEO = PROCESSED / "ytstream/uav_0006/video.mp4"
+_CLI = CLI
 
 FPS = 5
 WIN_S, WIN_E = 180, 210          # default window, overridable on the CLI
@@ -87,7 +91,7 @@ def run_query(q: str) -> list[int]:
     out = _HERE / "clip" / "_rightturn.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        [str(_CLI), "--dataset", "ytstream", "--sub-dataset", "uav_0006",
+        [str(_CLI), "--data-dir", str(PROCESSED), "--dataset", "ytstream", "--sub-dataset", "uav_0006",
          "--max-gap", "10", "--max-error-px", "0", "run", q, str(out)],
         check=True, capture_output=True, text=True)
     idx = engine_oids()

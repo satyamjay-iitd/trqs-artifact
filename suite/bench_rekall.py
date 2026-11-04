@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.12,<3.13"
+# requires-python = ">=3.12"
 # dependencies = [
 #     "duckdb>=1.5.6",
 #     "tqdm",
@@ -8,7 +8,7 @@
 # ]
 #
 # [tool.uv.sources]
-# rekallpy = { path = "/home/satyam/dev/frameql/baselines/rekall/rekallpy" }
+# rekallpy = { git = "https://github.com/scanner-research/rekall", rev = "3f61b402d0658ed53b20af74722df6b7be41054b", subdirectory = "rekallpy" }
 # ///
 """Rekall, DuckDB and TrQS on Rekall's own cyclist-detection query.
 
@@ -20,7 +20,7 @@ contains minimal optimization ... final queries ran in less than thirty
 seconds". This script measures that cost, on its own tutorial query and its own
 released detections, beside the two encodings the paper already compares.
 
-    uv run papers/vldb27/suite/bench_rekall.py --tile 1 2 5 10
+    uv run suite/bench_rekall.py --tile 1 2 5 10
 
 Three encodings of one question. Rekall holds a materialised `Interval` per
 detection and joins them in Python; DuckDB holds one row per object per frame
@@ -87,11 +87,9 @@ import duckdb
 from rekall import Bounds3D, Interval, IntervalSet, IntervalSetMapping
 from rekall.predicates import and_pred, equal, overlaps
 
-_REPO = Path("/home/satyam/dev/frameql")
-_PROCESSED = _REPO / "datasets" / "processed"
-_SUITE = _REPO / "papers" / "vldb27" / "suite"
-_TMP = Path("/home/satyam/.claude/jobs/c5f85dd3/tmp")
-_CLI = _REPO / "target" / "release" / "trql-cli"
+from paths import CLI, OUTPUT, PROCESSED, ROOT, SCRATCH, SUITE
+
+_REPO, _PROCESSED, _SUITE, _TMP, _CLI = ROOT, PROCESSED, SUITE, SCRATCH, CLI
 
 _QUERY_ID = "CYDET-cyclist"
 _SUB = "0001"
@@ -406,7 +404,7 @@ def write_gt(path: Path, trs: set[tuple[int, int, int]], oids: list[int]) -> Non
 def run_trql(variant: str, tile: int, err: int, gt: Path | None, runs: int) -> dict:
     """`trql-cli bench`, which times TrQS and the reference SQL under one roof."""
     cmd = [
-        str(_CLI),
+        str(_CLI), "--data-dir", str(_PROCESSED),
         "--dataset", f"rekall_cydet_{variant}",
         "--sub-dataset", _SUB,
         "--max-gap", str(_MAX_GAP),
@@ -415,7 +413,7 @@ def run_trql(variant: str, tile: int, err: int, gt: Path | None, runs: int) -> d
         (_SUITE / "queries" / f"{_QUERY_ID}.trql").read_text().strip(),
         str(tile), str(runs),
         "--sql", str(_SUITE / "sql-ref" / f"{_QUERY_ID}.sql"),
-        "--bench-db", str(_REPO / "bench.db"),
+        "--bench-db", str(OUTPUT / "bench.db"),
     ]
     if gt is not None:
         cmd += ["--gt", str(gt)]
@@ -490,7 +488,7 @@ def main() -> None:
                          "seconds/frame-relative one, then exit")
     ap.add_argument("--report", action="store_true",
                     help="print `--out` as a table and exit, measuring nothing")
-    ap.add_argument("--out", type=Path, default=_SUITE / "results-rekall.json")
+    ap.add_argument("--out", type=Path, default=OUTPUT / "results-rekall.json")
     args = ap.parse_args()
 
     if args.report:
@@ -506,6 +504,8 @@ def main() -> None:
             )
         return
 
+    _TMP.mkdir(parents=True, exist_ok=True)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
     results = []
     for variant in args.variants:
         src = _PROCESSED / f"rekall_cydet_{variant}" / _SUB / "duckdb.db"

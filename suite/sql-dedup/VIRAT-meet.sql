@@ -1,5 +1,5 @@
 -- The same query as sql-ref/VIRAT-meet.sql, over the frame-deduplicated copy of the
--- clip (`papers/vldb27/suite/build_dedup.py`), which keeps a row only where it
+-- clip (`suite/build_dedup.py`), which keeps a row only where it
 -- says something the previous frame did not.
 --
 --   SELECT (a: class=car, b: class=car)

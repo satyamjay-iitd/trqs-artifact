@@ -11,6 +11,7 @@ Generated, not edited: run this after changing a reference query.
     ./suite/strip_sql_comments.py
 """
 from pathlib import Path
+from paths import OUTPUT
 
 QUERIES = ["I24-journey4", "I24-lane-truck", "I24-convoy", "CL-overtake",
            "NS-crossing", "ST-swap", "SD-carpass"]
@@ -52,7 +53,7 @@ def strip(text: str) -> str:
 
 def main() -> None:
     here = Path(__file__).resolve().parent
-    src, dst = here / "sql-ref", here.parent / "listings" / "sql"
+    src, dst = here / "sql-ref", OUTPUT / "listings" / "sql"
     dst.mkdir(parents=True, exist_ok=True)
     for q in QUERIES:
         text = (src / f"{q}.sql").read_text()

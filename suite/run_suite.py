@@ -19,9 +19,9 @@ Two modes:
 and query time. This is the cheap pass -- use it to check a query still matches
 after an edit.
 
-*bench* (`--bench`) goes through `trql-cli bench`, which reloads the database
-per repeat and samples peak RSS, and appends each run to the SQLite results db
-the `papers/plotter/` scripts read.
+*bench* (`--bench`) loads the selected database once, executes the query
+`--run-repeat` times, samples peak RSS, and appends to the SQLite results
+store. `--db-repeat` is the dataset replication factor.
 
 Query ids are namespaced by dataset (`SN-Q1`, `I24-Q1`, `CL-Q1`, `NS-Q1`)
 because the results schema keys runs on `queries.name` alone: an un-namespaced
@@ -40,11 +40,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from frames import PROCESSED, ROOT  # noqa: E402
+from paths import CLI, OUTPUT, PROCESSED, ROOT  # noqa: E402
 from queries import SUITE, Query  # noqa: E402
-
-CLI = ROOT / "target" / "release" / "trql-cli"
-
 
 def sub_datasets(dataset: str) -> list[str]:
     """Every sub-dataset of a family that has a built `.trql`, in name order."""
@@ -56,7 +53,7 @@ def sub_datasets(dataset: str) -> list[str]:
 
 def targets(q: Query, limit: int | None) -> list[str]:
     subs = q.subs if q.subs is not None else sub_datasets(q.dataset)
-    subs = [s for s in subs if q.runs_on(s)]
+    subs = [s for s in subs if (PROCESSED / q.dataset / s / "10_0.trql").is_file() and q.runs_on(s)]
     return subs[:limit] if limit else subs
 
 
@@ -64,7 +61,7 @@ def run_one(q: Query, sub: str) -> dict:
     """One `trql-cli run`: match count and query time for this sub-dataset."""
     with tempfile.NamedTemporaryFile(suffix=".json") as out:
         proc = subprocess.run(
-            [str(CLI), "--dataset", q.dataset, "--sub-dataset", sub,
+            [str(CLI), "--data-dir", str(PROCESSED), "--dataset", q.dataset, "--sub-dataset", sub,
              "--format", "json", "run", q.dsl_for(sub), out.name],
             capture_output=True, text=True, cwd=ROOT,
         )
@@ -77,7 +74,7 @@ def run_one(q: Query, sub: str) -> dict:
 def bench_one(q: Query, sub: str, db_repeat: int, run_repeat: int,
               results_db: Path | None) -> dict:
     """One `trql-cli bench`: timings, peak RSS, and the results-db append."""
-    cmd = [str(CLI), "--dataset", q.dataset, "--sub-dataset", sub,
+    cmd = [str(CLI), "--data-dir", str(PROCESSED), "--dataset", q.dataset, "--sub-dataset", sub,
            "--format", "json", "bench", q.id, q.dsl_for(sub),
            str(db_repeat), str(run_repeat)]
     if results_db:
@@ -121,14 +118,14 @@ def main() -> int:
     ap.add_argument("--query", nargs="+", help="restrict to these query ids")
     ap.add_argument("--limit", type=int, help="sample at most N sub-datasets per query")
     ap.add_argument("--bench", action="store_true", help="measure via `trql-cli bench`")
-    ap.add_argument("--db-repeat", type=int, default=1)
+    ap.add_argument("--db-repeat", type=int, default=1, help="dataset replication factor")
     ap.add_argument("--run-repeat", type=int, default=3)
     ap.add_argument("--results-db", type=Path)
-    ap.add_argument("--out", type=Path, default=Path(__file__).parent / "results.json")
+    ap.add_argument("--out", type=Path, default=OUTPUT / "results.json")
     args = ap.parse_args()
 
     if not CLI.is_file():
-        print(f"!! {CLI} not built -- run `cargo build --release -p trql-cli`")
+        print(f"!! {CLI} not built -- run `cargo build --release --manifest-path engine/Cargo.toml -p trql-cli`")
         return 1
 
     todo = SUITE
@@ -143,7 +140,8 @@ def main() -> int:
     out = []
     for q in todo:
         subs = targets(q, args.limit)
-        all_subs = q.subs if q.subs is not None else sub_datasets(q.dataset)
+        all_subs = [s for s in (q.subs if q.subs is not None else sub_datasets(q.dataset))
+                    if (PROCESSED / q.dataset / s / "10_0.trql").is_file()]
         skipped = len(all_subs) - len([s for s in all_subs if q.runs_on(s)])
         per_sub, failed = [], []
         t0 = time.time()
@@ -170,9 +168,10 @@ def main() -> int:
             line += f"  !! {len(failed)} FAILED"
         print(line, flush=True)
 
+    args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(out, indent=2) + "\n")
     print(f"\nwrote {args.out}")
-    return 1 if any("failures" in s for s in out) else 0
+    return 1 if any("failures" in s for s in out) or not any(s["sub_datasets_run"] for s in out) else 0
 
 
 if __name__ == "__main__":

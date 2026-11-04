@@ -13,7 +13,7 @@ orange when it matched nothing or the wrong car.
 The point is the red boxes -- cars making the same manoeuvre, in the same place,
 that the model did not report.
 
-    uv run papers/vldb27/suite/vlm/annotate.py
+    uv run suite/vlm/annotate.py
 """
 
 from __future__ import annotations
@@ -22,14 +22,18 @@ import argparse
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import duckdb
 from PIL import Image, ImageDraw, ImageFont
 
-_REPO = Path("/home/satyam/dev/frameql")
-_HERE = _REPO / "papers/vldb27/suite/vlm"
-_DB = _REPO / "datasets/processed/ytstream/uav_0006/duckdb.db"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from paths import PROCESSED, ROOT, VLM
+
+_REPO = ROOT
+_HERE = VLM
+_DB = PROCESSED / "ytstream/uav_0006/duckdb.db"
 W, H, FPS = 960, 540, 5
 
 FOUND = (64, 160, 43)        # ctp green

@@ -1,33 +1,87 @@
 # Evaluation suite
 
-The 24-query workload for the evaluation section, and everything needed to run,
-check, and typeset it. `../query_suite_plan.md` is the write-up — findings,
-measurements, and what is left; this file is just how to use the code.
+The 24-query development workload, its execution drivers, and the
+independent reference SQL used by the evaluation. The current paper selects six
+queries; their `.trql` files are in `queries/` and reference SQL in `sql-ref/`.
+The old query-suite planning document is not part of this artifact.
 
 ## Running
+
+Run these commands from the repository root. Build the CLI and create the
+Python environment as described in the root README, then activate it:
+
+```bash
+source .trqs-pyenv/bin/activate
+export TRQS_DATA_DIR="$PWD/datasets/processed"
+export TRQS_RAW_DIR="$PWD/datasets/raw"
+export TRQS_OUTPUT_DIR="$PWD/results/suite"
+mkdir -p "$TRQS_OUTPUT_DIR"
+```
+
+The suite discovers `10_0.trql` artifacts. Build each selected sub-dataset with
+`--max-gap 10 --max-error-px 0 dataset build` before using the drivers.
+`TRQS_DATA_DIR` can point to any isolated processed-data tree. Generated reports,
+SQL listings go under `TRQS_OUTPUT_DIR`.
 
 Everything goes through `run_suite.py`, which loops the sub-datasets `trql-cli`
 can only take one at a time (106 soccernet clips, 850 nuscenes scenes, 24 i24
 slices) and reports the distribution.
 
 ```bash
-./run_suite.py                                  # everything, run mode
-./run_suite.py --dataset soccernet              # one family
-./run_suite.py --query SN-Q2 CL-Q3              # named queries
-./run_suite.py --limit 20                       # sample 20 sub-datasets per query
-./run_suite.py --bench --results-db ../../plotter/dbs/vldb27.db --run-repeat 5
+python suite/run_suite.py                                  # everything, run mode
+python suite/run_suite.py --dataset soccernet              # one family
+python suite/run_suite.py --query SN-Q2 CL-Q3              # named queries
+python suite/run_suite.py --limit 20                       # sample 20 sub-datasets per query
+python suite/run_suite.py --bench --results-db results/suite/results.db --run-repeat 5
 ```
 
 *run* mode (default) executes each query once per sub-dataset and reports match
 counts and query time — the cheap pass, for checking a query still matches after
-an edit. `--bench` goes through `trql-cli bench`, which reloads the database per
-repeat and samples peak RSS, and appends every run to the results db the
-`papers/plotter/` scripts read.
+an edit. `--bench` goes through `trql-cli bench`, which loads the database once, executes the query `--run-repeat` times, samples
+peak RSS, and appends the measurement to the selected results database.
+`--db-repeat` is the dataset replication factor, not a reload count.
 
-Needs `cargo build --release -p trql-cli` first, and the datasets venv:
-`datasets/.venv/bin/python`.
+This driver's `--bench` mode records timing and memory in the evaluator-compatible results
+schema; it does not supply `--sql` or `--gt`. For paired DuckDB measurements and
+query accuracy, use the root README's `trql-cli bench --sql ... --gt ...`
+workflow. Unscored precision/recall fields must not be read as measured
+accuracy.
+
+The two SQLite output formats serve different purposes:
+
+| Output | How it is written | Contents and use |
+|---|---|---|
+| `results.db` | `trql-cli bench --results-db <path>` | Per-system timing, memory, scale, fitting settings, and optional ground-truth scores in `systems`, `queries`, and `runs` tables. Compatible with the evaluator's reports. |
+| `bench.db` | `trql-cli bench --sql <reference.sql> --bench-db <path>` | Paired TrQS and DuckDB timings, answer agreement, dataset statistics, and optional ground-truth scores in `Dataset`, `Query`, and `Run` tables. Used by the plotter. |
+
+Both flags can be supplied to the same CLI benchmark. The filenames are
+conventions; the flags determine which schema is written. `run_suite.py`
+also writes `results.json`, a separate summary of query runs and sub-datasets.
+
+Build from the repository root with
+`cargo build --locked --release --manifest-path engine/Cargo.toml -p trql-cli`.
+SQL compilation uses the restored `trql-sql` example, built on demand, and SQL
+execution in `compile_sql.py --check` and `head_to_head.py` uses the DuckDB CLI.
+Install the DuckDB CLI executable from the
+[DuckDB releases](https://github.com/duckdb/duckdb/releases), selecting the
+`duckdb_cli` archive for your platform (version 1.5.5 to match the Rust shared
+library). Extract it and put the `duckdb` executable on your `PATH`. Verify with:
+
+```bash
+duckdb --version
+```
+
+The Python DuckDB package is also required for metadata lookups and the other
+suite scripts; installing it does not replace the CLI prerequisite.
 
 ## Files
+
+Raw-data preparation is documented in [../converters/README.md](../converters/README.md).
+The 24-query suite below includes exploratory workloads; it is not identical to
+the paper's final six-query comparison. SoccerNet tracking does not substitute
+for that comparison's SoccerTrack panorama input, whose converter/raw sources
+still need recovery. Short raw subsets verify the supported execution paths;
+they do not reproduce the published full-dataset measurements.
 
 | file | what it is |
 |---|---|
@@ -39,8 +93,16 @@ Needs `cargo build --release -p trql-cli` first, and the datasets venv:
 | `frames.py` | natural units → stored units, read from each sub-dataset's metadata |
 | `scenes.py` | per-scene class sets and generated regions (nuScenes) |
 | `slice_i24.py` | cut i24's 4-hour sub-datasets into fixed-length slices |
-| `gen_workload_tex.py` | generate `../tables/workload.tex` and `workload-full.tex` |
-| `sql/` | generated `<ID>.sql` listings, the paper's appendix material |
+| `gen_workload_tex.py` | generate LaTeX workload summary and DSL listings from `queries.py`; does not summarize measured results |
+| `sql/` | historical SQL listings; new compiler outputs go to `results/suite/sql/` |
+
+To generate the optional workload tables:
+
+```bash
+mkdir -p results/suite/tables
+python suite/gen_workload_tex.py --out results/suite/tables/workload.tex
+python suite/gen_workload_tex.py --listing --out results/suite/tables/workload-full.tex
+```
 
 ## Benchmarking
 
@@ -84,10 +146,9 @@ different classes — there is no variable-inequality constraint in the language
 Append a `Query` to the right list in `queries.py`, then:
 
 ```bash
-./probe.py <dataset> <sub-dataset> "<dsl>"      # does it parse, does it match
-./run_suite.py --query <ID>                     # does it match across the family
-./compile_sql.py --query <ID> --check           # does the SQL agree
-./gen_workload_tex.py && ./gen_workload_tex.py --listing
+python suite/probe.py <dataset> <sub-dataset> "<dsl>"      # does it parse, does it match
+python suite/run_suite.py --query <ID>                     # does it match across the family
+python suite/compile_sql.py --query <ID> --check           # does the SQL agree
 ```
 
 Check the match count across the *family*, not one sub-dataset. Three of the
@@ -108,18 +169,17 @@ exactly once, so nothing is lost.
 `sql-dedup/<ID>.sql` is `sql-ref/<ID>.sql` over that copy: co-appearance becomes
 an interval overlap instead of a join on `fid`, phases are coalesced before the
 DURATION minimum rather than grouped by consecutive frame, and nothing else
-changes. `bench_dedup.py` runs both at `threads=1`, tiled the way `trql-cli
---db-repeat` tiles, and requires the two answers to be identical before
+changes. `bench_dedup.py` runs both at `threads=1`, tiled the way the CLI's replication factor tiles, and requires the two answers to be identical before
 reporting a time — they are, on both clips.
 
 ```bash
-uv run build_detrac_px.py                 # integer-pixel DETRAC (see below)
-uv run build_dedup.py
-uv run bench_dedup.py --repeat 10         # writes results-dedup.json
+uv run suite/build_detrac_px.py                 # integer-pixel DETRAC (see below)
+uv run suite/build_dedup.py
+uv run suite/bench_dedup.py --repeat 10         # writes results/suite/results-dedup.json
 ```
 
-`papers/plotter` draws the result as the second bar of each group in
-`plots/compression.png` (`baselines = "../vldb27/suite/results-dedup.json"` in
+`plotter/` draws the result as the second bar of each group in
+`plots/compression.png` (`baselines = "data/results-dedup.json"` in
 its manifest).
 
 ## Why the figure pairs VIRAT with DETRAC
@@ -168,12 +228,12 @@ query and its own released detections, beside the two encodings the rest of the
 suite already compares.
 
 ```bash
-cargo build --release -p trql-cli              # default features; the ablation leaves others
-uv run build_rekall_cydet.py                   # raw: their data as published
-uv run build_rekall_cydet.py --track           # tracked: the same boxes, with identity
-uv run bench_rekall.py --verify-encoding       # one-time fidelity check
-uv run bench_rekall.py --tile 1 2 5 10 25 50 100 --errs 0 1 2 4
-uv run bench_rekall.py --report                # re-print results-rekall.json
+cargo build --locked --release --manifest-path engine/Cargo.toml -p trql-cli              # default features; the ablation leaves others
+uv run suite/build_rekall_cydet.py                   # raw: their data as published
+uv run suite/build_rekall_cydet.py --track           # tracked: the same boxes, with identity
+uv run suite/bench_rekall.py --verify-encoding       # one-time fidelity check
+uv run suite/bench_rekall.py --tile 1 2 5 10 25 50 100 --errs 0 1 2 4
+uv run suite/bench_rekall.py --report                # re-print results/suite/results-rekall.json
 ```
 
 `build_rekall_cydet.py` downloads the Mask R-CNN detections behind tutorial 01
@@ -274,3 +334,24 @@ rather than a gate. On this query it barely moves: at ×100 on `tracked`, ε = 4
 drops the segment count from 2.31 M to 1.81 M for a mean IoU of 0.9997 and no
 change in query time, because box-overlap is a coarse enough predicate that a
 four-pixel fit error rarely flips it.
+
+## Recorded inputs and correctness checks
+
+The plotter reads the paper's recorded auxiliary measurements from
+`plotter/data/`. Re-running a suite baseline writes new results to
+`results/suite/`; it does not replace those recorded inputs. To plot a new run,
+point the corresponding manifest entry's `baselines`, `results`, or `source`
+setting at the new output.
+
+The plotter still reads the recorded root `bench.db` by default. To render a
+fresh benchmark database, pass `--db /absolute/path/to/results/suite/bench.db`
+to `benchplot render`. This is separate from the evaluator-compatible `results.db` written by
+`run_suite.py --bench --results-db`; that database is not the plotter's input.
+
+Use `python suite/compile_sql.py --check --strict ...` to return a failure status
+on an answer difference. The default checker prints differences without failing
+on them, since gap smoothing can intentionally differ from frame-expanded SQL.
+Verification on small raw subsets found unresolved span differences in `CL-Q2`
+and `CL-Q3`; the `CL-Q3` difference also persists at `max_gap=1`. `CL-Q6` is
+already marked broken in `queries.py` because it can match across concatenated
+videos. These queries should not be treated as validated correctness baselines.

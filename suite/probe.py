@@ -13,14 +13,13 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
-CLI = ROOT / "target" / "release" / "trql-cli"
+from paths import CLI, PROCESSED, ROOT
 
 
 def probe(dataset: str, sub: str, query: str) -> tuple[int, float, list]:
     with tempfile.NamedTemporaryFile(suffix=".json") as out:
         proc = subprocess.run(
-            [str(CLI), "--dataset", dataset, "--sub-dataset", sub,
+            [str(CLI), "--data-dir", str(PROCESSED), "--dataset", dataset, "--sub-dataset", sub,
              "--format", "json", "run", query, out.name],
             capture_output=True, text=True, cwd=ROOT,
         )

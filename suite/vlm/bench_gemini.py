@@ -22,10 +22,10 @@ invented 3" rather than just "the timings were off".
 
 `GEMINI_API_KEY` comes from the environment and is never written anywhere.
 
-    uv run papers/vldb27/suite/vlm/bench_gemini.py --modes static agentic
-    uv run papers/vldb27/suite/vlm/bench_gemini.py --report
+    uv run suite/vlm/bench_gemini.py --modes static agentic
+    uv run suite/vlm/bench_gemini.py --report
 
-    uv run papers/vldb27/suite/vlm/bench_gemini.py \
+    uv run suite/vlm/bench_gemini.py \
         --clip clip/uav0006_180_780.mp4 --gt gt_180_780.json \
         --out results-vlm-600s.json
 """
@@ -43,9 +43,12 @@ from pathlib import Path
 import duckdb
 import requests
 
-_REPO = Path("/home/satyam/dev/frameql")
-_HERE = _REPO / "papers/vldb27/suite/vlm"
-_DB = _REPO / "datasets/processed/ytstream/uav_0006/duckdb.db"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from paths import PROCESSED, ROOT, VLM
+
+_REPO = ROOT
+_HERE = VLM
+_DB = PROCESSED / "ytstream/uav_0006/duckdb.db"
 _API = "https://generativelanguage.googleapis.com"
 MODEL = "gemini-4-argon"
 W, H, FPS = 960, 540, 5

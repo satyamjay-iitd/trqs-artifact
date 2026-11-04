@@ -7,7 +7,9 @@ import duckdb, json
 from pathlib import Path
 import numpy as np
 
-ROOT = Path("/home/satyam/dev/frameql/datasets/processed/virat")
+from paths import OUTPUT, PROCESSED
+
+ROOT = PROCESSED / "virat"
 SQL = """
 WITH s AS (SELECT oid, fid, x1,y1,x2,y2,(x1+x2)/2.0 cx,(y1+y2)/2.0 cy FROM bbox),
 d AS (SELECT fid-lag(fid) OVER w df,
@@ -43,7 +45,8 @@ for d in sorted(ROOT.iterdir()):
                     p99=float(p99 or 0), max=float(mx or 0),
                     person=cls.get("person", 0), car=cls.get("car", 0),
                     objs=sum(cls.values())))
-Path("/home/satyam/.claude/jobs/c5f85dd3/tmp/virat_scan.json").write_text(json.dumps(out, indent=1))
+OUTPUT.mkdir(parents=True, exist_ok=True)
+(OUTPUT / "virat_scan.json").write_text(json.dumps(out, indent=1))
 print(f"scanned {len(out)} clips\n")
 usable = [r for r in out if r["person"] >= 2 and r["car"] >= 2 and r["rows"] >= 20000]
 usable.sort(key=lambda r: r["same"])

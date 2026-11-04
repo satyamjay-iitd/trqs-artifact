@@ -22,7 +22,7 @@ also produced these particular tracks.
 
 Run with the GPU environment:
 
-    .venv-detect/bin/python papers/vldb27/suite/vlm/ingest_cost.py
+    .venv-detect/bin/python suite/vlm/ingest_cost.py
 """
 
 from __future__ import annotations
@@ -37,10 +37,13 @@ import cv2
 import duckdb
 import numpy as np
 
-_REPO = Path("/home/satyam/dev/frameql")
-_HERE = _REPO / "papers/vldb27/suite/vlm"
-_DB = _REPO / "datasets/processed/ytstream/uav_0006/duckdb.db"
-_SCRATCH = Path("/home/satyam/.claude/jobs/c5f85dd3/tmp")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from paths import PROCESSED, ROOT, SCRATCH, VLM
+
+_REPO = ROOT
+_HERE = VLM
+_DB = PROCESSED / "ytstream/uav_0006/duckdb.db"
+_SCRATCH = SCRATCH
 MODEL = "yolo11x.pt"          # the largest YOLO11 checkpoint in the tree
 TRACKER = "botsort.yaml"      # GMC on, which is the right choice for a drone
 FPS = 5
@@ -63,6 +66,12 @@ class _Dets:
 
     def __len__(self):
         return len(self.conf)
+
+    @property
+    def xyxy(self):
+        """Corner boxes used by BoT-SORT's camera-motion compensation."""
+        half = self.xywh[:, 2:4] / 2
+        return np.concatenate((self.xywh[:, :2] - half, self.xywh[:, :2] + half), axis=1)
 
 
 def pipeline_seconds(clip: Path, out: Path) -> float:
@@ -90,7 +99,7 @@ def association_ms_per_frame(clip: Path, f0: int, f1: int) -> tuple[float, float
 
     con = duckdb.connect(str(_DB), read_only=True)
     rows = con.execute(
-        "SELECT fid,x1,y1,x2,y2 FROM bbox WHERE fid BETWEEN ? AND ? ORDER BY fid",
+        "SELECT fid,x1,y1,x2,y2 FROM bbox WHERE fid >= ? AND fid < ? ORDER BY fid",
         [f0, f1]).fetchall()
     con.close()
     per: dict[int, list] = {}
@@ -100,7 +109,7 @@ def association_ms_per_frame(clip: Path, f0: int, f1: int) -> tuple[float, float
 
     cap = cv2.VideoCapture(str(clip))
     n, tot, nbox = 0, 0.0, 0
-    for i in range(f1 - f0 + 1):
+    for i in range(f1 - f0):
         ok, img = cap.read()
         if not ok:
             break
@@ -123,7 +132,7 @@ def main() -> None:
     for c in CELLS:
         clip = _HERE / c["clip"]
         f0, f1 = c["frames"]
-        n = f1 - f0 + 1
+        n = f1 - f0
         wall = pipeline_seconds(clip, _SCRATCH / f"ingest_{c['name']}.db")
         assoc_ms, density = association_ms_per_frame(clip, f0, f1)
         total = wall + assoc_ms / 1000.0 * n

@@ -13,7 +13,7 @@ on that, so the cut has to land on the stated boundary rather than near it.
 slides the window by however far the nearest one is. We re-encode instead and
 then verify the result is 150 frames at 5 fps before anyone uses it.
 
-    uv run papers/vldb27/suite/vlm/clip.py
+    uv run suite/vlm/clip.py
 """
 
 from __future__ import annotations
@@ -24,9 +24,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-_REPO = Path("/home/satyam/dev/frameql")
-_SRC = _REPO / "datasets/processed/ytstream/uav_0006/video.mp4"
-_OUT = _REPO / "papers/vldb27/suite/vlm/clip"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from paths import PROCESSED, ROOT, VLM
+
+_REPO = ROOT
+_SRC = PROCESSED / "ytstream/uav_0006/video.mp4"
+_OUT = VLM / "clip"
 
 FPS = 5
 

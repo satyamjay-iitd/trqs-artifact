@@ -116,11 +116,11 @@ particular tracks. The tracks themselves are MIRIS ground-truth annotation --
 
 ## The figure
 
-`papers/plotter/plots/vlm.pdf`, drawn by the `vlm` plot kind from
+`plotter/plots/vlm.pdf`, drawn by the `vlm` plot kind from
 `results-vlm.json`, `results-vlm-600s.json` and `ingest.json`:
 
 ```bash
-cd papers/plotter && uv run benchplot render --only vlm
+cd plotter && uv run --locked benchplot render --only vlm
 ```
 
 F1 against total time, log x, six points, each system's two windows joined.
@@ -277,7 +277,7 @@ at 15 min, which is this variance and not a scaling effect.
 
 ## The per-query bar figure
 
-`papers/plotter/plots/vlmbars.pdf` (`benchplot render --only vlmbars`) is the
+`plotter/plots/vlmbars.pdf` (`benchplot render --only vlmbars`) is the
 whole matrix in one figure: one panel per window, one group per system, two bars
 per group for the first and second query, with precision, recall and the time
 printed over each bar.
@@ -322,47 +322,73 @@ move in steps of 0.33 and should not be read as a measurement of quality.
 
 ## Running it
 
+Run from the repository root, with Python 3.13+, uv, FFmpeg, and the CLI built.
+Prepare `ytstream/uav_0006` from the raw video and annotations, then build its
+`10_0.trql`. Its dataset-specific converter still needs migration into this
+repository; the command below assumes that processed input already exists.
+Set up a separate working directory so reruns preserve the checked-in labels
+and the paper's reference measurements:
+
+```bash
+export TRQS_DATA_DIR="$PWD/datasets/processed"
+export TRQS_OUTPUT_DIR="$PWD/results/suite"
+export TRQS_VLM_DIR="$TRQS_OUTPUT_DIR/vlm"
+mkdir -p "$TRQS_VLM_DIR"
+cp -r suite/vlm/queries "$TRQS_VLM_DIR/"
+cp suite/vlm/gt*.json plotter/data/vlm/*.json "$TRQS_VLM_DIR/"
+```
+
+The copied `results-vlm*.json` files can be reported or scored offline. This is
+the verification scope for the artifact: live Gemini reruns are excluded.
+The model-call commands below document the original experiment and are optional.
+Live
+model calls require `GEMINI_API_KEY` and access to the configured model. The
+`uv run` commands install their declared Python dependencies. The ingestion
+command uses the separate `.venv-detect` environment from the root README.
+The plotter uses the preserved measurements under `plotter/data/vlm/` by
+default; set a plot's `source` to `../results/suite/vlm` to draw new measurements.
+
 ```bash
 export GEMINI_API_KEY=...        # never written to disk
 
-uv run papers/vldb27/suite/vlm/clip.py --start 180 --dur 30
-uv run papers/vldb27/suite/vlm/groundtruth.py --start 180 --end 210
-uv run papers/vldb27/suite/vlm/bench_gemini.py --modes static agentic
+uv run suite/vlm/clip.py --start 180 --dur 30
+uv run suite/vlm/groundtruth.py --start 180 --end 210
+uv run suite/vlm/bench_gemini.py --modes static agentic
 
-uv run papers/vldb27/suite/vlm/clip.py --start 180 --dur 600
-uv run papers/vldb27/suite/vlm/groundtruth.py --start 180 --end 780
-uv run papers/vldb27/suite/vlm/bench_gemini.py --modes static agentic \
+uv run suite/vlm/clip.py --start 180 --dur 600
+uv run suite/vlm/groundtruth.py --start 180 --end 780
+uv run suite/vlm/bench_gemini.py --modes static agentic \
     --clip clip/uav0006_180_780.mp4 --gt gt_180_780.json \
-    --out papers/vldb27/suite/vlm/results-vlm-600s.json
+    --out results/suite/vlm/results-vlm-600s.json
 
 # the second query, same video and window
-uv run papers/vldb27/suite/vlm/groundtruth.py --start 180 --end 780 \
+uv run suite/vlm/groundtruth.py --start 180 --end 780 \
     --query queries/UAV-rightturn-top.trql       # writes gt_top_180_780.json
-uv run papers/vldb27/suite/vlm/bench_gemini.py --modes static agentic \
+uv run suite/vlm/bench_gemini.py --modes static agentic \
     --clip clip/uav0006_180_780.mp4 --gt gt_top_180_780.json --trqs_ms 6.3 \
     --event "every car that enters from the top of the frame and then turns right (the car's own right)" \
-    --out papers/vldb27/suite/vlm/results-vlm-top-600s.json
+    --out results/suite/vlm/results-vlm-top-600s.json
 
 # the 15 min window (both queries), which is what the figure draws
-uv run papers/vldb27/suite/vlm/clip.py --start 180 --dur 900
+uv run suite/vlm/clip.py --start 180 --dur 900
 for q in UAV-rightturn UAV-rightturn-top; do
-  uv run papers/vldb27/suite/vlm/groundtruth.py --start 180 --end 1080 \
+  uv run suite/vlm/groundtruth.py --start 180 --end 1080 \
       --query queries/$q.trql
 done
-uv run papers/vldb27/suite/vlm/bench_gemini.py --modes static agentic \
+uv run suite/vlm/bench_gemini.py --modes static agentic \
     --clip clip/uav0006_180_1080.mp4 --gt gt_180_1080.json --trqs_ms 5.3 \
-    --out papers/vldb27/suite/vlm/results-vlm-900s.json
-uv run papers/vldb27/suite/vlm/bench_gemini.py --modes static agentic \
+    --out results/suite/vlm/results-vlm-900s.json
+uv run suite/vlm/bench_gemini.py --modes static agentic \
     --clip clip/uav0006_180_1080.mp4 --gt gt_top_180_1080.json --trqs_ms 6.3 \
     --event "every car that enters from the top of the frame and then turns right (the car's own right)" \
-    --out papers/vldb27/suite/vlm/results-vlm-top-900s.json
+    --out results/suite/vlm/results-vlm-top-900s.json
 
-uv run papers/vldb27/suite/vlm/scaling.py        # all cells + amortization
+uv run suite/vlm/scaling.py        # all cells + amortization
 
-.venv-detect/bin/python papers/vldb27/suite/vlm/ingest_cost.py   # needs the GPU env
-cd papers/plotter && uv run benchplot render --only vlm          # plots/vlm.pdf
+.venv-detect/bin/python suite/vlm/ingest_cost.py   # needs the GPU env
+cd plotter && uv run --locked benchplot render --only vlm          # plots/vlm.pdf
 cd -
-uv run papers/vldb27/suite/vlm/annotate.py \     # burn the scoring into the clip
+uv run suite/vlm/annotate.py \
     --clip clip/uav0006_180_780.mp4 --gt gt_180_780.json \
     --results results-vlm-600s.json --suffix _600s
 ```

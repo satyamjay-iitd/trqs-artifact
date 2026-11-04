@@ -17,7 +17,7 @@ Quantising the source once puts all three encodings on the same numbers. Every
 other dataset in the suite already stores integer coordinates, so this only
 restates for DETRAC what is true elsewhere by construction.
 
-    uv run papers/vldb27/suite/build_detrac_px.py
+    uv run suite/build_detrac_px.py
 """
 
 from __future__ import annotations
@@ -27,7 +27,9 @@ from pathlib import Path
 
 import duckdb
 
-_ROOT = Path("/home/satyam/dev/frameql/datasets/processed")
+from paths import PROCESSED
+
+_ROOT = PROCESSED
 _CLIPS = {"detrac/MVI_40191": "detrac_px/MVI_40191"}
 
 # `as u32` truncates toward zero and saturates at 0 for a negative, so

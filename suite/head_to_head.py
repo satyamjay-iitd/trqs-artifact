@@ -29,7 +29,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from compile_sql import compile_dsl, engine_oids, run_sql  # noqa: E402
-from frames import PROCESSED, ROOT  # noqa: E402
+from paths import CLI, PROCESSED, ROOT  # noqa: E402
 from queries import SUITE  # noqa: E402
 
 import json  # noqa: E402
@@ -53,7 +53,7 @@ def time_engine(dataset: str, sub: str, dsl: str) -> tuple[float, float, set]:
     with tempfile.NamedTemporaryFile(suffix=".json") as out:
         t0 = time.time()
         proc = subprocess.run(
-            [str(ROOT / "target" / "release" / "trql-cli"),
+            [str(CLI), "--data-dir", str(PROCESSED),
              "--dataset", dataset, "--sub-dataset", sub,
              "--format", "json", "run", dsl, out.name],
             capture_output=True, text=True, cwd=ROOT,
@@ -92,6 +92,7 @@ def main() -> int:
           f"DuckDB threads={args.threads}\n")
     print(f"{'id':9s} {'TrQS wall':>10s} {'(query)':>9s} {'DuckDB':>9s} "
           f"{'wall/wall':>10s} {'query/duck':>11s} {'rows':>8s}  agree")
+    errors = 0
     for q in todo:
         dsl = q.dsl_for(args.sub)
         try:
@@ -99,6 +100,7 @@ def main() -> int:
             sql = compile_dsl(dsl)
             d_wall, d_rows = time_sql(sql, q.dataset, args.sub, args.threads)
         except Exception as exc:
+            errors += 1
             print(f"{q.id:9s} ERROR {str(exc)[:90]}", flush=True)
             continue
         agree = "yes" if e_rows == d_rows else f"NO (+{len(e_rows-d_rows)}/-{len(d_rows-e_rows)})"
@@ -106,7 +108,7 @@ def main() -> int:
         r_query = d_wall / e_query if e_query else float("nan")
         print(f"{q.id:9s} {e_wall:9.2f}s {e_query:8.2f}s {d_wall:8.2f}s "
               f"{r_wall:9.2f}x {r_query:10.2f}x {len(e_rows):8d}  {agree}", flush=True)
-    return 0
+    return 1 if errors or not todo else 0
 
 
 if __name__ == "__main__":

@@ -11,8 +11,8 @@ those pickles and writes them into the processed-dataset schema the engine
 ingests, so Rekall, a frame-expanded SQL baseline and TrQS can all be measured
 on the same boxes.
 
-    uv run papers/vldb27/suite/build_rekall_cydet.py            # raw
-    uv run papers/vldb27/suite/build_rekall_cydet.py --track    # with identity
+    uv run suite/build_rekall_cydet.py            # raw
+    uv run suite/build_rekall_cydet.py --track    # with identity
 
 Each pickle is a list over frames of `[x1, y1, x2, y2, class, score, png]` in
 **pixel** coordinates (`tutorials/cyclist_tutorial_helpers.py` divides by
@@ -57,9 +57,9 @@ from pathlib import Path
 import duckdb
 import requests
 
-_REPO = Path("/home/satyam/dev/frameql")
-_RAW = _REPO / "datasets" / "raw" / "rekall_cydet"
-_PROCESSED = _REPO / "datasets" / "processed"
+from paths import PROCESSED, RAW, ROOT
+
+_REPO, _RAW, _PROCESSED = ROOT, RAW / "rekall_cydet", PROCESSED
 
 _BASEURL = "https://storage.googleapis.com/esper/dan_olimar/rekall_tutorials/cydet"
 # The two videos `cyclist_tutorial_helpers.py` names, in its order (sorted by
@@ -311,7 +311,7 @@ def build(vm: dict, frame_list: list[list], with_identity: bool) -> dict:
         )
         + (
             " Object ids come from a greedy per-class IoU tracker added by "
-            f"papers/vldb27/suite/build_rekall_cydet.py (IoU >= {_IOU_MATCH}, "
+            f"suite/build_rekall_cydet.py (IoU >= {_IOU_MATCH}, "
             f"closed after {_MAX_MISSES} missed frames); Rekall's release has "
             "no identity."
             if with_identity

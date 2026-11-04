@@ -17,7 +17,7 @@ CYDET-cyclist    rekall_cydet_{raw,tracked}/0001          28 runs each, err 0..4
 
 CYDET-cyclist is Rekall's own tutorial query (tutorial 01, "Cyclist
 Detection"), ported to TrQL: a person's box intersects a bicycle's, with no
-duration constraint. It is measured by papers/vldb27/suite/bench_rekall.py,
+duration constraint. It is measured by suite/bench_rekall.py,
 which runs Rekall's code on Rekall's released detections beside the reference
 SQL and the engine -- so this row is the only one in the suite whose answer is
 gated against a third system rather than two.
