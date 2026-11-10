@@ -6,8 +6,8 @@ enters from the top of the frame and turns right. They select disjoint sets of
 cars, so they are genuinely different questions of the same footage.
 
 **(a) Cumulative cost against number of queries.** The engine pays detection
-and tracking once -- $49.9$ s with the largest YOLO11 checkpoint -- and then answers
-in milliseconds, so its line is flat. The model has no persistent state to
+and tracking once -- the recorded `INGEST_S` below, 73.0 s for the 15 min window --
+and then answers in milliseconds, so its line is flat. The model has no persistent state to
 re-use: it must re-read the video for every question, so its line is linear in
 the number of queries. One query cannot tell those two shapes apart, which is
 why there are two. `k = 1, 2` are measured and drawn solid; beyond that the line
@@ -20,8 +20,8 @@ the event being scored -- so its bars report expressibility, not an accuracy win
 Q2's manoeuvre is shorter and in a corner of the frame, so its F1 is not
 comparable with Q1's; neither panel's claim rests on comparing them.
 
-Reads `results-vlm-*.json` and `ingest.json` from `suite/vlm/`,
-not `bench.db`.
+Reads `results-vlm-*.json` from `plotter/data/vlm/`, not `bench.db`. The
+ingestion cost is the recorded `INGEST_S`, not a file.
 """
 
 from __future__ import annotations
@@ -73,7 +73,13 @@ _RC: Any = {
     "pdf.fonttype": 42,
 }
 
-#: Per window: the `ingest.json` cell, and `(results file, label)` for each
+#: Detection + tracking + fitting, in seconds, for each window of
+#: `ytstream/uav_0006` starting at 180 s. Recorded once with YOLO11x and BoT-SORT
+#: and reported as stated; the artifact does not re-run the detector. The 15 min
+#: window's 73.0 s is about 16 ms per frame.
+INGEST_S = {"30s": 5.65, "600s": 49.43, "900s": 73.01}
+
+#: Per window: the `INGEST_S` key, and `(results file, label)` for each
 #: query in the order it was asked. The 30 s window has only one query and only
 #: five ground-truth turns -- recall quantises into steps of 0.2 -- so it cannot
 #: carry the figure; it stays in the README and in the length sweep below.
@@ -83,7 +89,7 @@ _WINDOWS = {
     "900s": ("900s", (("results-vlm-900s.json", "Q1"),
                       ("results-vlm-top-900s.json", "Q2"))),
 }
-#: `(ingest cell, Q1 results file, label)` for the length sweep, ascending.
+#: `(INGEST_S key, Q1 results file, label)` for the length sweep, ascending.
 _LENGTHS = (("30s", "results-vlm.json", "30 s"),
             ("600s", "results-vlm-600s.json", "10 min"),
             ("900s", "results-vlm-900s.json", "15 min"))
@@ -95,7 +101,7 @@ _KMAX = 10
 class VlmOptions:
     """The `[[plots]]` keys only this kind understands."""
 
-    #: Directory holding results-vlm*.json and ingest.json.
+    #: Directory holding results-vlm*.json.
     source: Path = DEFAULT_DIR
     #: Which window the left panel is drawn for.
     window: str = "900s"
@@ -119,29 +125,13 @@ def _f1(tp: int, fp: int, fn: int) -> float:
     return 2 * tp / d if d else 0.0
 
 
-def ingest_cells(source: Path) -> dict:
-    """`ingest.json` keyed by cell name."""
-    path = source / "ingest.json"
-    if not path.is_file():
-        raise FileNotFoundError(
-            f"no ingest measurements at {path} — run "
-            ".venv-detect/bin/python suite/vlm/ingest_cost.py"
-        )
-    return {c["name"]: c for c in json.loads(path.read_text())["cells"]}
-
-
 def load_queries(source: Path, with_ingest: bool, window: str = "900s") -> dict:
     """Per-query cost and F1 for each system, plus the one-off ingest cost."""
     if window not in _WINDOWS:
         raise ValueError(
             f"unknown window {window!r}; known: {', '.join(_WINDOWS)}")
     cell, queries = _WINDOWS[window]
-    ingest = 0.0
-    if with_ingest:
-        cells = ingest_cells(source)
-        if cell not in cells:
-            raise ValueError(f"ingest.json has no cell named {cell!r}")
-        ingest = cells[cell]["ingest_s"]
+    ingest = INGEST_S[cell] if with_ingest else 0.0
 
     labels: list[str] = []
     cost: dict[str, list[float]] = {"static": [], "agentic": [], "trqs": []}
@@ -179,7 +169,6 @@ def load_queries(source: Path, with_ingest: bool, window: str = "900s") -> dict:
 
 def load_lengths(source: Path, with_ingest: bool) -> dict:
     """Cost of answering Q1 once, against how much video it is asked about."""
-    cells = ingest_cells(source) if with_ingest else {}
     out: dict[str, list] = {"labels": [], "seconds": [],
                             "static": [], "agentic": [], "trqs": []}
     for cell, fname, label in _LENGTHS:
@@ -194,7 +183,7 @@ def load_lengths(source: Path, with_ingest: bool) -> dict:
             out[run["mode"]].append(run["latency_ms"] / 1000.0)
         # The engine's first query over a video costs ingestion plus the query.
         out["trqs"].append(res["trqs_ms"] / 1000.0
-                           + (cells[cell]["ingest_s"] if with_ingest else 0.0))
+                           + (INGEST_S[cell] if with_ingest else 0.0))
     return out
 
 

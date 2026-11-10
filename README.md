@@ -11,7 +11,7 @@ use the supplied converters to prepare inputs.
 | `engine/` | the Rust workspace: algebra, DSL, polynomial fitting, selector, storage, CLI |
 | `suite/` | the evaluation workload: TrQL queries, hand-written reference SQL, drivers |
 | `suite/sql-ref/` | reference SQL per query, written against the DSL's denotation, not generated from the engine -- this is what the exactness gate compares against |
-| `suite/vlm/` | the Gemini comparison: harness, prompts, raw responses, scoring |
+| `suite/vlm/` | the Gemini comparison: harness, prompts, raw responses, scoring, and the built `ytstream/uav_0006` artifact it queries |
 | `plotter/` | plot renderers, recorded auxiliary measurements, and the preserved MIRIS PDF |
 | `scripts/detect_track.py` | the ingest worker: detector + tracker -> the `objects`/`bbox` schema |
 | `converters/` | 18 dataset converters, shared helpers, and projection dependencies; see its README for coverage |
@@ -176,9 +176,9 @@ engine/target/release/trql-cli --data-dir "$DATA_ROOT" --dataset predicted \
   --max-gap 1 --max-error-px 0 dataset build
 ```
 
-The worker is also called by the TUI's `d` action and
-`suite/vlm/ingest_cost.py`. The VLM timer has its own documented estimated-cost
-methodology; it does not claim that its detector generated the annotated tracks.
+The worker is also called by the TUI's `d` action. The VLM comparison runs no
+detector: it ingests the YTStream video's own tracks and reports the recorded
+ingestion cost (see its [README](suite/vlm/README.md#ingestion-cost)).
 
 Launch the TUI from the repository root:
 

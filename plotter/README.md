@@ -77,7 +77,7 @@ For separate inputs, update these manifest keys:
 |---|---|
 | `compression` | `baselines`: deduplicated DuckDB results JSON |
 | `rekall` | `results`: Rekall benchmark JSON |
-| `vlm`, `vlmbars` | `source`: directory with `results-vlm*.json` and `ingest.json` |
+| `vlm`, `vlmbars` | `source`: directory with `results-vlm*.json`; ingestion is the recorded `INGEST_S` in `plots/vlm.py` |
 | `cooccurrence` | `stats`: measured co-occurrence JSON |
 
 The ablation scripts accept `--data-dir` and `--out`; the degree script also

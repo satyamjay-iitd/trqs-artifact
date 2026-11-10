@@ -15,8 +15,8 @@ F1, computed from precision and recall, is drawn on a linear right axis.
 The engine's F1 is `1.00` by construction: the TrQL region query defines the
 event being scored, so it reports expressibility rather than an accuracy win.
 
-Reads `results-vlm*.json` and `ingest.json` from `suite/vlm/`,
-not `bench.db`.
+Reads `results-vlm*.json` from `plotter/data/vlm/`, not `bench.db`. The
+ingestion cost is the recorded `INGEST_S` of the `vlm` kind, not a file.
 """
 
 from __future__ import annotations
@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from benchplot.plots.vlm import INGEST_S
 from benchplot.spec import Plot, PlotKind, Table
 
 DEFAULT_DIR = Path("data/vlm")
@@ -70,7 +71,7 @@ _RC: Any = {
     "hatch.linewidth": 0.5,
 }
 
-#: `(panel label, ingest cell, Q1 results, Q2 results)`, shortest window first.
+#: `(panel label, INGEST_S key, Q1 results, Q2 results)`, shortest window first.
 _CELLS = (("30 s", "30s", "results-vlm.json", "results-vlm-top.json"),
           ("10 min", "600s", "results-vlm-600s.json", "results-vlm-top-600s.json"),
           # ("15 min", "900s", "results-vlm-900s.json", "results-vlm-top-900s.json"),
@@ -86,7 +87,7 @@ _SERIES = (("trqs", _C_TRQS, "TrQS"),
 class VlmBarsOptions:
     """The `[[plots]]` keys only this kind understands."""
 
-    #: Directory holding results-vlm*.json and ingest.json.
+    #: Directory holding results-vlm*.json.
     source: Path = DEFAULT_DIR
     #: Charge the engine its ingestion on the first query. On by default: with
     #: it off the first bar is milliseconds too and the figure says nothing.
@@ -109,19 +110,9 @@ def _read(path: Path) -> dict:
 
 def load_cells(source: Path, with_ingest: bool) -> list[dict]:
     """Per window: time, precision and recall of query 1 and query 2."""
-    ingest_path = source / "ingest.json"
-    if not ingest_path.is_file():
-        raise FileNotFoundError(
-            f"no ingest measurements at {ingest_path} — run "
-            ".venv-detect/bin/python suite/vlm/ingest_cost.py"
-        )
-    cells = {c["name"]: c for c in json.loads(ingest_path.read_text())["cells"]}
-
     out = []
     for label, cell, f1, f2 in _CELLS:
-        if cell not in cells:
-            raise ValueError(f"{ingest_path}: no cell named {cell!r}")
-        ingest = cells[cell]["ingest_s"] if with_ingest else 0.0
+        ingest = INGEST_S[cell] if with_ingest else 0.0
         panel: dict[str, Any] = {"label": label, "ingest": ingest}
         for key in ("trqs", "static", "agentic"):
             panel[key] = []

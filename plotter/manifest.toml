@@ -425,7 +425,7 @@ height = 1.5
 # cars, so they are different questions of the same footage.
 #
 # (a) Cumulative cost against query count. The engine pays detection and
-# tracking once (vlm/ingest_cost.py, 49.9 s with the largest YOLO11 checkpoint)
+# tracking once (the recorded INGEST_S, 73.0 s for this window with YOLO11x)
 # and then answers in milliseconds, so its line is flat; the model has no
 # persistent state to re-use and must re-read the video per question, so its
 # line is linear. One query cannot tell those shapes apart, which is why there
@@ -442,8 +442,7 @@ height = 1.5
 # recall into steps of 0.2, so that cell cannot carry a figure. It is in the
 # suite README.
 #
-# Reads results-vlm-600s.json, results-vlm-top-600s.json and ingest.json, not
-# bench.db.
+# Reads results-vlm-900s.json and results-vlm-top-900s.json, not bench.db.
 [[plots]]
 name = "vlm"
 kind = "vlm"
@@ -477,7 +476,7 @@ height = 1.7
 #
 # Drawn at 7 in, so it belongs in a `figure*` spanning both columns.
 #
-# Reads results-vlm*.json and ingest.json, not bench.db.
+# Reads results-vlm*.json, not bench.db.
 [[plots]]
 name = "vlmbars"
 kind = "vlmbars"

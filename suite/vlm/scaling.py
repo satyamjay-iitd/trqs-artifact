@@ -39,7 +39,13 @@ CELLS = [("30 s", "Q1", "results-vlm.json"),
          ("10 min", "Q2", "results-vlm-top-600s.json"),
          ("15 min", "Q1", "results-vlm-900s.json"),
          ("15 min", "Q2", "results-vlm-top-900s.json")]
-#: `(window, ingest cell, results files)` for the amortization block. Each is
+#: Detection + tracking + fitting, in seconds, per window of `ytstream/uav_0006`
+#: from 180 s. Recorded once with YOLO11x and BoT-SORT and reported as stated;
+#: the artifact does not re-run the detector. Same values as the plotter's
+#: `benchplot.plots.vlm.INGEST_S`.
+INGEST_S = {"30s": 5.65, "600s": 49.43, "900s": 73.01}
+
+#: `(window, INGEST_S key, results files)` for the amortization block. Each is
 #: one video and one window, so the ingestion is genuinely paid once.
 AMORT = [("30 s", "30s", ["results-vlm.json", "results-vlm-top.json"]),
          ("10 min", "600s", ["results-vlm-600s.json", "results-vlm-top-600s.json"]),
@@ -89,17 +95,12 @@ def table() -> None:
 
 
 def amortization() -> None:
-    ing = load("ingest.json")
-    if ing is None:
-        print("amortization needs ingest.json — run ingest_cost.py")
-        return
-    cells = {c["name"]: c for c in ing["cells"]}
     for window, cell, files in AMORT:
         runs = [load(f) for f in files]
-        if any(r is None for r in runs) or cell not in cells:
+        if any(r is None for r in runs):
             print(f"amortization: {window} cell incomplete, skipping")
             continue
-        _one(window, cells[cell]["ingest_s"], runs)
+        _one(window, INGEST_S[cell], runs)
 
 
 def _one(window: str, ingest: float, runs: list[dict]) -> None:
