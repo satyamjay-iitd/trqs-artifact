@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.13"
-# dependencies = ["duckdb>=1.5.6", "numpy>=2.1"]
+# dependencies = ["duckdb==1.5.6", "numpy>=2.1"]
 # ///
 """Rank every VIRAT clip by how much its objects actually move."""
 import duckdb, json

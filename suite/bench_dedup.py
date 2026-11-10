@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.13"
-# dependencies = ["duckdb>=1.5.6"]
+# dependencies = ["duckdb==1.5.6"]
 # ///
 """The frame-deduplicated DuckDB baseline, against the frame-expanded one.
 

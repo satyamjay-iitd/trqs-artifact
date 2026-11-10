@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["duckdb>=1.5.6", "requests"]
+# dependencies = ["duckdb==1.5.6", "requests"]
 # ///
 """Ask Gemini which cars turn right, and score it against the specification.
 

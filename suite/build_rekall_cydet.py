@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.13"
-# dependencies = ["duckdb>=1.5.6", "requests"]
+# dependencies = ["duckdb==1.5.6", "requests"]
 # ///
 """Rekall's cyclist-detection tutorial data, as a TrQS dataset.
 

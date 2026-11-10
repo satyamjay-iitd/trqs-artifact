@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "duckdb>=1.5.6",
+#     "duckdb==1.5.6",
 #     "tqdm",
 #     "python-constraint==1.4.0",
 #     "rekallpy",

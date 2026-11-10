@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["duckdb>=1.5.6", "pillow"]
+# dependencies = ["duckdb==1.5.6", "pillow"]
 # ///
 """Freeze the set of turns the VLM will be scored against.
 

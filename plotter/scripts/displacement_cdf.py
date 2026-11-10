@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "duckdb>=1.5.6",
+#     "duckdb==1.5.6",
 # ]
 # ///
 """How far an object moves between one frame and the next, per dataset.

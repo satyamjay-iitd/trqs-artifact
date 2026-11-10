@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["duckdb>=1.5.6", "pillow"]
+# dependencies = ["duckdb==1.5.6", "pillow"]
 # ///
 """Burn the scoring into the clip so the misses are visible.
 

@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.13"
-# dependencies = ["duckdb>=1.5.6"]
+# dependencies = ["duckdb==1.5.6"]
 # ///
 """Build the frame-deduplicated copy of a clip: the same detections, minus the
 rows that repeat the one before them.

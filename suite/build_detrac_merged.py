@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.13"
-# dependencies = ["duckdb>=1.5.6"]
+# dependencies = ["duckdb==1.5.6"]
 # ///
 """Merge every UA-DETRAC sequence into one dataset, quantised to integer pixels.
 
