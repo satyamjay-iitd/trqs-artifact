@@ -51,14 +51,17 @@ def plot_p15(
     """Writes the chart to `out_path` and returns it."""
     if df.empty:
         raise ValueError("nothing to plot")
-    missing = [q for q in order if q not in set(df["query"])]
-    if missing:
-        raise ValueError(f"query not in the database: {', '.join(missing)}")
+    # A query with no runs (its dataset could not be obtained, say) keeps its
+    # row, marked, so the figure never silently drops one of the paper's queries.
+    # The renderer only lets that through when the manifest sets `mark_missing`.
+    present = [q for q in order if q in set(df["query"])]
+    if not present:
+        raise ValueError("none of the queries is in the database")
 
     # Only the first budget of each query, and only it is required to have been
     # measured: the later budgets belong to the headline figure, not this one.
     first = {q: list(v[:1]) for q, v in budgets.items()}
-    rows = {b.row["query"]: b.row for b in _layout(df, order, first)}
+    rows = {b.row["query"]: b.row for b in _layout(df, present, first)}
     type_scale = 0.95 if width <= 4.5 else 1.0
 
     fig, (ax_speed, ax_mem) = plt.subplots(
@@ -71,6 +74,21 @@ def plot_p15(
     ys = range(len(order))
 
     for y, query in zip(ys, order):
+        if query not in rows:
+            for ax in (ax_speed, ax_mem):
+                ax.text(
+                    0.03,
+                    y,
+                    "not measured",
+                    transform=ax.get_yaxis_transform(),
+                    ha="left",
+                    va="center",
+                    fontsize=6 * type_scale,
+                    fontstyle="italic",
+                    color="0.35",
+                    zorder=4,
+                )
+            continue
         row = rows[query]
         # One colour for every query: the rows are named on the axis, and the
         # colour is the p15 colour of the headline figure.
@@ -126,7 +144,7 @@ def plot_p15(
         ax_speed.set_xscale("log")
         ax_mem.set_xscale("log")
         # Room on the right of the longest bar for the number standing at its end.
-        top = max(rows[q]["speedup"] for q in order)
+        top = max(rows[q]["speedup"] for q in present)
         ax_speed.set_xlim(0.7, top * 8)
         # Decades only: the panels are narrow, and a label on every minor tick
         # runs into its neighbour.
@@ -136,7 +154,7 @@ def plot_p15(
         # Whole decades on the memory axis, so it has more than one tick to read.
         mems = [
             v
-            for q in order
+            for q in present
             for v in (rows[q].get("trql_mem_mb"), rows[q].get("sql_mem_mb"))
             if pd.notna(v) and v > 0
         ]

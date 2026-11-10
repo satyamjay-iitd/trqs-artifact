@@ -46,6 +46,7 @@ COMMON_KEYS = (
     "exclude",
     "errs",
     "scales",
+    "mark_missing",
 )
 
 
@@ -171,6 +172,7 @@ def _read_plot(table: Table, defaults: Defaults, base: Path) -> Plot | None:
             drop_errs=table.number_list_map("drop_errs"),
             keep_errs=table.number_list_map("keep_errs"),
             scales=table.numbers("scales", defaults.scales),
+            mark_missing=table.boolean("mark_missing", False),
         ),
         # The kind takes its own keys from the same table, so whatever neither it
         # nor the common keys above claimed is a typo.

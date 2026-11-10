@@ -65,12 +65,14 @@ its generator and execution repository are not included.
 ### One command
 
 `reproduce_paper.sh` re-measures every point that Figures 4a, 5 and 8 draw from
-`bench.db`, then redraws those figures from the new measurements:
+`bench.db`, re-measures the Figure 9 ablations, then redraws those figures from
+the new measurements:
 
 ```sh
 ./reproduce_paper.sh --dry-run          # the plan and the exact commands; runs nothing
-./reproduce_paper.sh                    # compression (4a), p15 (5), epsilon (8)
+./reproduce_paper.sh                    # 4a, 5, 8, 9a, 9b
 ./reproduce_paper.sh --plots compression --data-dir /path/to/processed
+./reproduce_paper.sh --plots "degree_ablation interval_ablation"   # Figure 9 only
 ```
 
 The plan comes from `plotter/manifest.toml`, applied to the recorded `bench.db`.
@@ -86,8 +88,59 @@ resolves to it and checks its SHA-256 before and after every run. Re-running the
 script resumes: points already in `results/repro/bench.db` are skipped
 (`--no-resume` re-measures them). Points whose sub-dataset is absent from
 `--data-dir` (default `$TRQS_DATA_DIR` or `datasets/processed`) are skipped and
-listed. A figure is drawn only when every point it needs has been measured.
-The engine is built if `engine/target/release/trql-cli` is absent.
+listed. A figure is drawn only when every point it needs has been measured,
+except Figure 5: a query whose dataset is absent is drawn as a marked
+"not measured" row, and the summary names it. This applies to SoccerTrack v2,
+which has no converter. The engine is built if
+`engine/target/release/trql-cli` is absent.
+
+Figure 9 compares engine builds rather than budgets, so its two manifest entries
+(`degree_ablation`, `interval_ablation`) carry their own matrix: the query,
+sub-dataset, budgets and one cargo feature set per variant. The script builds
+each feature set once into `results/repro/ablation/bin/`. Each degree gets its own
+data directory, because a `.trql` file's name does not record the polynomial
+degree. A degree's instrumented build reuses that directory's fitted files,
+which are byte-identical (the manifest's `fit` key). The figures are drawn
+from `results/repro/ablation/<plot>/`.
+
+| Figure | Variants (cargo features of `trql-cli`) | Runs |
+|---|---|---|
+| 9a degree | `linear`, default (quadratic), `cubic`, each again with `instrument` | I24-convoy on `i24_motion/post1`, gap 10, budgets 30–487, gated against the reference SQL |
+| 9b interval sets | `instrument`; `instrument,naive-intervals` | CL-overtake on `clevrer_merged/video_00000+99more` (`converters/paper_merges.sh --only clevrer-100`), gap 1, budget 0 |
+
+#### Time and resources
+
+Measured on one machine: Intel i9-14900K (32 threads), 123 GB RAM, NVMe, with
+the converted datasets already in place. Treat the times as an order of
+magnitude for your hardware.
+
+| Stage | First run (fits every `.trql`) | Re-run (`.trql` kept) |
+|---|---|---|
+| Engine release build | 35 s | — |
+| Figures 4a, 5, 8: 39 runs and drawing | 25 min | 4 min |
+| — of which I24-convoy (8 budgets) | 19 min | 1 min |
+| Figure 9: 7 engine builds, 32 runs | about 42 min | — |
+| — of which 9a, 30 runs, 15 fits | about 40 min | — |
+| — of which 9b, 2 runs, 1 fit | about 2 min | — |
+| Everything (`./reproduce_paper.sh`) | about 1 h 10 min | — |
+
+The Figure 9 times are derived from a measured run in which every build fitted
+its own files: 9a took 70 min, about 2 min per point, almost all of it fitting
+(the timed query work was 11 min in total). Builds that share fitted files skip
+15 of those 30 fits.
+
+Fitting I24-Motion `post1` dominates: 830k objects and 280 M boxes, refitted
+for each budget, and for Figure 9a once per budget and degree. Each 9a
+run also times DuckDB three times, about 7 s each. Interrupted runs resume from
+the last finished point.
+
+Memory: DuckDB peaks at about 1.8 GB (I24-convoy) and TrQS at about 1.1 GB
+(SoccerTrack); the naive interval build of Figure 9b needs about 4.5 GB. Disk:
+the seven converted sub-datasets the figures read take about 6.6 GB (6.2 GB of
+it I24), and the fitted `.trql` files add about 3 GB. Figure 9a adds 1.5–2.2 GB
+of fitted files per degree, about 5.3 GB for all three, under
+`results/repro/ablation/`. Converting I24-Motion `post1` from its 19 GB JSON
+takes about 10 min, 7.6 GB of RAM and about 14 GB of temporary space.
 
 Figure 4a's deduplicated-DuckDB bars still come from the recorded
 `plotter/data/results-dedup.json`. Re-measure them with the

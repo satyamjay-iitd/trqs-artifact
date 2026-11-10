@@ -11,11 +11,10 @@ Run from `plotter/`:
 
 ```sh
 uv run --locked benchplot render
-uv run --locked python scripts/degree_ablation.py
-uv run --locked python scripts/interval_ablation.py
 ```
 
-These commands produce the quantitative paper figures under `plots/`. The
+This produces the quantitative paper figures under `plots/`, including Figure 9
+(`degree_ablation`, `interval_ablation`). The
 manifest command also renders older and supplementary plots. MIRIS is the
 preserved-PDF exception described below.
 
@@ -26,8 +25,8 @@ preserved-PDF exception described below.
 | 6: VLM comparison | `vlmbars.pdf` | `uv run --locked benchplot render --only vlmbars` |
 | 7: MIRIS comparison | `miris_timeline_plot.pdf` | `uv run --locked benchplot render --only miris_timeline_plot` |
 | 8: fitting-budget ablation | `epsilon.pdf` | `uv run --locked benchplot render --only epsilon` |
-| 9a: polynomial-degree ablation | `comparison-cubic-quadratic-plot.pdf` | `uv run --locked python scripts/degree_ablation.py` |
-| 9b: interval-representation ablation | `interval_ablation.pdf` | `uv run --locked python scripts/interval_ablation.py` |
+| 9a: polynomial-degree ablation | `degree_ablation.pdf` | `uv run --locked benchplot render --only degree_ablation` |
+| 9b: interval-representation ablation | `interval_ablation.pdf` | `uv run --locked benchplot render --only interval_ablation` |
 
 Figure 7 is copied unchanged from `data/miris_timeline_plot.pdf`. Its original
 measurements, generator, and MIRIS execution repository are not included.
@@ -79,10 +78,22 @@ For separate inputs, update these manifest keys:
 | `rekall` | `results`: Rekall benchmark JSON |
 | `vlm`, `vlmbars` | `source`: directory with `results-vlm*.json`; ingestion is the recorded `INGEST_S` in `plots/vlm.py` |
 | `cooccurrence` | `stats`: measured co-occurrence JSON |
+| `degree_ablation` | `source`: `<variant>.db` per build; `stages`: `<variant>-inst.db` |
+| `interval_ablation` | `source`: `<query>-<variant>.json` per build |
 
-The ablation scripts accept `--data-dir` and `--out`; the degree script also
-accepts `--stage-dir` for instrumented measurements. They draw recorded clean
-query times and stage proportions without rebuilding the Rust engine.
+For the plots that read their own directory (`vlm`, `vlmbars` and the two
+ablations), `--source-dir DIR` overrides `source` (and `stages`) for one run
+without editing the manifest; `reproduce_paper.sh` draws Figure 9 that way.
+The ablation entries also carry `[plots.measure]`, the matrix behind them:
+query, sub-dataset, budgets, and one `[[plots.measure.variants]]` per engine
+build (`name`, cargo `features`, `default_features`, `output`, and `fit`:
+variants with the same `fit` share fitted files).
+`scripts/degree_ablation.py` and `scripts/interval_ablation.py` do the drawing
+and still run directly (`--data-dir`, `--stage-dir`, `--out`).
+
+A `[[plots]]` table may set `mark_missing = true`: a named query with no runs is
+then drawn as a marked "not measured" gap instead of stopping the figure, and
+the render summary names it. Figure 5 (`p15`) sets it.
 
 ## Manifest
 

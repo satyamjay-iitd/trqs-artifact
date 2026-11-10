@@ -2,12 +2,20 @@
 # Re-run the measurements behind the paper's bench.db figures and redraw them.
 #
 #   ./reproduce_paper.sh --dry-run          # what would run, nothing executed
-#   ./reproduce_paper.sh                    # Figs 4a, 5, 8 (compression, p15, epsilon)
+#   ./reproduce_paper.sh                    # Figs 4a, 5, 8 and 9a, 9b
 #   ./reproduce_paper.sh --plots "p15"      # one figure
 #
 # The plan is read from plotter/manifest.toml against the recorded bench.db
 # (opened read-only): exactly the (query, sub-dataset, budget, gap, scale)
 # points each figure draws. See plotter/scripts/repro_plan.py.
+#
+# Figure 9's ablations compare engine builds, so their manifest entries carry
+# their own matrix: each variant is built once with its cargo features (into
+# --out/ablation/bin) and run against the data tree of its `fit` group, because
+# a .trql file's name does not record the polynomial degree. Builds that leave
+# fitting untouched (the instrumented twin of a degree) share their group's
+# fitted files. Outputs go to --out/ablation/<plot>/ and the figure is drawn
+# from there.
 #
 # The recorded ./bench.db is never written. Every run goes to --out (default
 # results/repro/bench.db) via an explicit --bench-db, the script refuses an
@@ -26,7 +34,7 @@ CLI="${TRQL_CLI:-$ROOT/engine/target/release/trql-cli}"
 
 DATA_DIR="${TRQS_DATA_DIR:-$ROOT/datasets/processed}"
 OUT="$ROOT/results/repro"
-PLOTS="compression p15 epsilon"
+PLOTS="compression p15 epsilon degree_ablation interval_ablation"
 RUNS=3
 DRY_RUN=0
 RESUME=1
@@ -38,8 +46,9 @@ Usage: $(basename "$0") [options]
 
   --plots "A B ..."   manifest plots to reproduce (default: "$PLOTS")
   --data-dir DIR      processed datasets root (default: \$TRQS_DATA_DIR or datasets/processed)
-  --out DIR           output root; bench.db, plots/, logs/ go here (default: results/repro)
-  --runs N            query executions per point (default: $RUNS, as recorded)
+  --out DIR           output root; bench.db, plots/, logs/, ablation/ go here (default: results/repro)
+  --runs N            query executions per bench.db point (default: $RUNS, as recorded);
+                      the Figure 9 ablations use the manifest's own `runs`
   --no-resume         re-measure points already present in the output bench.db
   --stop-on-error     stop at the first failing point (default: keep going)
   --dry-run           print the plan and the commands; run nothing
@@ -162,22 +171,122 @@ while IFS=$'\t' read -r plots query family sub err gap scale trql sql status sql
     check_ref
 done < <(tail -n +2 "$PLAN")
 
+# --- Ablations (Figure 9) --------------------------------------------------
+ABL="$OUT/ablation"
+ABL_PLAN="$ABL/plan.tsv"
+mkdir -p "$ABL"
+abl_skip=()
+[[ $RESUME -eq 1 ]] && abl_skip=(--ablation-dir "$ABL")
+# shellcheck disable=SC2086
+(cd "$ROOT/plotter" && uv run --quiet --locked python scripts/repro_plan.py \
+    --reference-db "$REF_DB" --plots $PLOTS --ablations "${abl_skip[@]}") > "$ABL_PLAN"
+n_abl=$(($(wc -l < "$ABL_PLAN") - 1))
+declare -A abl_plots=() dry_built=()
+[[ $n_abl -gt 0 ]] && say "$n_abl ablation runs -> $ABL_PLAN"
+
+# variant_bin FEATURES DEFAULT -> path of a trql-cli built with those features,
+# built on first use. Variants sharing a feature set share the binary.
+variant_bin() {
+    local feats="$1" def="$2" key bin args=()
+    key="$([[ $def == true ]] && echo default || echo nodefault)"
+    [[ $feats != - ]] && key+="+${feats//,/+}"
+    bin="$ABL/bin/trql-cli.$key"
+    [[ $def == false ]] && args+=(--no-default-features)
+    [[ $feats != - ]] && args+=(--features "$feats")
+    if [[ ! -x "$bin" ]]; then
+        if [[ $DRY_RUN -eq 1 ]]; then
+            # Print each build once; the dry run is read top to bottom.
+            if [[ -z "${dry_built[$key]:-}" ]]; then
+                dry_built["$key"]=1
+                printf ' CARGO_TARGET_DIR=%q cargo build --locked --release -p trql-cli' "$ABL/target"
+                [[ ${#args[@]} -gt 0 ]] && printf ' %q' "${args[@]}"
+                echo
+            fi
+            return 0
+        else
+            mkdir -p "$ABL/bin"
+            say "Building trql-cli ($key)" >&2
+            CARGO_TARGET_DIR="$ABL/target" cargo build --locked --release \
+                --manifest-path "$ROOT/engine/Cargo.toml" -p trql-cli "${args[@]}" \
+                > "$ABL/build-$key.log" 2>&1 || { warn "build failed; see $ABL/build-$key.log"; return 1; }
+            cp "$ABL/target/release/trql-cli" "$bin"
+        fi
+    fi
+    echo "$bin"
+}
+
+j=0
+while IFS=$'\t' read -r plot query family sub err gap aruns variant feats def output fit trql sql status; do
+    j=$((j + 1))
+    abl_plots["$plot"]=1
+    tag="$plot/$variant $query ${family}/${sub} eps=$err gap=$gap"
+    case "$status" in
+        done) skipped_done=$((skipped_done + 1)); continue ;;
+        no-query-file) noquery+=("$tag"); continue ;;
+    esac
+    src="$DATA_DIR/$family/$sub"
+    if [[ ! -f "$src/duckdb.db" ]]; then
+        missing+=("$tag  [$plot]")
+        missing_seen["$family/$sub"]=1
+        continue
+    fi
+    # One tree per fit group: real directories, the inputs symlinked read-only.
+    # Variants of a group reuse its .trql files instead of refitting.
+    tree="$ABL/data/$plot/$fit"
+    ds="$tree/$family/$sub"
+    dest="$ABL/$plot"
+    common=(--data-dir "$tree" --dataset "$family" --sub-dataset "$sub"
+            --max-gap "$gap" --max-error-px "$err")
+    extra=()
+    [[ $sql != - ]] && extra+=(--sql "$ROOT/$sql")
+    [[ $output == bench-db ]] && extra+=(--bench-db "$dest/$variant.db")
+    if [[ $DRY_RUN -eq 1 ]]; then
+        printf '[ablation %d/%d] %s\n' "$j" "$n_abl" "$tag"
+        variant_bin "$feats" "$def"
+        printf ' %q' "<trql-cli.$variant>" "${common[@]}" bench "$query" "<$trql>" 1 "$aruns" "${extra[@]}"; echo
+        continue
+    fi
+    say "[ablation $j/$n_abl] $tag"
+    log="$LOG_DIR/ablation__${plot}__${variant}__e${err}.log"
+    if ! bin=$(variant_bin "$feats" "$def"); then
+        failed+=("$tag  (build)"); [[ $STOP_ON_ERROR -eq 1 ]] && break; continue
+    fi
+    mkdir -p "$ds" "$dest"
+    ln -sf "$src/duckdb.db" "$ds/duckdb.db"
+    [[ -f "$src/metadata.json" ]] && ln -sf "$src/metadata.json" "$ds/metadata.json"
+    report="$ds/benchmark/${query}_${gap}_${err}_x1.json"
+    if { [[ -f "$ds/${gap}_${err}.trql" ]] || "$bin" "${common[@]}" dataset build; } >"$log" 2>&1 \
+        && "$bin" "${common[@]}" bench "$query" "$(cat "$ROOT/$trql")" 1 "$aruns" "${extra[@]}" >>"$log" 2>&1 \
+        && { [[ $output != report ]] || cp "$report" "$dest/$query-$variant.json"; }; then
+        ok=$((ok + 1))
+    else
+        failed+=("$tag  (log: $log)")
+        warn "failed; see $log"
+        tail -n 5 "$log" >&2 || true
+        [[ $STOP_ON_ERROR -eq 1 ]] && break
+    fi
+    check_ref
+done < <(tail -n +2 "$ABL_PLAN")
+
 # --- Render ----------------------------------------------------------------
 rendered=(); unrendered=()
 if [[ $DRY_RUN -eq 0 ]]; then
-    if [[ -f "$NEW_DB" ]]; then
-        mkdir -p "$PLOT_DIR"
-        for p in $PLOTS; do
-            if out=$(cd "$ROOT/plotter" && uv run --quiet --locked benchplot render \
-                    --only "$p" --db "$NEW_DB" --out-dir "$PLOT_DIR" 2>&1); then
-                rendered+=("$out")
-            else
-                unrendered+=("$p: $out")
-            fi
-        done
-    else
-        for p in $PLOTS; do unrendered+=("$p: no measurements were taken"); done
-    fi
+    mkdir -p "$PLOT_DIR"
+    for p in $PLOTS; do
+        if [[ -n "${abl_plots[$p]:-}" ]]; then
+            src_args=(--source-dir "$ABL/$p")
+        elif [[ -f "$NEW_DB" ]]; then
+            src_args=(--db "$NEW_DB")
+        else
+            unrendered+=("$p: no measurements were taken"); continue
+        fi
+        if out=$(cd "$ROOT/plotter" && uv run --quiet --locked benchplot render \
+                --only "$p" "${src_args[@]}" --out-dir "$PLOT_DIR" 2>&1); then
+            rendered+=("$out")
+        else
+            unrendered+=("$p: $out")
+        fi
+    done
 fi
 
 # --- Report ----------------------------------------------------------------

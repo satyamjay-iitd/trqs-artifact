@@ -9,6 +9,7 @@ added here is immediately writable in `manifest.toml`.
 from __future__ import annotations
 
 from benchplot.plots import (
+    ablation,
     compression,
     cooccurrence,
     epsilon,
@@ -25,6 +26,8 @@ from benchplot.spec import PlotKind
 KINDS: dict[str, PlotKind] = {
     kind.name: kind
     for kind in (
+        ablation.DEGREE_KIND,
+        ablation.INTERVAL_KIND,
         compression.KIND,
         cooccurrence.KIND,
         epsilon.KIND,

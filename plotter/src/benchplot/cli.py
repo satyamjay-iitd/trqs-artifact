@@ -8,6 +8,7 @@ one-off overrides (another database, another output directory, a subset).
 
 from __future__ import annotations
 
+from dataclasses import fields, replace
 from pathlib import Path
 from typing import Annotated, NoReturn, Optional
 
@@ -55,6 +56,15 @@ def render(
         Optional[Path],
         typer.Option("--out-dir", help="Override the manifest's output directory."),
     ] = None,
+    source_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--source-dir",
+            help="For plots that read their own measurements (Fig 9's ablations, "
+            "the VLM figures): read them from this directory instead of the "
+            "manifest's `source` (and `stages`).",
+        ),
+    ] = None,
     dry_run: Annotated[
         bool,
         typer.Option("--dry-run", help="Say what would be drawn, draw nothing."),
@@ -77,6 +87,9 @@ def render(
         typer.echo(f"{manifest}: every plot is disabled — nothing to draw")
         return
 
+    if source_dir is not None:
+        plots = [_with_source(p, source_dir.resolve()) for p in plots]
+
     if dry_run:
         for plot in plots:
             typer.echo(f"{plot.name:<20} {plot.kind:<10} -> {_short(plot.out)}")
@@ -89,6 +102,16 @@ def render(
         except ManifestError as exc:
             _die(str(exc))
         typer.echo(f"{done.plot.name:<20} {_short(done.path)}  ({done.summary})")
+
+
+def _with_source(plot: Plot, source: Path) -> Plot:
+    """`plot` reading its measurements from `source`, or a clear refusal."""
+    names = {f.name for f in fields(plot.options)} if plot.options is not None else set()
+    if "source" not in names:
+        _die(f'--source-dir: plot "{plot.name}" ({plot.kind}) reads bench.db, not a '
+             "source directory; select plots with --only")
+    changes = {k: source for k in ("source", "stages") if k in names}
+    return replace(plot, options=replace(plot.options, **changes))
 
 
 @app.command(name="plots")

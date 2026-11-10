@@ -25,6 +25,17 @@ correctness oracle, and a revised oracle (NS-crossing's, after the reference
 was brought in line with the paper's semantics) is reported as `revised` rather
 than skipped.
 
+Figure 9's ablations (`degree_ablation`, `interval_ablation`) compare engine
+*builds*, so their runs are not in `bench.db`; their manifest entries carry the
+matrix instead (`[plots.measure]`). `--ablations` prints that plan, one line per
+(variant, budget):
+
+    plot query family sub err gap runs variant features default_features output fit trql sql status
+
+`features` is comma-separated (`-` for none); variants with the same `fit` share
+fitted files; `status` is `todo`, or `done` when
+the output is already in `--ablation-dir/<plot>/`.
+
 Output is tab-separated, one line per distinct point, header first:
 
     plots query family sub err gap scale trql sql status sql_vs_recorded
@@ -146,6 +157,16 @@ def main() -> int:
         type=Path,
         help="New bench.db; points already measured there are marked `done`.",
     )
+    ap.add_argument(
+        "--ablations",
+        action="store_true",
+        help="Print the plan of the ablation plots among --plots instead.",
+    )
+    ap.add_argument(
+        "--ablation-dir",
+        type=Path,
+        help="With --ablations: outputs already there are marked `done`.",
+    )
     args = ap.parse_args()
 
     ref = args.reference_db.resolve()
@@ -166,10 +187,15 @@ def main() -> int:
 
     from benchplot.plots import KINDS
 
+    if args.ablations:
+        return _ablation_plan([by_name[n] for n in args.plots], args.ablation_dir)
+
     renderer = Renderer()
     points: dict[tuple[str, str, float, int, int], list[str]] = {}
     for name in args.plots:
         plot = by_name[name]
+        if hasattr(plot.options, "measure"):
+            continue  # an ablation: planned by --ablations, not from bench.db
         if not KINDS[plot.kind].needs_runs:
             print(
                 f"repro_plan: {name} ({plot.kind}) reads its own recorded inputs, "
@@ -238,6 +264,53 @@ def main() -> int:
                 ]
             )
         )
+    return 0
+
+
+def _ablation_done(directory: Path | None, plot: str, query: str, variant, err: float) -> bool:
+    if directory is None:
+        return False
+    where = directory / plot
+    if variant.output == "report":
+        return (where / f"{query}-{variant.name}.json").is_file()
+    db = where / f"{variant.name}.db"
+    if not db.is_file():
+        return False
+    with sqlite3.connect(f"file:{db}?mode=ro", uri=True) as conn:
+        n = conn.execute(
+            "SELECT count(*) FROM Run r JOIN Query q ON q.id = r.query_id "
+            "WHERE q.name = ? AND r.trql_error_px = ? AND r.trql_time > 0",
+            (query, err),
+        ).fetchone()[0]
+    return n > 0
+
+
+def _ablation_plan(plots, directory: Path | None) -> int:
+    print("plot\tquery\tfamily\tsub\terr\tgap\truns\tvariant\tfeatures\t"
+          "default_features\toutput\tfit\ttrql\tsql\tstatus")
+    for plot in plots:
+        m = getattr(plot.options, "measure", None)
+        if m is None:
+            continue
+        family, _, sub = m.dataset.partition("/")
+        trql = ROOT / "suite" / "queries" / f"{m.query}.trql"
+        sql = ROOT / "suite" / "sql-ref" / f"{m.query}.sql"
+        trql_s = str(trql.relative_to(ROOT)) if trql.is_file() else "-"
+        sql_s = str(sql.relative_to(ROOT)) if (m.sql and sql.is_file()) else "-"
+        for v in m.variants:
+            for err in m.budgets:
+                if trql_s == "-" or (m.sql and sql_s == "-"):
+                    status = "no-query-file"
+                elif _ablation_done(directory, plot.name, m.query, v, err):
+                    status = "done"
+                else:
+                    status = "todo"
+                print("\t".join([
+                    plot.name, m.query, family, sub, f"{err:g}", str(m.max_gap),
+                    str(m.runs), v.name, ",".join(v.features) or "-",
+                    "true" if v.default_features else "false", v.output, v.fit,
+                    trql_s, sql_s, status,
+                ]))
     return 0
 
 

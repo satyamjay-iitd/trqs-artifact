@@ -59,6 +59,9 @@ class Renderer:
                 f"{points['query'].nunique()} queries, {len(points)} points, "
                 f"{plot.selection.aggregate} of {len(self._runs[plot.selection.db])} runs"
             )
+            missing = missing_queries(points, plot.selection)
+            if missing:
+                summary += f"; marked missing: {', '.join(missing)}"
         else:
             # The kind reads its own source; the runs database is not opened at
             # all, so a manifest may draw this figure on a machine without one.
@@ -74,6 +77,14 @@ class Renderer:
         return Rendered(plot=plot, path=path, summary=summary)
 
 
+def missing_queries(points: pd.DataFrame, sel: Selection) -> list[str]:
+    """Named queries with no runs, in manifest order; empty unless `mark_missing`."""
+    if not (sel.mark_missing and sel.queries):
+        return []
+    have = set(points["query"])
+    return [q for q in sel.queries if q not in have]
+
+
 def _select(points: pd.DataFrame, sel: Selection, *, where: str) -> pd.DataFrame:
     """Apply `queries` / `exclude` / `errs` / `keep_errs`, loudly if nothing is left.
 
@@ -82,10 +93,21 @@ def _select(points: pd.DataFrame, sel: Selection, *, where: str) -> pd.DataFrame
     leave a blank figure in the paper.
     """
     known = set(points["query"])
+    absent: set[str] = set()
     if sel.queries:
         # Naming queries is also how the manifest fixes their order, so an
         # unknown name is a mistake rather than a filter that matched nothing.
         unknown = sorted(set(sel.queries) - known)
+        if unknown and sel.mark_missing:
+            # Drawn as marked gaps by the kind; there must still be something.
+            if len(unknown) == len(set(sel.queries)):
+                raise ManifestError(
+                    f"{where}: none of the named queries has runs; the database "
+                    f"holds {', '.join(sorted(known))}"
+                )
+            absent = set(unknown)
+            known |= absent
+            unknown = []
         if unknown:
             raise ManifestError(
                 f"{where}: queries has unknown name{'s' if len(unknown) > 1 else ''} "
@@ -107,6 +129,8 @@ def _select(points: pd.DataFrame, sel: Selection, *, where: str) -> pd.DataFrame
             )
 
     for query, dropped in sel.drop_errs.items():
+        if query in absent:
+            continue
         if query not in known:
             raise ManifestError(
                 f"{where}: drop_errs names unknown query {query}; the database "
@@ -121,6 +145,8 @@ def _select(points: pd.DataFrame, sel: Selection, *, where: str) -> pd.DataFrame
             )
 
     for query, kept in sel.keep_errs.items():
+        if query in absent:
+            continue
         if query not in known:
             raise ManifestError(
                 f"{where}: keep_errs names unknown query {query}; the database "

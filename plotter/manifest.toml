@@ -1,5 +1,6 @@
 # Manifest-based plots and the preserved MIRIS figure for VLDB'27.
-# Polynomial-degree and interval-set ablations use scripts/; see README.md.
+# The Figure 9 ablations (degree_ablation, interval_ablation) also say how they
+# were measured, so reproduce_paper.sh can re-measure them; see README.md.
 #
 #   uv run benchplot render            # all of them
 #   uv run benchplot render -n speedup # one of them
@@ -303,6 +304,10 @@ queries = [
     "SD-carpass",
 ]
 scales = [1]
+# A query whose dataset a reader could not obtain (SoccerTrack v2 has no
+# converter yet) is drawn as a marked "not measured" row rather than refusing
+# the figure; the render summary names it.
+mark_missing = true
 width = 3.4
 height = 1.1
 
@@ -484,3 +489,87 @@ format = "pdf"
 with_ingest = true
 width = 5.8
 height = 2.1
+
+# Figure 9a: polynomial degree. Each degree is a separate `trql-cli` build (the
+# degree is a compile-time feature), measured clean for the times and again with
+# `instrument` for the stage split; segment counts and their footprint come from
+# the clean runs. `instrument` only adds timers at query time, so an instrumented
+# build reuses its degree's fitted files (`fit`); they are byte-identical. One query, one sub-dataset, five budgets; the drawing shows the
+# narrow three-budget layout the paper uses.
+#
+# Reads <variant>.db from `source` and <variant>-inst.db from `stages`, not
+# bench.db. A re-measurement writes both into one directory.
+[[plots]]
+name = "degree_ablation"
+kind = "degree_ablation"
+format = "pdf"
+source = "data/ablation"
+stages = "data/ablation-instrumented"
+
+[plots.measure]
+query = "I24-convoy"
+dataset = "i24_motion/post1"
+max_gap = 10
+budgets = [30, 55, 148, 364, 487]
+runs = 3
+sql = true
+
+[[plots.measure.variants]]
+name = "linear"
+features = ["linear"]
+default_features = false
+
+[[plots.measure.variants]]
+name = "quadratic"
+
+[[plots.measure.variants]]
+name = "cubic"
+features = ["cubic"]
+default_features = false
+
+[[plots.measure.variants]]
+name = "linear-inst"
+features = ["linear", "instrument"]
+default_features = false
+fit = "linear"
+
+[[plots.measure.variants]]
+name = "quadratic-inst"
+features = ["instrument"]
+fit = "quadratic"
+
+[[plots.measure.variants]]
+name = "cubic-inst"
+features = ["cubic", "instrument"]
+default_features = false
+fit = "cubic"
+
+# Figure 9b: interval representation. The compact 5-tuple sets against the fully
+# enumerated pair sets (`naive-intervals`), both instrumented for the stage split.
+# The 100-video CLEVRER merge, not the 10k one: the enumerated build exceeded
+# 75 GB RSS on the full dataset before it was stopped. Both return 222 tuples.
+#
+# Reads <query>-<variant>.json (the `bench` report) from `source`, not bench.db.
+[[plots]]
+name = "interval_ablation"
+kind = "interval_ablation"
+format = "pdf"
+source = "data/interval-ablation"
+
+[plots.measure]
+query = "CL-overtake"
+dataset = "clevrer_merged/video_00000+99more"
+max_gap = 1
+budgets = [0]
+runs = 3
+
+[[plots.measure.variants]]
+name = "5tuple"
+features = ["instrument"]
+output = "report"
+
+[[plots.measure.variants]]
+name = "naive"
+features = ["instrument", "naive-intervals"]
+output = "report"
+fit = "5tuple"

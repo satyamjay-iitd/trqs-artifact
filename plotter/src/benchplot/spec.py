@@ -216,6 +216,11 @@ class Selection:
     # engine's fixed per-query cost rather than its algebra, so a figure about
     # speed often wants the tiled runs and nothing else.
     scales: tuple[float, ...] | None
+    # Draw a named query that has no runs as a marked gap instead of refusing
+    # the figure. Off by default, because an unknown name is usually a typo; a
+    # figure turns it on when a query's input may be legitimately absent (a
+    # dataset the reader could not obtain) and says so in the figure itself.
+    mark_missing: bool = False
 
 
 @dataclass(frozen=True)
