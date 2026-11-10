@@ -52,6 +52,43 @@ boston-seaport scenes it gives the same frames and objects, 93.5% of boxes
 identical, 96.5% within 2 cm, and 0.7% more boxes. Convert only the paper's map
 with `--location boston-seaport`.
 
+## Getting the datasets
+
+No dataset is redistributed here. Download each one from its publisher, accept
+its terms, and unpack it under `datasets/raw/<directory>` in the layout the
+converter's docstring describes. Several require registration or a signed
+agreement, so request access early: approval can take days.
+
+### Datasets behind the paper's figures
+
+| Dataset | Query (figure) | Source | Download | `datasets/raw/` |
+|---|---|---|---|---|
+| CLEVRER | CL-overtake (5, 8) | <http://clevrer.csail.mit.edu/> | `obj_clevrer.csv` and `video_train.zip` (train split only; extract into `video_train/`) | `clevrer` |
+| UA-DETRAC | DETRAC-meet (4a) | Authors' page, <https://sites.google.com/view/daweidu/projects/ua-detrac> (Google Drive links) | `DETRAC-Images` and the train/test `DETRAC-*-Annotations-XML`. After conversion, `suite/build_detrac_px.py` builds the `detrac_px` copy the figures read | `detrac` |
+| I-24 MOTION (INCEPTION v1.0.0) | I24-convoy, I24-journey4 (5, 8) | <https://i24motion.org/data> | The trajectory JSON exports (`<hash>__post1.json`, ...; ~19 GB each) | `I24_Motion` |
+| VIRAT Video Dataset, Ground release 2.0 | VIRAT-meet (4a) | <https://viratdata.org/>; zip files on <https://data.kitware.com/> | Videos and `annotations/*.viratdata.objects.txt` (and `mapping.txt`) | `virat` |
+| Stanford Drone Dataset | SD-carpass (5) | <https://cvgl.stanford.edu/projects/uav_data/> | `video/` and `annotations/` for all 60 clips | `StanfordDroneDataset` |
+| nuScenes v1.0 | NS-crossing (5, 8) | <https://www.nuscenes.org/nuscenes#download> | Only the metadata, `v1.0-trainval_meta.tgz`; no images, lidar or maps | `nuscenes` |
+| SoccerTrack v2 | ST-swap-img (5) | <https://huggingface.co/datasets/atomscott/soccertrack-v2> | `gsr/`, `bas/` and `raw/<match>/` for all 10 matches (videos not needed) | no converter yet |
+
+### Other supported datasets
+
+| Dataset | Source | `datasets/raw/` |
+|---|---|---|
+| AI City Challenge 2022, Track 1 (CityFlowV2 MTMC) | Request form via <https://www.aicitychallenge.org/> | `AICity22_Track1_MTMC_Tracking` |
+| Alfheim (Tromsø IL vs Tottenham) | <https://datasets.simula.no/alfheim/> | `alfheim_Totten` |
+| Argoverse 2 Sensor | <https://www.argoverse.org/av2.html>; `converters/argoverse2/fetch_logs.py` downloads from the public S3 bucket | `argoverse2` |
+| CityFlow-NL | <https://github.com/fredfung007/cityflow-nl>; videos from the AI City form above | `cityflow` |
+| I24-3D | <https://github.com/I24-MOTION/I24-3D-dataset> | `I24-3D` |
+| I-24V (WACV 2024) | I-24 MOTION project, <https://i24motion.org/data>; utilities at <https://github.com/I24-MOTION/i24-video-dataset-utils> | `I24V_WACV2024` |
+| MEVA | <https://mevadata.org/> | `meva` |
+| MOT17 | <https://motchallenge.net/data/MOT17/> | `mot17` |
+| openDD | <https://l3pilot.eu/data/opendd.html> | `openDD` |
+| SoccerNet-Tracking | <https://www.soccer-net.org/data> (`SoccerNet` pip package) | `soccernet` |
+| TrackID3x3 | <https://github.com/open-starlab/TrackID3x3> (Google Drive link in its README) | `TrackID3x3` |
+| VisDrone2019-MOT | <https://github.com/VisDrone/VisDrone-Dataset> | `VisDrone` |
+| YTStream (MIRIS) | <https://favyen.com/miris/ytstream-dataset.zip> | `ytstream` |
+
 ## Merged sub-datasets used by the paper
 
 Several experiments run on merges of converted sub-datasets. After converting
