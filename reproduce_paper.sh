@@ -48,7 +48,7 @@ Usage: $(basename "$0") [options]
   --data-dir DIR      processed datasets root (default: \$TRQS_DATA_DIR or datasets/processed)
   --out DIR           output root; bench.db, plots/, logs/, ablation/ go here (default: results/repro)
   --runs N            query executions per bench.db point (default: $RUNS, as recorded);
-                      the Figure 9 ablations use the manifest's own `runs`
+                      the Figure 9 ablations use the manifest's own runs
   --no-resume         re-measure points already present in the output bench.db
   --stop-on-error     stop at the first failing point (default: keep going)
   --dry-run           print the plan and the commands; run nothing
@@ -198,7 +198,8 @@ variant_bin() {
             # Print each build once; the dry run is read top to bottom.
             if [[ -z "${dry_built[$key]:-}" ]]; then
                 dry_built["$key"]=1
-                printf ' CARGO_TARGET_DIR=%q cargo build --locked --release -p trql-cli' "$ABL/target"
+                printf ' CARGO_TARGET_DIR=%q cargo build --locked --release --manifest-path %q -p trql-cli' \
+                    "$ABL/target" "$ROOT/engine/Cargo.toml"
                 [[ ${#args[@]} -gt 0 ]] && printf ' %q' "${args[@]}"
                 echo
             fi

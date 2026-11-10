@@ -1,8 +1,9 @@
 # Video-language-model comparison
 
 Two right-turn queries on `ytstream/uav_0006`, compared with recorded Gemini
-STATIC and AGENTIC responses. The windows start at 180 seconds and last 30,
-600, or 900 seconds. The video is 960×540 at 5 FPS. STATIC uses native 5 FPS;
+STATIC and AGENTIC responses. The windows start at 180 seconds and last 30 or
+600 seconds.
+The video is 960×540 at 5 FPS. STATIC uses native 5 FPS;
 AGENTIC chooses its sampling rate. Recorded responses identify `gemini-4-argon`.
 
 ## Data used
@@ -18,7 +19,7 @@ from the dataset is used. Two files are taken from the archive:
 | `uav/json/0006-baseline.json` | the dataset's own car tracks for that video | `datasets/raw/ytstream/uav/json/0006-baseline.json` |
 
 The queries run over the whole video. The model comparison uses windows of it
-that start at 180 s (3:00) and last 30 s, 10 min or 15 min.
+that start at 180 s (3:00) and last 30 s or 10 min.
 
 The tracks are the dataset's own and are ingested as they are; the artifact
 runs no detector or tracker for this experiment. They become 3,014 cars and
@@ -52,11 +53,11 @@ The engine's first query on a video is charged its ingestion: detection,
 tracking and fitting. The artifact reports the recorded values and does not
 re-measure them:
 
-| Window | Frames | Ingestion |
-|---|---|---|
-| 30 s | 151 | 5.65 s |
-| 10 min | 3,001 | 49.43 s |
-| 15 min | 4,501 | 73.01 s |
+| Window | Ingestion |
+|---|---|
+| 30 s | 5.65 s |
+| 10 min | 49.43 s |
+
 
 They were measured once with YOLO11x and BoT-SORT over each clip. The pretrained
 detector finds few cars in this overhead view, so tracker association time was
@@ -134,7 +135,7 @@ mkdir -p "$TRQS_VLM_DIR"
 cp -r suite/vlm/queries "$TRQS_VLM_DIR/"
 cp suite/vlm/gt*.json plotter/data/vlm/*.json "$TRQS_VLM_DIR/"
 
-for duration in 30 600 900; do
+for duration in 30 600; do   
   uv run suite/vlm/clip.py --start 180 --dur "$duration"
 done
 uv run suite/vlm/groundtruth.py --start 180 --end 210
@@ -143,8 +144,9 @@ uv run suite/vlm/bench_gemini.py --modes static agentic
 uv run suite/vlm/bench_gemini.py --report
 ```
 
-`clip.py` re-encodes with FFmpeg and verifies the frame count: 150, 3,000, or
-4,500 frames. `groundtruth.py --query queries/UAV-rightturn-top.trql` selects Q2;
+`clip.py` re-encodes with FFmpeg and verifies the frame count: 150 or 3,000
+frames.
+`groundtruth.py --query queries/UAV-rightturn-top.trql` selects Q2;
 `--start` and `--end` select another window.
 
 For a longer window, pass its clip, labels, and output explicitly:

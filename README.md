@@ -14,15 +14,17 @@ use the supplied converters to prepare inputs.
 | `suite/vlm/` | the Gemini comparison: harness, prompts, raw responses, scoring, and the built `ytstream/uav_0006` artifact it queries |
 | `plotter/` | plot renderers, recorded auxiliary measurements, and the preserved MIRIS PDF |
 | `scripts/detect_track.py` | the ingest worker: detector + tracker -> the `objects`/`bbox` schema |
-| `converters/` | 18 dataset converters, shared helpers, and projection dependencies; see its README for coverage |
+| `converters/` | 19 dataset converters, shared helpers, and projection dependencies; see its README for coverage |
 | `lean-proof/` | interval-set algebra proofs and pinned Lean/mathlib dependencies |
-| `bench.db` | the measurements behind the paper's figures (SQLite), filtered to the queries and error budgets the figures actually read |
+| `bench.db` | the measurements behind the manifest's plots (SQLite): the paper's figures and the supplementary DETRAC recall plots, filtered to the queries and error budgets they read |
 
 ## Building and preparing inputs
 
 The engine requires Rust/Cargo 1.92+, a C/C++ compiler toolchain, and the
 **DuckDB 1.5.5 shared library** (`libduckdb.so` on Linux). DuckDB is not bundled;
-install the matching library before building. For a library outside the system
+install the matching library before building. It is the `libduckdb-<platform>.zip`
+asset of the [v1.5.5 release](https://github.com/duckdb/duckdb/releases/tag/v1.5.5)
+(`libduckdb-linux-amd64.zip` on x86-64 Linux). For a library outside the system
 search paths, set `DUCKDB_LIB_DIR` to its directory when building and add that
 directory to `LD_LIBRARY_PATH` when running the binaries on Linux.
 Python 3.13+, uv, and FFmpeg (`ffmpeg` and `ffprobe`) are used by the converters,
@@ -52,11 +54,23 @@ figures. No datasets or API keys are needed to render them:
 ```sh
 cd plotter
 uv run --locked benchplot render
-uv run --locked python scripts/degree_ablation.py
-uv run --locked python scripts/interval_ablation.py
 ```
 
-Outputs go to `plotter/plots/`. See the [plotter README](plotter/README.md) for
+Outputs go to `plotter/plots/`, Figure 9 included.
+
+Figure 5 labels its six queries Q1–Q6:
+
+| Label | Query | Dataset |
+|---|---|---|
+| Q1 | `I24-journey4` | I-24 MOTION |
+| Q2 | `I24-convoy` | I-24 MOTION |
+| Q3 | `CL-overtake` | CLEVRER |
+| Q4 | `NS-crossing` | nuScenes |
+| Q5 | `ST-swap-img` (`suite/queries/ST-swap.trql`) | SoccerTrack v2 |
+| Q6 | `SD-carpass` | Stanford Drone |
+
+The VLM comparison's Q1 and Q2 are its own two queries; see its
+[README](suite/vlm/README.md#queries-and-scoring). See the [plotter README](plotter/README.md) for
 individual figures and new measurements. The MIRIS figure is a preserved PDF;
 its generator and execution repository are not included.
 
@@ -136,7 +150,7 @@ the last finished point.
 
 Memory: DuckDB peaks at about 1.8 GB (I24-convoy) and TrQS at about 1.1 GB
 (SoccerTrack); the naive interval build of Figure 9b needs about 4.5 GB. Disk:
-the seven converted sub-datasets the figures read take about 6.6 GB (6.2 GB of
+the eight converted sub-datasets the figures read take about 6.6 GB (6.2 GB of
 it I24), and the fitted `.trql` files add about 3 GB. Figure 9a adds 1.5–2.2 GB
 of fitted files per degree, about 5.3 GB for all three, under
 `results/repro/ablation/`. Converting I24-Motion `post1` from its 19 GB JSON

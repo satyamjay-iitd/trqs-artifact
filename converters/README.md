@@ -63,9 +63,9 @@ agreement, so request access early: approval can take days.
 
 | Dataset | Query (figure) | Source | Download | `datasets/raw/` |
 |---|---|---|---|---|
-| CLEVRER | CL-overtake (5, 8) | <http://clevrer.csail.mit.edu/> | `obj_clevrer.csv` and `video_train.zip` (train split only; extract into `video_train/`) | `clevrer` |
+| CLEVRER | CL-overtake (5, 8, 9b) | <http://clevrer.csail.mit.edu/> | `obj_clevrer.csv` and `video_train.zip` (train split only; extract into `video_train/`) | `clevrer` |
 | UA-DETRAC | DETRAC-meet (4a) | Authors' page, <https://sites.google.com/view/daweidu/projects/ua-detrac> (Google Drive links) | `DETRAC-Images` and the train/test `DETRAC-*-Annotations-XML`. After conversion, `suite/build_detrac_px.py` builds the `detrac_px` copy the figures read | `detrac` |
-| I-24 MOTION (INCEPTION v1.0.0) | I24-convoy, I24-journey4 (5, 8) | <https://i24motion.org/data> | The trajectory JSON exports (`<hash>__post1.json`, ...; ~19 GB each) | `I24_Motion` |
+| I-24 MOTION (INCEPTION v1.0.0) | I24-convoy (5, 8, 9a), I24-journey4 (5) | <https://i24motion.org/data> | The trajectory JSON exports (`<hash>__post1.json`, ...; ~19 GB each) | `I24_Motion` |
 | VIRAT Video Dataset, Ground release 2.0 | VIRAT-meet (4a) | <https://viratdata.org/>; zip files on <https://data.kitware.com/> | Videos and `annotations/*.viratdata.objects.txt` (and `mapping.txt`) | `virat` |
 | Stanford Drone Dataset | SD-carpass (5) | <https://cvgl.stanford.edu/projects/uav_data/> | `video/` and `annotations/` for all 60 clips | `StanfordDroneDataset` |
 | nuScenes v1.0 | NS-crossing (5, 8) | <https://www.nuscenes.org/nuscenes#download> | Only the metadata, `v1.0-trainval_meta.tgz`; no images, lidar or maps | `nuscenes` |
@@ -110,8 +110,9 @@ converters/paper_merges.sh             # build every merge whose sources exist
 The memberships match those recorded in the original merges. The CLEVRER and
 Stanford Drone merges rebuild byte-identical tables from the same sources.
 
-The converters must use the pinned `duckdb==1.5.5` from `requirements.txt`. A
-newer DuckDB writes database files the engine's DuckDB 1.5.5 cannot read.
+The converters must use the pinned `duckdb==1.5.5` from `requirements.txt`.
+DuckDB 2.0 writes database files the engine's DuckDB 1.5.5 cannot read; files
+written by 1.5.6, which the suite scripts pin, read fine.
 
 ## Dataset-specific steps
 

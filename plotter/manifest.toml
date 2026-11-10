@@ -17,9 +17,10 @@ format = "pdf"
 # latest | median | min. `latest` suits repeats that straddle a code change,
 # where only the newest describes the current engine.
 aggregate = "latest"
-# Kept in bench.db and in final_queries.md, where it earns its place as the
-# unselective control — but off the charts. A plot that names `queries`
-# overrides this; one that sets its own `exclude` replaces it.
+# I24-lane-any, the development suite's unselective control, is no longer in
+# bench.db; it stays excluded so a re-measurement cannot put it on a chart. A
+# plot that names `queries` overrides this; one that sets its own `exclude`
+# replaces it.
 exclude = ["I24-lane-any"]
 
 [[plots]]
@@ -33,7 +34,8 @@ name = "speedup"
 kind = "speedup"
 # Named rather than left to `exclude`, so benchmarking a new query cannot quietly
 # add a bar to the paper's headline figure — the VIRAT clips did exactly that.
-# Naming also fixes the order. These are the suite of `final_queries.md`.
+# Naming also fixes the order. These are the paper's six queries, Q1-Q6, from
+# `suite/queries/` with their reference SQL in `suite/sql-ref/`.
 queries = [
     "I24-journey4",
     "I24-convoy",
@@ -327,11 +329,10 @@ height = 1.1
 "ST-swap-img" = "Q5"
 "SD-carpass" = "Q6"
 
-# Error-budget ablation: every budget measured for each of the six queries, as
-# one point per budget at (speedup, F1). Two rows of three, one panel per query,
-# in the headline figure's order and with its Q-names. All budgets measured are
-# drawn, not the five percentile ones: this is the sweep the headline figure's
-# budgets were picked from.
+# Error-budget ablation (Figure 8): three of the six queries (Q2, Q3, Q4), one
+# panel each in one row, in the headline figure's order and with its Q-names.
+# Each budget is a point at (engine runtime, F1); the budgets drawn are the
+# percentile ladder below.
 [[plots]]
 name = "epsilon"
 kind = "epsilon"
@@ -354,7 +355,7 @@ height = 2.0
 # They are in each dataset's own coordinate units, so the three panels are not
 # comparable; each labels its own.
 #
-# `show` lists all six, so every budget named below is drawn; narrow it to draw
+# `show` lists all seven, so every budget named below is drawn; narrow it to draw
 # fewer without re-measuring. `[plots.eps]` is the other way to select -- an
 # explicit list per query, with no percentile names -- and is unused here. The
 # hand-trimmed lists it held are kept commented out below.
@@ -463,9 +464,9 @@ kmax = 10
 width = 3.3
 height = 1.7
 
-# Cost of a first and a second query at three video lengths, with precision and
-# recall printed over each bar. One panel per window, one group per system, two
-# bars per group.
+# Cost of a first and a second query at two video lengths, 30 s and 10 min (the
+# 15 min cell is commented out in plots/vlmbars.py), with F1 on a right axis.
+# One panel per window, one group per system, two bars per group.
 #
 # The engine's pair is the argument: the first bar carries ingestion, the second
 # is the query alone -- four orders of magnitude smaller -- while each model's
@@ -473,13 +474,9 @@ height = 1.7
 # re-reads the video every time. The y axis is logarithmic for exactly that
 # reason: on a linear one the engine's second bar would be invisible.
 #
-# The engine's P and R are 1.00 **by construction** (the TrQL query defines the
-# event scored), so they report expressibility, not an accuracy win. The caption
-# must say so. P and R are printed rather than plotted because the axis is time:
-# comparing bar heights compares cost, and the labels stop that reading as
-# quality.
-#
-# Drawn at 7 in, so it belongs in a `figure*` spanning both columns.
+# The engine's F1 is 1.00 **by construction** (the TrQL query defines the event
+# scored), so it reports expressibility, not an accuracy win. The caption must
+# say so.
 #
 # Reads results-vlm*.json, not bench.db.
 [[plots]]

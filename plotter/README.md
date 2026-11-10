@@ -133,7 +133,7 @@ use DuckDB in addition to the plotting environment.
 `tools/cooccurrence_stats.py` uses the Python package and can be run with
 `uv run --with duckdb --with numpy tools/cooccurrence_stats.py`.
 `scripts/cooccurrence.py` uses the DuckDB CLI executable on `PATH`; install it
-as described in [the suite README](../suite/README.md#running) and check
+as described in [the suite README](../suite/README.md#setup) and check
 `duckdb --version` before running `uv run python scripts/cooccurrence.py`.
 `scripts/gap_sweep.py` uses the recorded `bench.db` and produces the older,
 currently commented-out DETRAC experiment.

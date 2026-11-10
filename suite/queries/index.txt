@@ -2,16 +2,32 @@ Queries recorded in bench.db, as run.
 
 <name>.trql is the DSL verbatim -- no header, because trql-cli takes it as a
 command-line argument and a leading `--` is parsed as a flag.
-<name>.sql is the hand-written reference it was checked against.
+<name>.sql, where present, is a copy of the hand-written reference SQL; the
+copy the experiments use is suite/sql-ref/<name>.sql.
 
-CL-overtake      clevrer_merged/video_00000+9999more      7 runs, err 0..16
-I24-journey4     i24_motion/post1                         8 runs, err 0..25
-I24-lane-any     i24_motion/post1                         8 runs, err 0..25
-I24-lane-truck   i24_motion/post1                         8 runs, err 0..25
-NS-crossing      nuscenes_maps/boston-seaport             9 runs, err 0..50
-NS-junction      nuscenes_maps/boston-seaport             9 runs, err 0..50
-ST-swap          merged/SoccerTrackv2-117092-1st+19more   9 runs, err 0..50
-SD-passclose     merged/bookstore_video0+59more           1 run,  err 0
+Recorded id      file              sub-dataset                                 runs  err       figure
+I24-journey4     I24-journey4      i24_motion/post1                              15  0..487    5 (Q1)
+I24-convoy       I24-convoy        i24_motion/post1                              18  0..540    5 (Q2), 8, 9a
+CL-overtake      CL-overtake       clevrer_merged/video_00000+9999more           37  0..16     5 (Q3), 8
+NS-crossing      NS-crossing       nuscenes_maps/boston-seaport                  47  0..154    5 (Q4), 8
+ST-swap-img      ST-swap           merged/SoccerTrackPano-117092-1st+19more      11  0..50     5 (Q5)
+SD-carpass       SD-carpass        merged/bookstore_video0+59more                 8  0..16     5 (Q6)
+DETRAC-meet      DETRAC-meet       detrac_px/MVI_40191 (x10)                      7  0..32     4a
+VIRAT-meet       VIRAT-meet        virat/VIRAT_S_010109_04_000487_000538 (x10)    7  0..32     4a
+DETRAC-approach  DETRAC-approach   68 detrac/<sequence> sub-datasets            238  0         recall, precision (supplementary)
+DETRAC-dwell     DETRAC-dwell      200 detrac/<sequence> sub-datasets           920  0         recall, precision (supplementary)
+DETRAC-pass      DETRAC-pass       176 detrac/<sequence> sub-datasets           812  0         recall, precision (supplementary)
+
+The recorded id is the name in bench.db; the file is suite/queries/<file>.trql,
+matched to the recorded run by its text. ST-swap-img was recorded under that
+name from ST-swap.trql, and DETRAC-meet and VIRAT-meet are the same query text,
+so both match either file. Figure 9b runs CL-overtake on
+clevrer_merged/video_00000+99more; its runs are in
+plotter/data/interval-ablation/, and Figure 9a's in plotter/data/ablation*/,
+not in bench.db.
+
+The other .trql files here are the development workload; they are not recorded
+in bench.db.
 
 CYDET-cyclist    rekall_cydet_{raw,tracked}/0001          28 runs each, err 0..4
 
@@ -20,12 +36,5 @@ Detection"), ported to TrQL: a person's box intersects a bicycle's, with no
 duration constraint. It is measured by suite/bench_rekall.py,
 which runs Rekall's code on Rekall's released detections beside the reference
 SQL and the engine -- so this row is the only one in the suite whose answer is
-gated against a third system rather than two.
-
-SD-passclose is SD-approach with a proximity requirement: the biker and the
-pedestrian must come within 100 px on both axes for a second, strictly inside
-the pass. CONTAINS rather than AND, because AND on interval sets is equality
-and would demand the close spell occupy the whole pass. It cuts the answer from
-23,206 intervals to 3,305 on the 60-video merged set -- the OVERLAP alone
-constrains only relative position, so a biker on the far side of the frame
-qualifies while it is left-of and above.
+gated against a third system rather than two. Its runs are in
+plotter/data/results-rekall.json, not bench.db.
