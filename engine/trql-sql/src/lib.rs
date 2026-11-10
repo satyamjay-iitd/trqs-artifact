@@ -135,7 +135,6 @@ pub fn compile_with(
         ctes: Vec::new(),
         next_group: 0,
         next_node: 0,
-        group_frames: Vec::new(),
     };
 
     let root = c.compile_top(expr)?;
@@ -197,9 +196,6 @@ struct Compiler<'a> {
     ctes: Vec<(String, String)>,
     next_group: usize,
     next_node: usize,
-    /// Frame relations already emitted for the current appearance group, keyed by the
-    /// sorted slots they join. Leaves naming the same slots share one relation.
-    group_frames: Vec<(Vec<Slot>, String)>,
 }
 
 impl Compiler<'_> {
@@ -228,76 +224,41 @@ impl Compiler<'_> {
             } => {
                 let l = self.compile_top(lhs)?;
                 let r = self.compile_top(rhs)?;
-                // Across groups one object may bind several slots, so no distinctness.
-                Ok(self.emit_then(&l, &r, *min_gap, *max_gap, false))
+                Ok(self.emit_then(&l, &r, *min_gap, *max_gap))
             }
             leaf => {
-                let slots = self.group_slots(leaf);
-                let group = self.next_group;
-                self.next_group += 1;
-                self.group_frames.clear();
-
-                let root = self.compile_in_group(leaf, group, &slots)?;
-                if uniform_slots(leaf, &slots) {
-                    // Every leaf read the whole group's frame relation, so the tuple
-                    // co-appears wherever it has an interval.
-                    Ok(root)
-                } else {
-                    Ok(self.emit_coappear(&root, &slots))
+                let mut slots = collect_slots(leaf);
+                slots.sort_unstable();
+                slots.dedup();
+                // A subtree referencing no slot (a bare `TRUE`) still has to produce a
+                // tuple, so it falls back to every declared variable — as the engine does.
+                if slots.is_empty() {
+                    slots = self.vars.slots().collect();
                 }
+
+                let frames = self.emit_frames(&slots)?;
+                self.compile_in_group(leaf, &frames, &slots)
             }
         }
-    }
-
-    /// The slots of one appearance group: those its subtree names, sorted and deduped.
-    ///
-    /// A subtree referencing no slot (a bare `TRUE`) still has to produce a tuple, so it
-    /// falls back to every declared variable — as the engine does.
-    fn group_slots(&self, expr: &TrajExpr) -> Vec<Slot> {
-        let mut slots = collect_slots(expr);
-        slots.sort_unstable();
-        slots.dedup();
-        if slots.is_empty() {
-            slots = self.vars.slots().collect();
-        }
-        slots
     }
 
     // -- Within one appearance group ---------------------------------------------------
 
     /// Compiles a subtree that lives entirely inside one appearance group.
     ///
-    /// Each leaf is evaluated over the frames where *the slots it names* co-appear, not
-    /// the whole group's — mirroring `trql_algebra::eval`, which clips a leaf to the group
-    /// bounds only when it names every slot of the group, and otherwise to its own slots'
-    /// co-appearance. The difference matters under `CONTAINS` and `OVERLAP`, whose
-    /// operands need not be live at the same time: in
-    /// `OVERLAP(DURATION(a…, 10), DURATION(b…, 10))` the run of `a` may start before `b`
-    /// ever appears, and clipping it to the frames `a` and `b` share would cut it short.
-    ///
     /// A nested `Then` reaches here when it sits under `DURATION`/`CONTAINS`; the algebra
-    /// keeps such a `Then` inside its enclosing group, so it keeps distinctness too.
+    /// keeps such a `Then` inside its enclosing group, so both sides share `frames`.
     fn compile_in_group(
         &mut self,
         expr: &TrajExpr,
-        group: usize,
+        frames: &str,
         slots: &[Slot],
     ) -> Result<Node, SqlError> {
         match expr {
-            TrajExpr::AnalyticPred(p) => {
-                // A leaf naming no slot constrains nothing of its own; it reads the group.
-                let mut own = collect_slots(expr);
-                own.sort_unstable();
-                own.dedup();
-                if own.is_empty() {
-                    own = slots.to_vec();
-                }
-                let frames = self.frames_for(group, &own, slots)?;
-                Ok(self.emit_leaf(&pred::render(p), &frames, &own))
-            }
+            TrajExpr::AnalyticPred(p) => Ok(self.emit_leaf(&pred::render(p), frames, slots)),
 
             TrajExpr::Duration { inner, min_frames } => {
-                let inner = self.compile_in_group(inner, group, slots)?;
+                let inner = self.compile_in_group(inner, frames, slots)?;
                 Ok(self.emit_duration(&inner, *min_frames))
             }
 
@@ -307,82 +268,32 @@ impl Compiler<'_> {
                 min_gap,
                 max_gap,
             } => {
-                let l = self.compile_in_group(lhs, group, slots)?;
-                let r = self.compile_in_group(rhs, group, slots)?;
-                Ok(self.emit_then(&l, &r, *min_gap, *max_gap, true))
+                let l = self.compile_in_group(lhs, frames, slots)?;
+                let r = self.compile_in_group(rhs, frames, slots)?;
+                Ok(self.emit_then(&l, &r, *min_gap, *max_gap))
             }
 
             TrajExpr::Contained { lhs, rhs } => {
-                let l = self.compile_in_group(lhs, group, slots)?;
-                let r = self.compile_in_group(rhs, group, slots)?;
+                let l = self.compile_in_group(lhs, frames, slots)?;
+                let r = self.compile_in_group(rhs, frames, slots)?;
                 Ok(self.emit_contains(&l, &r))
             }
 
             TrajExpr::Overlap { lhs, rhs } => {
-                let l = self.compile_in_group(lhs, group, slots)?;
-                let r = self.compile_in_group(rhs, group, slots)?;
+                let l = self.compile_in_group(lhs, frames, slots)?;
+                let r = self.compile_in_group(rhs, frames, slots)?;
                 Ok(self.emit_overlap(&l, &r))
             }
         }
     }
 
-    /// The frame relation over `own` within group `group`, emitting it on first use.
-    fn frames_for(
-        &mut self,
-        group: usize,
-        own: &[Slot],
-        group_slots: &[Slot],
-    ) -> Result<String, SqlError> {
-        if let Some((_, name)) = self.group_frames.iter().find(|(s, _)| s == own) {
-            return Ok(name.clone());
-        }
-        let name = if own == group_slots {
-            format!("g{group}_frames")
-        } else {
-            let tag: Vec<String> = own.iter().map(|s| s.to_string()).collect();
-            format!("g{group}_s{}_frames", tag.join("_"))
-        };
-        self.emit_frames(&name, own)?;
-        self.group_frames.push((own.to_vec(), name.clone()));
-        Ok(name)
-    }
+    // -- Frame relation for a group ----------------------------------------------------
 
-    /// Keeps only the rows of `node` whose objects all co-appear on at least one frame.
-    ///
-    /// When a group's leaves name different slots, no leaf joins the whole group on `fid`,
-    /// so nothing else requires the group's objects to share a frame. The engine still
-    /// does: its selector enumerates only tuples whose group co-appears. Under `OVERLAP`
-    /// and `CONTAINS` the operator already implies it, but not, say, under a nested
-    /// `THEN` inside `CONTAINS` — this filter keeps the two evaluators in step there.
-    fn emit_coappear(&mut self, node: &Node, slots: &[Slot]) -> Node {
-        let lead = slots[0];
-        let mut from = format!("bbox b{lead}");
-        let mut conds: Vec<String> = Vec::new();
-        for (i, &slot) in slots.iter().enumerate() {
-            if i > 0 {
-                write!(from, " JOIN bbox b{slot} ON b{slot}.fid = b{lead}.fid").unwrap();
-            }
-            conds.push(format!("b{slot}.oid = n.{}", oid_col(slot)));
-        }
-        let body = format!(
-            "SELECT n.*\n    FROM {} n\n    WHERE EXISTS (\n        SELECT 1 FROM {from}\n        \
-             WHERE {}\n    )",
-            node.cte,
-            conds.join(" AND ")
-        );
-        Node {
-            cte: self.add_cte("n", body),
-            slots: node.slots.clone(),
-        }
-    }
-
-    // -- Frame relation --------------------------------------------------------------
-
-    /// Emits a per-frame relation named `name` over `slots`: one `bbox` row per slot, all
-    /// at the same `fid`, so a row exists exactly on the frames where those objects
-    /// co-appear. This is the SQL counterpart of the engine clipping a leaf's evaluation
-    /// to a co-appearance window.
-    fn emit_frames(&mut self, name: &str, slots: &[Slot]) -> Result<(), SqlError> {
+    /// Emits the per-frame relation for one appearance group: one `bbox` row per slot, all
+    /// at the same `fid`, so a row exists exactly on the frames where the group's objects
+    /// co-appear. This is the SQL counterpart of the engine clipping evaluation to a
+    /// group's co-appearance bounds.
+    fn emit_frames(&mut self, slots: &[Slot]) -> Result<String, SqlError> {
         let lead = slots[0];
         let mut select: Vec<String> = vec![format!("b{lead}.fid AS fid")];
         let mut from = format!("bbox b{lead}");
@@ -437,8 +348,10 @@ impl Compiler<'_> {
             write!(body, "\n    WHERE {}", wheres.join("\n      AND ")).unwrap();
         }
 
-        self.ctes.push((name.to_owned(), body));
-        Ok(())
+        let name = format!("g{}_frames", self.next_group);
+        self.next_group += 1;
+        self.ctes.push((name.clone(), body));
+        Ok(name)
     }
 
     /// The `class` literals a slot's property constraints reduce to.
@@ -533,16 +446,8 @@ impl Compiler<'_> {
     /// `lhs THEN rhs` with a gap window — `IntervalSet::then_pair_with_gap`.
     ///
     /// The two sides join on whatever slots they share, which pins a variable appearing on
-    /// both sides to one object while leaving the rest free. `in_group` is set for a `Then`
-    /// nested inside one appearance group, whose slots must stay distinct objects.
-    fn emit_then(
-        &mut self,
-        lhs: &Node,
-        rhs: &Node,
-        min_gap: u32,
-        max_gap: Option<u32>,
-        in_group: bool,
-    ) -> Node {
+    /// both sides to one object while leaving the rest free.
+    fn emit_then(&mut self, lhs: &Node, rhs: &Node, min_gap: u32, max_gap: Option<u32>) -> Node {
         let mut guards = vec![
             // R₁ + g_min + 1 ≤ L₂ and c₁ + g_min ≤ L₂, as in the `checked_sub` guards.
             format!("b.l - {min_gap} >= 1"),
@@ -560,7 +465,7 @@ impl Compiler<'_> {
              GREATEST(b.r, a.r + b.c + {min_gap}, b.s + b.c - 1) AS r"
         );
 
-        self.emit_join(lhs, rhs, &cols, &guards, in_group)
+        self.emit_join(lhs, rhs, &cols, &guards)
     }
 
     /// `lhs CONTAINS rhs` — `IntervalSet::contains`. The result keeps the *lhs* span.
@@ -572,7 +477,7 @@ impl Compiler<'_> {
              GREATEST(a.r, b.r + 1, b.s + b.c) AS r"
                 .to_owned();
 
-        self.emit_join(lhs, rhs, &cols, &guards, true)
+        self.emit_join(lhs, rhs, &cols, &guards)
     }
 
     /// `lhs OVERLAP rhs` (Allen's *overlaps*) — `IntervalSet::overlap`. The result spans the
@@ -603,25 +508,13 @@ impl Compiler<'_> {
              GREATEST(b.r, a.r + 1, b.s + b.c - 1, b.s + 1) AS r"
             .to_owned();
 
-        self.emit_join(lhs, rhs, &cols, &guards, true)
+        self.emit_join(lhs, rhs, &cols, &guards)
     }
 
     /// Shared shape of the binary interval operators: join the sides on their common
     /// slots, apply the operator's guards, compute the new 5-tuple, then keep only feasible
     /// rows (`IntervalSet::new` returning `Some`).
-    ///
-    /// With `distinct`, a slot only the lhs names and a slot only the rhs names must bind
-    /// different objects. Each side's own slots are already distinct (by induction from the
-    /// leaves' frame relations), so this keeps every slot of a group distinct even when no
-    /// single leaf joins them all.
-    fn emit_join(
-        &mut self,
-        lhs: &Node,
-        rhs: &Node,
-        cols: &str,
-        guards: &[String],
-        distinct: bool,
-    ) -> Node {
+    fn emit_join(&mut self, lhs: &Node, rhs: &Node, cols: &str, guards: &[String]) -> Node {
         let mut slots = lhs.slots.clone();
         for &s in &rhs.slots {
             if !slots.contains(&s) {
@@ -660,15 +553,6 @@ impl Compiler<'_> {
                 shared.join(" AND ")
             )
         };
-
-        let mut guards = guards.to_vec();
-        if distinct {
-            for &l in lhs.slots.iter().filter(|s| !rhs.slots.contains(s)) {
-                for &r in rhs.slots.iter().filter(|s| !lhs.slots.contains(s)) {
-                    guards.push(format!("a.{} <> b.{}", oid_col(l), oid_col(r)));
-                }
-            }
-        }
 
         let mut inner = format!(
             "SELECT {},\n           {cols}\n        FROM {join}",
@@ -733,24 +617,6 @@ impl Compiler<'_> {
         .unwrap();
 
         sql
-    }
-}
-
-/// Whether every leaf under `expr` names exactly `slots` (a slotless leaf counts, since it
-/// falls back to the group). Mirrors `trql_algebra::eval::uniform_slots`: when it holds,
-/// each leaf already joins the whole group on `fid`.
-fn uniform_slots(expr: &TrajExpr, slots: &[Slot]) -> bool {
-    match expr {
-        TrajExpr::AnalyticPred(_) => {
-            let mut own = collect_slots(expr);
-            own.sort_unstable();
-            own.dedup();
-            own.is_empty() || own == slots
-        }
-        TrajExpr::Then { lhs, rhs, .. }
-        | TrajExpr::Contained { lhs, rhs }
-        | TrajExpr::Overlap { lhs, rhs } => uniform_slots(lhs, slots) && uniform_slots(rhs, slots),
-        TrajExpr::Duration { inner, .. } => uniform_slots(inner, slots),
     }
 }
 
@@ -883,63 +749,11 @@ mod tests {
     }
 
     #[test]
-    fn overlap_operands_read_their_own_slots_frames() {
-        // Each operand names one slot, so each reads the frames where *that* object is
-        // present — not the frames `a` and `b` share, which would clip `a`'s run to start
-        // no earlier than `b` appears (CLEVRER CL-Q3: engine [25,127], old SQL [32,127]).
+    fn overlap_stays_in_one_appearance_group() {
+        // Two intervals can only properly overlap if they share frames, so both sides are
+        // evaluated over the same co-appearance window — one frame relation, as CONTAINS.
         let out = sql("SELECT (a:, b:) WHERE OVERLAP(a.x1 < 100, b.x1 < 100)");
-        assert_eq!(count(&out, "_frames AS ("), 2, "{out}");
-        assert!(out.contains("g0_s0_frames AS ("), "{out}");
-        assert!(out.contains("g0_s1_frames AS ("), "{out}");
-        // The only frame-level join of `a` with `b` is the co-appearance check.
-        assert_eq!(count(&out, "JOIN bbox b1 ON b1.fid = b0.fid"), 1, "{out}");
-    }
-
-    #[test]
-    fn mixed_slot_group_keeps_its_objects_distinct() {
-        // No frame relation joins `a` with `b` any more, so distinctness moves to the join.
-        let out = sql("SELECT (a:, b:) WHERE OVERLAP(a.x1 < 100, b.x1 < 100)");
-        assert!(out.contains("a.o0 <> b.o1"), "{out}");
-    }
-
-    #[test]
-    fn mixed_slot_group_still_requires_co_appearance() {
-        // The engine's selector only enumerates tuples whose group shares a frame.
-        let out = sql("SELECT (a:, b:) WHERE OVERLAP(a.x1 < 100, b.x1 < 100)");
-        assert!(out.contains("WHERE EXISTS ("), "{out}");
-        assert!(out.contains("b0.oid = n.o0 AND b1.oid = n.o1"), "{out}");
-    }
-
-    #[test]
-    fn contains_inner_leaf_reads_only_its_slots() {
-        // CLEVRER CL-Q2's shape: the outer spell names `w` alone, the inner names `a`, `b`.
-        let out = sql(
-            "SELECT (a:, b:, w:) WHERE CONTAINS(DURATION(w.x1 < 100, 25), \
-             DURATION(a.x1 < b.x1, 3))",
-        );
-        assert!(out.contains("g0_s2_frames AS ("), "{out}");
-        assert!(out.contains("g0_s0_1_frames AS ("), "{out}");
-        assert!(out.contains("b0.oid <> b1.oid"), "{out}");
-        assert!(
-            out.contains("a.o2 <> b.o0") && out.contains("a.o2 <> b.o1"),
-            "{out}"
-        );
-    }
-
-    #[test]
-    fn uniform_group_keeps_one_frame_relation_and_no_extra_filter() {
-        // Every leaf names both slots: same frames as before, no co-appearance filter.
-        let out = sql("SELECT (a:, b:) WHERE OVERLAP(a.x1 < b.x1, a.x1 > b.x1)");
-        assert_eq!(count(&out, "_frames AS ("), 1, "{out}");
-        assert!(out.contains("g0_frames AS ("), "{out}");
-        assert!(!out.contains("EXISTS"), "{out}");
-    }
-
-    #[test]
-    fn leaves_naming_the_same_slots_share_a_frame_relation() {
-        let out = sql("SELECT (a:, b:) WHERE OVERLAP(a.x1 < 100, CONTAINS(b.x1 < 9, b.x1 < 5))");
-        assert_eq!(count(&out, "g0_s1_frames AS ("), 1, "{out}");
-        assert_eq!(count(&out, "_frames AS ("), 2, "{out}");
+        assert_eq!(count(&out, "_frames AS ("), 1);
     }
 
     #[test]

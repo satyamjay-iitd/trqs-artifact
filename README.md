@@ -62,6 +62,39 @@ its generator and execution repository are not included.
 
 ## Re-running the measurements
 
+### One command
+
+`reproduce_paper.sh` re-measures every point that Figures 4a, 5 and 8 draw from
+`bench.db`, then redraws those figures from the new measurements:
+
+```sh
+./reproduce_paper.sh --dry-run          # the plan and the exact commands; runs nothing
+./reproduce_paper.sh                    # compression (4a), p15 (5), epsilon (8)
+./reproduce_paper.sh --plots compression --data-dir /path/to/processed
+```
+
+The plan comes from `plotter/manifest.toml`, applied to the recorded `bench.db`.
+That database is opened read-only, so the plan holds exactly the (query,
+sub-dataset, budget, gap, scale) points the figures draw: 39 runs for the three
+figures. The I24-Motion queries were measured at `--max-gap 10`, the others at
+`--max-gap 1`. Each run uses the query in `suite/queries/` and the reference SQL
+in `suite/sql-ref/`, matched by content to what was recorded.
+
+Outputs go to `results/repro/`: `bench.db`, `plots/`, `logs/` and `plan.tsv`.
+**The recorded `bench.db` is never written.** The script refuses an output that
+resolves to it and checks its SHA-256 before and after every run. Re-running the
+script resumes: points already in `results/repro/bench.db` are skipped
+(`--no-resume` re-measures them). Points whose sub-dataset is absent from
+`--data-dir` (default `$TRQS_DATA_DIR` or `datasets/processed`) are skipped and
+listed. A figure is drawn only when every point it needs has been measured.
+The engine is built if `engine/target/release/trql-cli` is absent.
+
+Figure 4a's deduplicated-DuckDB bars still come from the recorded
+`plotter/data/results-dedup.json`. Re-measure them with the
+[deduplicated baseline](suite/README.md#deduplicated-duckdb-baseline).
+
+### Individual runs
+
 Needs the datasets. Each is converted into a common schema --
 `objects(oid, class)` and `bbox(oid, fid, x1, y1, x2, y2)` -- then fitted into a
 `<max_gap>_<max_error_px>.trql` artifact:

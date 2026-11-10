@@ -59,7 +59,10 @@ The default database is `../bench.db`.
 Inputs are listed in [data/README.md](data/README.md). Suite baseline reruns
 write under `results/suite/`, leaving recorded plot inputs unchanged.
 
-For new paired benchmarks, select the database explicitly:
+`scripts/repro_plan.py` lists the `trql-cli bench` runs behind chosen plots,
+read from this manifest and the recorded `bench.db` opened read-only; the root
+`reproduce_paper.sh` runs that plan. For new paired benchmarks, select the
+database explicitly:
 
 ```sh
 uv run --locked benchplot render --only p15 --db ../results/suite/bench.db \

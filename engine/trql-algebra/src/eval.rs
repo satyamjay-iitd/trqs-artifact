@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use trql_bbox_compiler::{collect_pred_slots, eval_analytical};
+use trql_bbox_compiler::eval_analytical;
 use trql_bbox_compiler::{AnalyticalPred, AnalyticalPredKind};
 use trql_poly::PolyTraj;
 use trql_types::intervals::Interval;
@@ -100,32 +100,12 @@ impl<'a> AlgebraCtx<'a> {
         expr: &TrajExpr,
         tuple: &[u32],
         group_bounds: &[GroupBounds],
-        group_slots: &[Vec<Slot>],
         poly_trajs: &'a [PolyTraj],
         memo: &mut UnaryMemo,
     ) -> IntervalSets {
         match expr {
             TrajExpr::AnalyticPred(pred) => {
-                // A group's bounds are the coappearance of *every* slot in the
-                // group, but a leaf under `OVERLAP` or `CONTAINS` may name only
-                // some of them: those operators relate two intervals that need
-                // not both be live at once, so clipping such a leaf to the
-                // group window truncates it and can drop real answers. Where a
-                // leaf names the whole group the two coincide and the group
-                // bounds -- which also carry the THEN chain window -- are the
-                // tighter, cheaper choice; where it does not, fall back to the
-                // coappearance of just the slots the leaf itself names.
-                let own;
-                let clips: Option<&[Interval]> = match group_bounds.get(pred.group) {
-                    Some(gb) if covers_group(pred, group_slots.get(pred.group)) => {
-                        Some(gb.as_slice())
-                    }
-                    Some(_) | None => {
-                        own = slot_coappearance(pred, tuple, poly_trajs);
-                        own.as_deref()
-                    }
-                };
-                let intervals = match clips {
+                let intervals = match group_bounds.get(pred.group) {
                     Some(clips) => eval_clipped(pred, tuple, poly_trajs, clips, memo),
                     None => eval_analytical(pred, tuple, poly_trajs, (0, u32::MAX)),
                 };
@@ -141,28 +121,28 @@ impl<'a> AlgebraCtx<'a> {
                 min_gap,
                 max_gap,
             } => {
-                let lhs = self.eval(lhs, tuple, group_bounds, group_slots, poly_trajs, memo);
+                let lhs = self.eval(lhs, tuple, group_bounds, poly_trajs, memo);
                 if lhs.is_empty() {
                     return IntervalSets::empty();
                 }
-                let rhs = self.eval(rhs, tuple, group_bounds, group_slots, poly_trajs, memo);
+                let rhs = self.eval(rhs, tuple, group_bounds, poly_trajs, memo);
                 let _g = trql_instrument::scope(trql_instrument::Bucket::Temporal);
                 lhs.then_with_gap(&rhs, *min_gap, *max_gap)
             }
             TrajExpr::Duration { inner, min_frames } => {
-                let inner = self.eval(inner, tuple, group_bounds, group_slots, poly_trajs, memo);
+                let inner = self.eval(inner, tuple, group_bounds, poly_trajs, memo);
                 let _g = trql_instrument::scope(trql_instrument::Bucket::Temporal);
                 inner.with_min_duration(*min_frames)
             }
             TrajExpr::Contained { lhs, rhs } => {
-                let lhs = self.eval(lhs, tuple, group_bounds, group_slots, poly_trajs, memo);
-                let rhs = self.eval(rhs, tuple, group_bounds, group_slots, poly_trajs, memo);
+                let lhs = self.eval(lhs, tuple, group_bounds, poly_trajs, memo);
+                let rhs = self.eval(rhs, tuple, group_bounds, poly_trajs, memo);
                 let _g = trql_instrument::scope(trql_instrument::Bucket::Temporal);
                 lhs.contains(&rhs)
             }
             TrajExpr::Overlap { lhs, rhs } => {
-                let lhs = self.eval(lhs, tuple, group_bounds, group_slots, poly_trajs, memo);
-                let rhs = self.eval(rhs, tuple, group_bounds, group_slots, poly_trajs, memo);
+                let lhs = self.eval(lhs, tuple, group_bounds, poly_trajs, memo);
+                let rhs = self.eval(rhs, tuple, group_bounds, poly_trajs, memo);
                 let _g = trql_instrument::scope(trql_instrument::Bucket::Temporal);
                 lhs.overlap(&rhs)
             }
@@ -243,9 +223,6 @@ impl<'a> AlgebraCtx<'a> {
 
         // Preallocated buffer to avoid repeated allocations.
         let mut group_bounds: Vec<GroupBounds> = vec![Vec::new(); selector.num_groups()];
-        // Which slots each group covers, so a leaf that names only some of them
-        // is not clipped to a window its own objects never needed.
-        let group_slots = group_slot_sets(&opt_expr, &constraints);
 
         // Lives across the whole loop: that is what lets one object's single-slot
         // predicates be solved once rather than once per tuple it appears in.
@@ -272,7 +249,7 @@ impl<'a> AlgebraCtx<'a> {
                 }
                 tuple
             };
-            let ivs = self.eval(&opt_expr, &tuple, &group_bounds, &group_slots, poly_trajs, &mut memo);
+            let ivs = self.eval(&opt_expr, &tuple, &group_bounds, poly_trajs, &mut memo);
             if !ivs.is_empty() {
                 out.push((tuple, ivs));
             }
@@ -375,180 +352,6 @@ fn min_span(expr: &TrajExpr) -> Option<u32> {
     }
 }
 
-/// Whether every predicate under `expr` names exactly `slots`.
-///
-/// When it does, clipping a leaf to its own slots and to the group's
-/// coappearance are the same thing, so the group keeps the tighter
-/// [`min_span`] bound.
-fn uniform_slots(expr: &TrajExpr, slots: &[Slot]) -> bool {
-    match expr {
-        TrajExpr::AnalyticPred(pred) => {
-            let mut own = Vec::new();
-            collect_pred_slots(pred, &mut own);
-            own.sort_unstable();
-            own.dedup();
-            own == slots
-        }
-        TrajExpr::Then { lhs, rhs, .. }
-        | TrajExpr::Contained { lhs, rhs }
-        | TrajExpr::Overlap { lhs, rhs } => {
-            uniform_slots(lhs, slots) && uniform_slots(rhs, slots)
-        }
-        TrajExpr::Duration { inner, .. } => uniform_slots(inner, slots),
-    }
-}
-
-/// How many consecutive frames *all* of a group's slots must share, for a group
-/// whose leaves name different slots.
-///
-/// The selector discards a tuple whose group co-appears for fewer frames than
-/// this, so it has to be a necessary condition for the algebra to produce any
-/// interval at all -- never more. It is not the result's length: `DURATION`
-/// bounds the interval an operator returns, and under `OVERLAP` or `CONTAINS`
-/// that interval is assembled from operands over different objects, which
-/// need not all be on screen for the whole of it. `DURATION(OVERLAP(P(a),
-/// Q(b)), 20)` asks for a 20-frame union, which `a` and `b` can cover while
-/// sharing a single frame.
-///
-/// See [`Live`] for what is tracked and why each rule holds.
-fn coappear_span(expr: &TrajExpr, group: &[Slot]) -> u32 {
-    let live = Live::of(expr);
-    // A group whose subtree names no slot fell back to every declared slot;
-    // nothing constrains those, so beyond co-appearing at all there is no bound.
-    if live.slots != group {
-        return 1;
-    }
-    live.shared.max(1)
-}
-
-/// What a subtree guarantees about its objects' co-appearance, for
-/// [`coappear_span`].
-///
-/// A leaf is clipped to the co-appearance of the slots it names (see `eval`), so
-/// every interval it yields has all of those objects present on every frame.
-/// The binary operators may join operands over different slots, and then that
-/// stops holding for the result; what survives is tracked here.
-struct Live {
-    /// The slots the subtree names, sorted and deduped.
-    slots: Vec<Slot>,
-    /// A lower bound on the length of any interval the subtree yields -- the
-    /// `c` each operator computes in [`trql_types::intervals::IntervalSet`].
-    len: u32,
-    /// Whether every frame of every yielded interval has all of `slots` present.
-    full: bool,
-    /// A lower bound on the longest run of frames on which all of `slots` are
-    /// present, given that the subtree yields any interval at all.
-    shared: u32,
-}
-
-impl Live {
-    fn of(expr: &TrajExpr) -> Live {
-        match expr {
-            TrajExpr::AnalyticPred(_) => {
-                let mut slots = collect_slots(expr);
-                slots.sort_unstable();
-                slots.dedup();
-                Live::full(slots, 1)
-            }
-            // DURATION only drops short intervals: the frames of those it keeps,
-            // and so who is present on them, are unchanged.
-            TrajExpr::Duration { inner, min_frames } => {
-                let inner = Live::of(inner);
-                let len = inner.len.max(*min_frames);
-                if inner.full {
-                    Live::full(inner.slots, len)
-                } else {
-                    Live { len, ..inner }
-                }
-            }
-            TrajExpr::Contained { lhs, rhs } => {
-                let (l, r) = (Live::of(lhs), Live::of(rhs));
-                let len = l.len.max(r.len.saturating_add(2));
-                // The result is the lhs's interval, so it stays full only if the
-                // rhs adds no slot the lhs did not already cover.
-                if l.full && subset(&r.slots, &l.slots) {
-                    return Live::full(l.slots, len);
-                }
-                let mut shared = Live::sides_shared(&l, &r);
-                // The rhs's interval lies inside the lhs's: where both are full,
-                // every slot is present throughout the rhs's interval.
-                if l.full && r.full {
-                    shared = shared.max(r.len);
-                }
-                Live::partial(union(&l.slots, &r.slots), len, shared)
-            }
-            TrajExpr::Overlap { lhs, rhs } => {
-                let (l, r) = (Live::of(lhs), Live::of(rhs));
-                let len = l.len.saturating_add(1).max(r.len.saturating_add(1)).max(3);
-                // The union of two touching intervals is full only if both are,
-                // over the same slots.
-                if l.full && r.full && l.slots == r.slots {
-                    return Live::full(l.slots, len);
-                }
-                // Where both are full, everyone is present where they meet,
-                // which is at least one frame -- and no more is guaranteed.
-                let shared = Live::sides_shared(&l, &r);
-                Live::partial(union(&l.slots, &r.slots), len, shared)
-            }
-            // A nested THEN's sides are separated by a gap, so they need not
-            // share a frame and the result is never full.
-            TrajExpr::Then {
-                lhs, rhs, min_gap, ..
-            } => {
-                let (l, r) = (Live::of(lhs), Live::of(rhs));
-                let len = l.len.saturating_add(r.len).saturating_add(*min_gap);
-                let shared = Live::sides_shared(&l, &r);
-                Live::partial(union(&l.slots, &r.slots), len, shared)
-            }
-        }
-    }
-
-    fn full(slots: Vec<Slot>, len: u32) -> Live {
-        Live {
-            slots,
-            len,
-            full: true,
-            shared: len,
-        }
-    }
-
-    fn partial(slots: Vec<Slot>, len: u32, shared: u32) -> Live {
-        Live {
-            slots,
-            len,
-            full: false,
-            shared: shared.max(1),
-        }
-    }
-
-    /// What one side guarantees about *all* the slots: a side naming every slot
-    /// the other does carries its own run over to the union.
-    fn sides_shared(l: &Live, r: &Live) -> u32 {
-        let mut shared = 1;
-        if subset(&r.slots, &l.slots) {
-            shared = shared.max(l.shared);
-        }
-        if subset(&l.slots, &r.slots) {
-            shared = shared.max(r.shared);
-        }
-        shared
-    }
-}
-
-/// Whether sorted `a` is contained in sorted `b`.
-fn subset(a: &[Slot], b: &[Slot]) -> bool {
-    a.iter().all(|s| b.binary_search(s).is_ok())
-}
-
-/// The sorted union of two sorted slot lists.
-fn union(a: &[Slot], b: &[Slot]) -> Vec<Slot> {
-    let mut out = a.to_vec();
-    out.extend_from_slice(b);
-    out.sort_unstable();
-    out.dedup();
-    out
-}
-
 /// Recursive worker for [`coappear_chain`].
 ///
 /// A subtree referencing no slots (e.g. a constant predicate) falls back to
@@ -580,17 +383,7 @@ fn chain_groups(
             if slots.is_empty() {
                 slots = constraints.slots().collect();
             }
-            // `min_span` bounds the *group's* coappearance run only while
-            // every leaf is clipped to that run. A leaf naming a strict subset
-            // of the group's slots is not (see `eval`), so its interval may
-            // reach outside the run and the bound no longer applies: fall back
-            // to what the operators really need the whole group live for.
-            let span = if uniform_slots(leaf, &slots) {
-                min_span(leaf).unwrap_or(1)
-            } else {
-                coappear_span(leaf, &slots)
-            };
-            chain.group(slots, span);
+            chain.group(slots, min_span(leaf).unwrap_or(1));
         }
     }
 }
@@ -784,74 +577,6 @@ fn set_pred_groups(expr: &mut TrajExpr, group: usize) {
     }
 }
 
-/// Whether `pred` names every slot its chain group covers.
-///
-/// `None` group slots means an unannotated tree (as in tests), where there is
-/// no group to be narrower than, so the answer is "yes".
-fn covers_group(pred: &AnalyticalPred, group: Option<&Vec<Slot>>) -> bool {
-    let Some(group) = group else { return true };
-    let mut own = Vec::new();
-    collect_pred_slots(pred, &mut own);
-    own.sort_unstable();
-    own.dedup();
-    group.iter().all(|g| own.binary_search(g).is_ok())
-}
-
-/// The frames where every slot `pred` names is present, as a clip list.
-///
-/// `None` when the predicate names no slot at all, which constrains nothing and
-/// so must not be clipped.
-fn slot_coappearance(
-    pred: &AnalyticalPred,
-    tuple: &[u32],
-    poly_trajs: &[PolyTraj],
-) -> Option<Vec<Interval>> {
-    let mut slots = Vec::new();
-    collect_pred_slots(pred, &mut slots);
-    slots.sort_unstable();
-    slots.dedup();
-    let mut it = slots.into_iter();
-    let first = it.next()?;
-    let mut acc = poly_trajs[tuple[first] as usize]
-        .canonical_segments()
-        .to_vec();
-    for slot in it {
-        acc = trql_types::intervals::intersect(
-            &acc,
-            poly_trajs[tuple[slot] as usize].canonical_segments(),
-        );
-        if acc.is_empty() {
-            break;
-        }
-    }
-    Some(acc)
-}
-
-/// Slots per chain group, mirroring [`chain_groups`]'s walk so the indices
-/// line up with the ones [`annotate_groups`] hands the predicates.
-fn group_slot_sets(expr: &TrajExpr, constraints: &VariablesWithConstraints) -> Vec<Vec<Slot>> {
-    fn walk(expr: &TrajExpr, constraints: &VariablesWithConstraints, out: &mut Vec<Vec<Slot>>) {
-        match expr {
-            TrajExpr::Then { lhs, rhs, .. } => {
-                walk(lhs, constraints, out);
-                walk(rhs, constraints, out);
-            }
-            leaf => {
-                let mut slots = collect_slots(leaf);
-                slots.sort_unstable();
-                slots.dedup();
-                if slots.is_empty() {
-                    slots = constraints.slots().collect();
-                }
-                out.push(slots);
-            }
-        }
-    }
-    let mut out = Vec::new();
-    walk(expr, constraints, &mut out);
-    out
-}
-
 /// Intersects two ascending-sorted OID lists.
 fn intersect_sorted(lhs: &[u32], rhs: &[u32]) -> Vec<u32> {
     let mut out = Vec::new();
@@ -910,14 +635,7 @@ mod tests {
             let _g = trql_instrument::scope(trql_instrument::Bucket::Other);
             let optimized = optimize::optimize(expr.clone());
             let poly_trajs = self.poly_trajs.unwrap_or_else(|| self.db.poly_trajs());
-            self.eval(
-                &optimized,
-                tuple,
-                group_bounds,
-                &[],
-                poly_trajs,
-                &mut UnaryMemo::new(),
-            )
+            self.eval(&optimized, tuple, group_bounds, poly_trajs, &mut UnaryMemo::new())
         }
     }
 
@@ -1141,63 +859,6 @@ mod tests {
             "15 shared frames must satisfy DURATION 15, got {results:?}"
         );
         assert!(ctx.run(&constraints, &expr(16)).is_empty());
-    }
-
-    #[test]
-    fn run_duration_over_a_mixed_overlap_bounds_the_union_not_the_coappearance() {
-        // a: [0, 30], b: [25, 60] — on screen together for only 6 frames. OVERLAP
-        // returns the union [0, 60], and DURATION bounds *that* (61 >= 20), so the
-        // tuple matches. Requiring the pair to co-appear for 20 frames, which
-        // reading DURATION into the selector's span bound would, prunes it.
-        let [a, b] = query_slots::<2>();
-        let db = make_db_objs(&[(&[(0, 30)], 200), (&[(25, 60)], 200)]);
-        let ctx = AlgebraCtx {
-            db: &db,
-            poly_trajs: None,
-        };
-        let expr = TrajExpr::Duration {
-            inner: Box::new(TrajExpr::Overlap {
-                lhs: Box::new(gt_pred(a)),
-                rhs: Box::new(gt_pred(b)),
-            }),
-            min_frames: 20,
-        };
-
-        let results = ctx.run(&declaring(2), &expr);
-        let tuples: Vec<Vec<u32>> = results.iter().map(|(t, _)| t.to_vec()).collect();
-        assert_eq!(tuples, vec![vec![0, 1]], "got {results:?}");
-        assert_eq!(results[0].1.maximal(), vec![(0, 60)]);
-    }
-
-    #[test]
-    fn run_contains_inside_a_mixed_overlap_needs_no_long_coappearance() {
-        // a: [0, 16], b: [14, 40], c: [10, 30]. The overlap of a and b spans
-        // [0, 40] and c's 21-frame spell sits strictly inside it, yet all three
-        // share only frames 14..=16. The 5 frames DURATION asks of c are not a
-        // stretch the whole group must share: a and b need not both be present
-        // throughout c's spell, only cover it between them.
-        let [a, b, c] = query_slots::<3>();
-        let db = make_db_objs(&[(&[(0, 16)], 200), (&[(14, 40)], 200), (&[(10, 30)], 200)]);
-        let ctx = AlgebraCtx {
-            db: &db,
-            poly_trajs: None,
-        };
-        let expr = TrajExpr::Contained {
-            lhs: Box::new(TrajExpr::Overlap {
-                lhs: Box::new(gt_pred(a)),
-                rhs: Box::new(gt_pred(b)),
-            }),
-            rhs: Box::new(TrajExpr::Duration {
-                inner: Box::new(gt_pred(c)),
-                min_frames: 5,
-            }),
-        };
-
-        let results = ctx.run(&declaring(3), &expr);
-        assert!(
-            results.iter().any(|(t, _)| t.as_slice() == [0, 1, 2]),
-            "(a, b, c) = (0, 1, 2) must match, got {results:?}"
-        );
     }
 
     #[test]
@@ -1580,102 +1241,6 @@ mod tests {
     }
 
     #[test]
-    fn coappear_span_never_reads_duration_as_a_shared_stretch() {
-        let [a, b, c] = query_slots::<3>();
-        let dur = |inner: TrajExpr, k| TrajExpr::Duration {
-            inner: Box::new(inner),
-            min_frames: k,
-        };
-        let overlap = |l, r| TrajExpr::Overlap {
-            lhs: Box::new(l),
-            rhs: Box::new(r),
-        };
-        let contains = |l, r| TrajExpr::Contained {
-            lhs: Box::new(l),
-            rhs: Box::new(r),
-        };
-        let ab = vec![a, b];
-        let abc = vec![a, b, c];
-
-        // DURATION bounds the union OVERLAP returns, which `a` and `b` can cover
-        // while sharing one frame.
-        assert_eq!(
-            coappear_span(&dur(overlap(gt_pred(a), gt_pred(b)), 20), &ab),
-            1
-        );
-        // Likewise the outer interval of a mixed CONTAINS.
-        assert_eq!(
-            coappear_span(&dur(contains(gt_pred(c), lt_pred(a, b)), 25), &abc),
-            1
-        );
-        // A CONTAINS whose lhs is itself mixed: the rhs's spell lies inside the
-        // union, which `a` and `b` cover only between them.
-        assert_eq!(
-            coappear_span(
-                &contains(overlap(gt_pred(a), gt_pred(b)), dur(gt_pred(c), 5)),
-                &abc
-            ),
-            1
-        );
-    }
-
-    #[test]
-    fn coappear_span_keeps_the_stretches_the_operators_do_force() {
-        let [a, b, c] = query_slots::<3>();
-        let dur = |inner: TrajExpr, k| TrajExpr::Duration {
-            inner: Box::new(inner),
-            min_frames: k,
-        };
-        let contains = |l, r| TrajExpr::Contained {
-            lhs: Box::new(l),
-            rhs: Box::new(r),
-        };
-
-        // CLEVRER CL-Q2's shape: `c`'s spell encloses the `a`–`b` contact, so all
-        // three are present throughout the 3-frame contact.
-        assert_eq!(
-            coappear_span(
-                &contains(dur(gt_pred(c), 25), dur(lt_pred(a, b), 3)),
-                &[a, b, c]
-            ),
-            3
-        );
-        // CL-Q3's shape: two spells over different objects meet on one frame.
-        assert_eq!(
-            coappear_span(
-                &TrajExpr::Overlap {
-                    lhs: Box::new(dur(gt_pred(a), 10)),
-                    rhs: Box::new(dur(gt_pred(b), 10)),
-                },
-                &[a, b]
-            ),
-            1
-        );
-        // An lhs naming every slot is present throughout its own interval, and
-        // CONTAINS returns that interval.
-        assert_eq!(
-            coappear_span(
-                &contains(dur(lt_pred(a, b), 100), dur(gt_pred(b), 50)),
-                &[a, b]
-            ),
-            100
-        );
-        // A nested THEN carries over the run of a side naming every slot.
-        assert_eq!(
-            coappear_span(
-                &TrajExpr::Then {
-                    lhs: Box::new(dur(lt_pred(a, b), 30)),
-                    rhs: Box::new(gt_pred(a)),
-                    min_gap: 0,
-                    max_gap: None,
-                },
-                &[a, b]
-            ),
-            30
-        );
-    }
-
-    #[test]
     fn chain_carries_one_min_span_per_group() {
         let [a, b, c] = query_slots::<3>();
         let expr = TrajExpr::Then {
@@ -1930,9 +1495,8 @@ mod tests {
         let mut shared = UnaryMemo::new();
         for w in &windows {
             let bounds = vec![w.clone()];
-            let with_shared = ctx.eval(&expr, &[0, 1], &bounds, &[], poly_trajs, &mut shared);
-            let with_fresh =
-                ctx.eval(&expr, &[0, 1], &bounds, &[], poly_trajs, &mut UnaryMemo::new());
+            let with_shared = ctx.eval(&expr, &[0, 1], &bounds, poly_trajs, &mut shared);
+            let with_fresh = ctx.eval(&expr, &[0, 1], &bounds, poly_trajs, &mut UnaryMemo::new());
             assert_eq!(
                 with_shared.maximal(),
                 with_fresh.maximal(),

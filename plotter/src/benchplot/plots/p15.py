@@ -55,9 +55,10 @@ def plot_p15(
     if missing:
         raise ValueError(f"query not in the database: {', '.join(missing)}")
 
-    # Only the first budget of each query: `_layout` numbers a group's bars by the
-    # position of their name, so rank 0 is the first one given.
-    rows = {b.row["query"]: b.row for b in _layout(df, order, budgets) if b.rank == 0}
+    # Only the first budget of each query, and only it is required to have been
+    # measured: the later budgets belong to the headline figure, not this one.
+    first = {q: list(v[:1]) for q, v in budgets.items()}
+    rows = {b.row["query"]: b.row for b in _layout(df, order, first)}
     type_scale = 0.95 if width <= 4.5 else 1.0
 
     fig, (ax_speed, ax_mem) = plt.subplots(

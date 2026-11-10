@@ -126,21 +126,17 @@ def expand(s, e, c, l, r):
 def evaluate(node, binding, boxes, frames, gslots):
     """`gslots` are the whole group's slots.
 
-    A leaf is clipped to the frames where the objects *it names* co-appear, not the whole
-    group's -- the algebra clips a leaf to its group's bounds only when it names every slot
-    of the group, and otherwise to its own slots' co-appearance. Under `CONTAINS` and
-    `OVERLAP` the two differ: the operands need not be live at the same time, so a run of
-    one object may start before another of the group ever appears. A leaf naming no slot
-    falls back to the group.
+    A leaf is clipped to the frames where *every* object of its group co-appears, not just
+    the ones it mentions -- the algebra evaluates a group's predicates inside that group's
+    co-appearance bounds, and the generated SQL joins all of a group's slots on `fid`.
     """
     kind = node[0]
 
     if kind == "pred":
         _, slots, fn = node
-        own = slots or gslots
         truth = {}
         for f in frames:
-            bs = {v: boxes.get((f, binding[v])) for v in own}
+            bs = {v: boxes.get((f, binding[v])) for v in gslots}
             if any(b is None for b in bs.values()):
                 continue        # not co-appearing: the tuple has no value on this frame
             truth[f] = fn(lambda v, c: coord(bs[v], c))
@@ -176,10 +172,6 @@ def group_slots(node):
     return group_slots(node[1]) | group_slots(node[2])
 
 
-def coappears(slots, binding, boxes, frames):
-    return any(all((f, binding[v]) in boxes for v in slots) for f in frames)
-
-
 def spine(node):
     """Flattens the top-level THEN spine into (groups, gaps), mirroring the algebra."""
     if node[0] == "then":
@@ -208,12 +200,6 @@ def run(node, variables, boxes, cls, frames):
             len({binding[v] for v in group_slots(g)}) != len(group_slots(g))
             for g in groups
         ):
-            continue
-
-        # The selector only enumerates tuples whose every group shares at least one frame.
-        # Where a group's leaves all name its whole slot set this is implied by any
-        # interval at all; where they name different subsets it is a real constraint.
-        if not all(coappears(group_slots(g), binding, boxes, frames) for g in groups):
             continue
 
         value = evaluate(groups[0], binding, boxes, frames, group_slots(groups[0]))

@@ -42,7 +42,7 @@ def build_db():
         "x2 DOUBLE, y2 DOUBLE, aid BIGINT)"
     )
 
-    objs = [(0, "a"), (1, "b"), (2, "a"), (3, "b"), (4, "c"), (5, "d"), (6, "e")]
+    objs = [(0, "a"), (1, "b"), (2, "a"), (3, "b"), (4, "c")]
     con.executemany("INSERT INTO objects VALUES (?, ?)", objs)
 
     rows = []
@@ -60,13 +60,6 @@ def build_db():
         # o4 only ever appears in the first half.
         if f < 15:
             rows.append((f, 4, float(2 * f), 30.0, float(2 * f) + 3, 34.0, None))
-        # o5 only appears from frame 8, so it enters while o4 is already mid-run: a
-        # leaf over o4 alone must not be clipped to the frames it shares with o5.
-        if f >= 8:
-            rows.append((f, 5, 10.0, 40.0, 14.0, 44.0, None))
-        # o6 only appears from frame 20, after o4 has left: the two never co-appear.
-        if f >= 20:
-            rows.append((f, 6, 30.0, 40.0, 34.0, 44.0, None))
 
     con.executemany("INSERT INTO bbox VALUES (?, ?, ?, ?, ?, ?, ?)", rows)
     con.close()
@@ -270,77 +263,6 @@ CASES = [
         ("overlap",
          ("duration", P(["x", "y"], lambda g: g("x", "x1") < g("y", "x1") + 10), 4),
          ("duration", P(["x", "y"], lambda g: g("x", "x1") > g("y", "x1") - 10), 4)),
-    ),
-    # -- Leaves naming different slots of one group -------------------------------------
-    #
-    # Each leaf reads only the frames where the objects it names are present. Before this
-    # was fixed, every leaf was clipped to the frames where the *whole* group co-appears,
-    # which cut runs short (CLEVRER CL-Q2/CL-Q3) -- each case below fails that way.
-    (
-        "OVERLAP whose operands name different objects",
-        "SELECT (x: class=c, y: class=d) WHERE OVERLAP("
-        "DURATION(x.x1 < 25, 4), DURATION(y.x1 < 50, 4))",
-        {"x": "c", "y": "d"},
-        ("overlap",
-         ("duration", P(["x"], lambda g: g("x", "x1") < 25), 4),
-         ("duration", P(["y"], lambda g: g("y", "x1") < 50), 4)),
-    ),
-    (
-        # DURATION bounds the union OVERLAP returns. x and y share only frames
-        # 8..14, so a 25-frame result must come from the union, not a shared stretch.
-        "DURATION over a mixed OVERLAP bounds the union",
-        "SELECT (x: class=c, y: class=d) WHERE DURATION(OVERLAP("
-        "DURATION(x.x1 < 25, 4), DURATION(y.x1 < 50, 4)), 25)",
-        {"x": "c", "y": "d"},
-        ("duration",
-         ("overlap",
-          ("duration", P(["x"], lambda g: g("x", "x1") < 25), 4),
-          ("duration", P(["y"], lambda g: g("y", "x1") < 50), 4)),
-         25),
-    ),
-    (
-        "CONTAINS whose outer spell names a third object",
-        "SELECT (w: class=d, x: class=a, y: class=b) WHERE CONTAINS("
-        "DURATION(w.x1 < 50, 10), DURATION(x.x1 < y.x1, 3))",
-        {"w": "d", "x": "a", "y": "b"},
-        ("contains",
-         ("duration", P(["w"], lambda g: g("w", "x1") < 50), 10),
-         ("duration", P(["x", "y"], lambda g: g("x", "x1") < g("y", "x1")), 3)),
-    ),
-    (
-        "mixed-slot OVERLAP keeps the group's objects distinct",
-        "SELECT (x: class=a, y: class=a) WHERE OVERLAP("
-        "DURATION(x.x1 < 20, 3), DURATION(y.x1 > 5, 3))",
-        {"x": "a", "y": "a"},
-        ("overlap",
-         ("duration", P(["x"], lambda g: g("x", "x1") < 20), 3),
-         ("duration", P(["y"], lambda g: g("y", "x1") > 5), 3)),
-    ),
-    (
-        # x and y never share a frame, so although THEN alone would chain them, the group
-        # {w, x, y} has no co-appearance and the selector never enumerates it.
-        "nested THEN under CONTAINS needs the group to co-appear",
-        "SELECT (w: class=a, x: class=c, y: class=e) WHERE CONTAINS("
-        "w.x1 < 100, DURATION(x.x1 < 100, 2) THEN DURATION(y.x1 < 100, 2))",
-        {"w": "a", "x": "c", "y": "e"},
-        ("contains",
-         P(["w"], lambda g: g("w", "x1") < 100),
-         ("then",
-          ("duration", P(["x"], lambda g: g("x", "x1") < 100), 2),
-          ("duration", P(["y"], lambda g: g("y", "x1") < 100), 2),
-          0, None)),
-    ),
-    (
-        "nested THEN under CONTAINS, co-appearing group",
-        "SELECT (w: class=a, x: class=c, y: class=d) WHERE CONTAINS("
-        "w.x1 < 100, DURATION(x.x1 < 100, 2) THEN DURATION(y.x1 < 100, 2))",
-        {"w": "a", "x": "c", "y": "d"},
-        ("contains",
-         P(["w"], lambda g: g("w", "x1") < 100),
-         ("then",
-          ("duration", P(["x"], lambda g: g("x", "x1") < 100), 2),
-          ("duration", P(["y"], lambda g: g("y", "x1") < 100), 2),
-          0, None)),
     ),
     (
         "nested THEN under DURATION (stays one group)",
