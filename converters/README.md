@@ -32,6 +32,7 @@ datasets may have no video or may expose one as a separate viewpoint.
 | `i24v_convert.py` | `I24V_WACV2024` | `final_gps.csv`, `WACV2024_hg_save.cpkl` and camera videos |
 | `meva_convert.py` | `meva` | KPF geometry/types/activities YAML and videos |
 | `mot17_convert.py` | `mot17` | Training sequences: `gt/gt.txt`, `seqinfo.ini`, `img1/` |
+| `nuscenes_convert.py` | `nuscenes` | `v1.0-trainval/*.json` annotation tables (the metadata download; no images or maps) |
 | `opendd_convert.py` | `openDD` | Original roundabout SQLite trajectory databases |
 | `soccernet_convert.py` | `soccernet` | Tracking sequences: GT, game/sequence INI files and frames |
 | `stanford_drone_convert.py` | `StanfordDroneDataset` | `annotations/<scene>/<video>/annotations.txt` and corresponding videos |
@@ -41,8 +42,39 @@ datasets may have no video or may expose one as a separate viewpoint.
 | `ytstream_convert.py` | `ytstream` | Scene baseline JSON annotations and videos |
 
 The converters support datasets beyond the paper's main workload. SoccerNet tracking
-is different from the paper's SoccerTrack v2 panorama input. The SoccerTrack
-and nuScenes converters are not included.
+is different from the paper's SoccerTrack v2 panorama input. The SoccerTrack v2
+converter is not included.
+
+`nuscenes_convert.py` writes one map-space sub-dataset per scene from the
+annotation tables alone, with no video. It re-implements the rules recorded with
+the original processed data, whose converter is not available: on the 467
+boston-seaport scenes it gives the same frames and objects, 93.5% of boxes
+identical, 96.5% within 2 cm, and 0.7% more boxes. Convert only the paper's map
+with `--location boston-seaport`.
+
+## Merged sub-datasets used by the paper
+
+Several experiments run on merges of converted sub-datasets. After converting
+their sources, build them with:
+
+```sh
+converters/paper_merges.sh --list      # members of each merge
+converters/paper_merges.sh             # build every merge whose sources exist
+```
+
+| Merge | Output | Members |
+|---|---|---|
+| `clevrer-10k` | `clevrer_merged/video_00000+9999more` | `clevrer/video_00000` to `video_09999` |
+| `clevrer-100` | `clevrer_merged/video_00000+99more` | `clevrer/video_00000` to `video_00099` |
+| `sdd-60` | `merged/bookstore_video0+59more` | all 60 `stanford_drone` clips |
+| `nuscenes-boston` | `nuscenes_maps/boston-seaport` | all 467 boston-seaport scenes |
+| `soccertrack-20` | `merged/SoccerTrackPano-117092-1st+19more` | 20 SoccerTrack v2 panorama halves (no converter) |
+
+The memberships match those recorded in the original merges. The CLEVRER and
+Stanford Drone merges rebuild byte-identical tables from the same sources.
+
+The converters must use the pinned `duckdb==1.5.5` from `requirements.txt`. A
+newer DuckDB writes database files the engine's DuckDB 1.5.5 cannot read.
 
 ## Dataset-specific steps
 

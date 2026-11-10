@@ -40,8 +40,9 @@ python3 -m venv .trqs-pyenv
 The binaries are in `engine/target/release/`. Follow the
 [converter README](converters/README.md) for supported datasets, raw input
 layouts, and conversion commands. Each processed sub-dataset contains
-`duckdb.db`, `metadata.json`, and a video when available. SoccerTrack and
-nuScenes converters are not included; SoccerNet is distinct from SoccerTrack.
+`duckdb.db`, `metadata.json`, and a video when available. The SoccerTrack v2
+converter is not included; SoccerNet is distinct from SoccerTrack. The merged
+sub-datasets the experiments use are built with `converters/paper_merges.sh`.
 
 ## Reproducing the figures from recorded measurements
 
