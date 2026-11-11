@@ -16,9 +16,9 @@
 #   nuscenes-boston    nuscenes_maps/boston-seaport                 all 467 boston-seaport scenes NS-crossing (Figs 5, 8)
 #   soccertrack-20     merged/SoccerTrackPano-117092-1st+19more     20 SoccerTrackv2pano halves   ST-swap-img (Fig 5)
 #
-# Sources come from converters/clevrer_convert.py, stanford_drone_convert.py and
-# nuscenes_convert.py. SoccerTrack v2 has no converter in this repository, so its
-# merge runs only where `SoccerTrackv2pano/` was prepared some other way.
+# Sources come from converters/clevrer_convert.py, stanford_drone_convert.py,
+# nuscenes_convert.py and soccertrack_convert.py (which writes the
+# `SoccerTrackv2pano/` halves).
 
 set -euo pipefail
 

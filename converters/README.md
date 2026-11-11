@@ -35,6 +35,7 @@ datasets may have no video or may expose one as a separate viewpoint.
 | `nuscenes_convert.py` | `nuscenes` | `v1.0-trainval/*.json` annotation tables (the metadata download; no images or maps) |
 | `opendd_convert.py` | `openDD` | Original roundabout SQLite trajectory databases |
 | `soccernet_convert.py` | `soccernet` | Tracking sequences: GT, game/sequence INI files and frames |
+| `soccertrack_convert.py` | `soccertrack-v2` | `gsr/`, `bas/`, `raw/` and `videos/` per match |
 | `stanford_drone_convert.py` | `StanfordDroneDataset` | `annotations/<scene>/<video>/annotations.txt` and corresponding videos |
 | `trackid3x3_convert.py` | `TrackID3x3` | Indoor/Outdoor/Drone MOT annotations and corresponding videos |
 | `virat_convert.py` | `virat` | Object and activity mapping annotations, videos |
@@ -42,8 +43,8 @@ datasets may have no video or may expose one as a separate viewpoint.
 | `ytstream_convert.py` | `ytstream` | Scene baseline JSON annotations and videos |
 
 The converters support datasets beyond the paper's main workload. SoccerNet tracking
-is different from the paper's SoccerTrack v2 panorama input. The SoccerTrack v2
-converter is not included.
+is different from the paper's SoccerTrack v2 panorama input, which
+`soccertrack_convert.py` converts.
 
 `nuscenes_convert.py` writes one map-space sub-dataset per scene from the
 annotation tables alone, with no video. It re-implements the rules recorded with
@@ -61,33 +62,36 @@ agreement, so request access early: approval can take days.
 
 ### Datasets behind the paper's figures
 
-| Dataset | Query (figure) | Source | Download | `datasets/raw/` |
-|---|---|---|---|---|
-| CLEVRER | CL-overtake (5, 8, 9b) | <http://clevrer.csail.mit.edu/> | `obj_clevrer.csv` and `video_train.zip` (train split only; extract into `video_train/`) | `clevrer` |
-| UA-DETRAC | DETRAC-meet (4a) | Authors' page, <https://sites.google.com/view/daweidu/projects/ua-detrac> (Google Drive links) | `DETRAC-Images` and the train/test `DETRAC-*-Annotations-XML`. After conversion, `suite/build_detrac_px.py` builds the `detrac_px` copy the figures read | `detrac` |
-| I-24 MOTION (INCEPTION v1.0.0) | I24-convoy (5, 8, 9a), I24-journey4 (5) | <https://i24motion.org/data> | The trajectory JSON exports (`<hash>__post1.json`, ...; ~19 GB each) | `I24_Motion` |
-| VIRAT Video Dataset, Ground release 2.0 | VIRAT-meet (4a) | <https://viratdata.org/>; zip files on <https://data.kitware.com/> | Videos and `annotations/*.viratdata.objects.txt` (and `mapping.txt`) | `virat` |
-| Stanford Drone Dataset | SD-carpass (5) | <https://cvgl.stanford.edu/projects/uav_data/> | `video/` and `annotations/` for all 60 clips | `StanfordDroneDataset` |
-| nuScenes v1.0 | NS-crossing (5, 8) | <https://www.nuscenes.org/nuscenes#download> | Only the metadata, `v1.0-trainval_meta.tgz`; no images, lidar or maps | `nuscenes` |
-| SoccerTrack v2 | ST-swap-img (5) | <https://huggingface.co/datasets/atomscott/soccertrack-v2> | `gsr/`, `bas/` and `raw/<match>/` for all 10 matches (videos not needed) | no converter yet |
+| Dataset | Query (figure) | Source | `datasets/raw/` |
+|---|---|---|---|
+| CLEVRER | CL-overtake (5, 8, 9b) | <http://clevrer.csail.mit.edu/> | `clevrer` |
+| UA-DETRAC | DETRAC-meet (4a) | <https://sites.google.com/view/daweidu/projects/ua-detrac> | `detrac` |
+| I-24 MOTION (INCEPTION v1.0.0) | I24-convoy (5, 8, 9a), I24-journey4 (5) | <https://i24motion.org/data> | `I24_Motion` |
+| VIRAT Video Dataset, Ground release 2.0 | VIRAT-meet (4a) | <https://viratdata.org/> | `virat` |
+| Stanford Drone Dataset | SD-carpass (5) | <https://cvgl.stanford.edu/projects/uav_data/> | `StanfordDroneDataset` |
+| nuScenes v1.0 | NS-crossing (5, 8) | <https://www.nuscenes.org/nuscenes#download> | `nuscenes` |
+| SoccerTrack v2 | ST-swap-img (5) | <https://huggingface.co/datasets/atomscott/soccertrack-v2> | `soccertrack-v2` |
+
+DETRAC-meet reads `detrac_px`, which `suite/build_detrac_px.py` builds from the
+converted DETRAC sequences.
 
 ### Other supported datasets
 
 | Dataset | Source | `datasets/raw/` |
 |---|---|---|
-| AI City Challenge 2022, Track 1 (CityFlowV2 MTMC) | Request form via <https://www.aicitychallenge.org/> | `AICity22_Track1_MTMC_Tracking` |
+| AI City Challenge 2022, Track 1 (CityFlowV2 MTMC) | <https://www.aicitychallenge.org/> | `AICity22_Track1_MTMC_Tracking` |
 | Alfheim (Tromsø IL vs Tottenham) | <https://datasets.simula.no/alfheim/> | `alfheim_Totten` |
-| Argoverse 2 Sensor | <https://www.argoverse.org/av2.html>; `converters/argoverse2/fetch_logs.py` downloads from the public S3 bucket | `argoverse2` |
-| CityFlow-NL | <https://github.com/fredfung007/cityflow-nl>; videos from the AI City form above | `cityflow` |
+| Argoverse 2 Sensor | <https://www.argoverse.org/av2.html> | `argoverse2` |
+| CityFlow-NL | <https://github.com/fredfung007/cityflow-nl> | `cityflow` |
 | I24-3D | <https://github.com/I24-MOTION/I24-3D-dataset> | `I24-3D` |
-| I-24V (WACV 2024) | I-24 MOTION project, <https://i24motion.org/data>; utilities at <https://github.com/I24-MOTION/i24-video-dataset-utils> | `I24V_WACV2024` |
+| I-24V (WACV 2024) | <https://i24motion.org/data> | `I24V_WACV2024` |
 | MEVA | <https://mevadata.org/> | `meva` |
 | MOT17 | <https://motchallenge.net/data/MOT17/> | `mot17` |
 | openDD | <https://l3pilot.eu/data/opendd.html> | `openDD` |
-| SoccerNet-Tracking | <https://www.soccer-net.org/data> (`SoccerNet` pip package) | `soccernet` |
-| TrackID3x3 | <https://github.com/open-starlab/TrackID3x3> (Google Drive link in its README) | `TrackID3x3` |
+| SoccerNet-Tracking | <https://www.soccer-net.org/data> | `soccernet` |
+| TrackID3x3 | <https://github.com/open-starlab/TrackID3x3> | `TrackID3x3` |
 | VisDrone2019-MOT | <https://github.com/VisDrone/VisDrone-Dataset> | `VisDrone` |
-| YTStream (MIRIS) | <https://favyen.com/miris/ytstream-dataset.zip> | `ytstream` |
+| YTStream (MIRIS) | <https://favyen.com/miris/> | `ytstream` |
 
 ## Merged sub-datasets used by the paper
 
@@ -105,7 +109,7 @@ converters/paper_merges.sh             # build every merge whose sources exist
 | `clevrer-100` | `clevrer_merged/video_00000+99more` | `clevrer/video_00000` to `video_00099` |
 | `sdd-60` | `merged/bookstore_video0+59more` | all 60 `stanford_drone` clips |
 | `nuscenes-boston` | `nuscenes_maps/boston-seaport` | all 467 boston-seaport scenes |
-| `soccertrack-20` | `merged/SoccerTrackPano-117092-1st+19more` | 20 SoccerTrack v2 panorama halves (no converter) |
+| `soccertrack-20` | `merged/SoccerTrackPano-117092-1st+19more` | the 20 `SoccerTrackv2pano` halves (10 matches) |
 
 The memberships match those recorded in the original merges. The CLEVRER and
 Stanford Drone merges rebuild byte-identical tables from the same sources.

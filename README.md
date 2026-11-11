@@ -14,7 +14,7 @@ use the supplied converters to prepare inputs.
 | `suite/vlm/` | the Gemini comparison: harness, prompts, raw responses, scoring, and the built `ytstream/uav_0006` artifact it queries |
 | `plotter/` | plot renderers, recorded auxiliary measurements, and the preserved MIRIS PDF |
 | `scripts/detect_track.py` | the ingest worker: detector + tracker -> the `objects`/`bbox` schema |
-| `converters/` | 19 dataset converters, shared helpers, and projection dependencies; see its README for coverage |
+| `converters/` | 20 dataset converters, shared helpers, and projection dependencies; see its README for coverage |
 | `lean-proof/` | interval-set algebra proofs and pinned Lean/mathlib dependencies |
 | `bench.db` | the measurements behind the manifest's plots (SQLite): the paper's figures and the supplementary DETRAC recall plots, filtered to the queries and error budgets they read |
 
@@ -42,9 +42,10 @@ python3 -m venv .trqs-pyenv
 The binaries are in `engine/target/release/`. Follow the
 [converter README](converters/README.md) for supported datasets, raw input
 layouts, and conversion commands. Each processed sub-dataset contains
-`duckdb.db`, `metadata.json`, and a video when available. The SoccerTrack v2
-converter is not included; SoccerNet is distinct from SoccerTrack. The merged
-sub-datasets the experiments use are built with `converters/paper_merges.sh`.
+`duckdb.db`, `metadata.json`, and a video when available. SoccerNet is
+distinct from SoccerTrack v2, which `converters/soccertrack_convert.py` converts.
+The merged sub-datasets the experiments use are built with
+`converters/paper_merges.sh`.
 
 ## Reproducing the figures from recorded measurements
 
@@ -104,8 +105,7 @@ script resumes: points already in `results/repro/bench.db` are skipped
 `--data-dir` (default `$TRQS_DATA_DIR` or `datasets/processed`) are skipped and
 listed. A figure is drawn only when every point it needs has been measured,
 except Figure 5: a query whose dataset is absent is drawn as a marked
-"not measured" row, and the summary names it. This applies to SoccerTrack v2,
-which has no converter. The engine is built if
+"not measured" row, and the summary names it. The engine is built if
 `engine/target/release/trql-cli` is absent.
 
 Figure 9 compares engine builds rather than budgets, so its two manifest entries

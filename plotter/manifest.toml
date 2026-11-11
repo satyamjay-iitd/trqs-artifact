@@ -306,9 +306,9 @@ queries = [
     "SD-carpass",
 ]
 scales = [1]
-# A query whose dataset a reader could not obtain (SoccerTrack v2 has no
-# converter yet) is drawn as a marked "not measured" row rather than refusing
-# the figure; the render summary names it.
+# A query whose dataset a reader could not obtain (SoccerTrack v2 needs approved
+# access) is drawn as a marked "not measured" row rather than refusing the
+# figure; the render summary names it.
 mark_missing = true
 width = 3.4
 height = 1.1
